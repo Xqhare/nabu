@@ -11,7 +11,7 @@ The overarching goal of this project is to create a library that can be used to 
 .xqh should be able to hold any arbitrary data, making some kind of escape mechanism paramount.
 I have chosen ASCII encoding, specifically Windows-1252 as the data representation in binary. Mainly because I wanted to work with it.
 
-### command characters used by .xqh
+### Command characters used by .xqh
 `DLE`, or Data Link Escape is the ideal general escape character inside the ASCII encoding I chose. 
 
 Any data following `DLE`, until another `DLE` is encountered, is considered part of the data-stream. This should make it possible to save any kind of data inside, be it media or documents.
