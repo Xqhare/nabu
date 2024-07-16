@@ -1,8 +1,7 @@
 # Nabu
 
 > [!warning]
-> This is a hobby project. It is not intended to be used in production, and I don't think it can?
-> Anyway, here is another reinventing of the wheel!
+> This is a hobby project. It is not intended to be used in production.
 
 The overarching goal of this project is to create a library that can be used to build, read and write .xqh files.
 .xqh files are going to be my attempt at a general purpose file format, with Nabu as a small wrapper around it, giving the opportunity for downstream projects to create their own files suiting their needs.
