@@ -24,4 +24,4 @@ The text wrapped by it should be returned as a fully decoded `String` or appropr
 
 All other command characters should be returned to the caller, and any non-command characters should error.
 
-![Xff chart](pictures/xff-main-chart.png)
+![Xff chart](pictures/xff-main-chart.jpeg)
