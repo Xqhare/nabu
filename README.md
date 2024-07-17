@@ -33,5 +33,5 @@ Command characters should be saved together, if they are followed by another com
 
 
 ![Xff chart](pictures/xff-main-chart.jpeg)
-![Command characters](pictures/xff-cmd-char-chart.png)
-![Characters](pictures/xff-char-chart.png)
+![Command characters](pictures/xff-cmd-char-chart.jpeg)
+![Characters](pictures/xff-char-chart.jpeg)
