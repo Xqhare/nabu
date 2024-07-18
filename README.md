@@ -6,17 +6,13 @@
 The overarching goal of this project is to create a library that can be used to build, read and write `.xff` files.
 `.xff` files are going to be my attempt at a general purpose file format, with Nabu as a small wrapper around it, giving the opportunity for downstream projects to create their own files suiting their needs.
 
-
-
-
-
 ## `.xff` specification
-`.xff` stands for `xqhares file format`, pronounced `squares file format` or `squared file format`.
+`.xff` stands for `xqhares file format` or `xqhared file format`, pronounced `squares file format` or `squared file format`.
 I have chosen ASCII encoding, specifically Windows-1252 as the data representation in binary. Mainly because I wanted to work with it.
 As such, any mention of ASCII should be understood to be referring to Windows-1252 specifically.
+
 `.xff` is a very simple format. It essentially uses a small subset of ASCII control characters to wrap arbitrary data.
 If used with ASCII data only, it can hold any String, Number of Control characters.
-
 ![Xff chart, showing the composition of a xff file in token form](pictures/xff-main-chart.jpeg)
 
 ### Command characters
@@ -30,13 +26,14 @@ Here the burden to decode and encode the data lies on the downstream project.
 
 `EM` is the end of the `.xff` file.
 
-All other command characters should be returned to the caller, and any non-command characters should error.
+All command characters should be returned to the caller, and any non-command characters should error.
 To make all characters available to the caller, any command character should be escaped with `ESC`, and `ESC` should be escaped with `ESC` too.
-Command characters should be saved together, if they are followed by another command character.
+Command characters should be saved together, if they are followed by another command character, to save on escaping every single one.
 
 > [!important]
 > Because of the way I decided to design the `.xff` specification, the control characters, as they are called in the ASCII standard, are not all valid command characters.
 > Some non control characters are also valid command characters.
+
 ![Command characters, showing the composition of a xff file in token form](pictures/xff-cmd-char-chart.jpeg)
 
 ### Strings and numbers
