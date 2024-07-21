@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq)]
 pub enum XffValue {
     String(String),
     Number(Number),
@@ -5,6 +6,7 @@ pub enum XffValue {
     CommandCharacter(CommandCharacter),
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Number {
     Unsigned(usize),
     Integer(isize),
@@ -30,6 +32,7 @@ impl Number {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Data {
     pub data: Vec<u8>,
     pub len: usize,
@@ -41,6 +44,7 @@ impl From<Vec<u8>> for Data {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum CommandCharacter {
     Null,
     StartOfHeading,
