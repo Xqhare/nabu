@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::error::NabuError;
 
-use super::value::{CommandCharacter, Data, XffValue};
+use super::value::{CommandCharacter, Data, Number, XffValue};
 
 
 pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
@@ -20,7 +20,8 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
 }
 
 /// TODO:
-///   - Add support for ECMA-404 numbers
+///   - Add support for ECMA-404 numbers -> DONE
+///   - Add better support for ECMA-404 numbers
 fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
     if content.len() == 0 {
         return Err(NabuError::InvalidXFF("Missing end of file marker".to_string()));
@@ -38,9 +39,6 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 while content[0] != 3 {
                     let current_char = content.remove(0);
                     byte_pos += 1;
-                    if current_char >= 48 && current_char <=57 || current_char == 150 {
-                        // Maybe a number
-                    };
                     match current_char {
                         8..=13 => {
                             // command characters
@@ -75,8 +73,6 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                                 }
                             }
                         },
-                        48..=57 | 150 => {
-                        },
                         32..=126 | 128 | 130..=140 | 142 | 145..=156 | 158..=255 => {
                             tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
                         },
@@ -88,7 +84,16 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 if content[0] == 3 {
                     content.remove(0);
                     byte_pos += 1;
-                    out.push(XffValue::String(tmp_string_binding));
+                    // very much the lazy man's number parsing, inefficient but it works
+                    if tmp_string_binding.parse::<usize>().is_ok() {
+                        out.push(XffValue::Number(Number::Unsigned(tmp_string_binding.parse::<usize>().unwrap())));
+                    } else if tmp_string_binding.parse::<isize>().is_ok() {
+                        out.push(XffValue::Number(Number::Integer(tmp_string_binding.parse::<isize>().unwrap())));
+                    } else if tmp_string_binding.parse::<f64>().is_ok() {
+                        out.push(XffValue::Number(Number::Float(tmp_string_binding.parse::<f64>().unwrap())));
+                    } else {
+                        out.push(XffValue::String(tmp_string_binding));
+                    }
                 } else {
                     return Err(NabuError::InvalidXFF(format!("Missing end of transmission marker at byte position: {}", byte_pos)));
                 }
