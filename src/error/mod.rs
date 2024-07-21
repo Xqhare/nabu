@@ -1,5 +1,6 @@
 use core::fmt;
 
+#[derive(Debug)]
 pub enum NabuError {
     IoError(std::io::Error),
     UnknownXFFVersion(u8),
