@@ -8,4 +8,6 @@ The overarching goal of this project is to create a rust library that can be use
 I also plan to try out the `Features` flag for the first time, and use that to extend the usability of `.xff` files for a wide range of use-cases.
 The only one of these features that is planned, is a key-value store, but I am sure more will come to mind in due time.
 
-
+## `.xff` specifications
+All specifications are in the `specifications` directory. 
+V0 can be found [here](specifications/v0.md).
