@@ -1,11 +1,11 @@
 mod xff;
 
 pub mod serde {
-    pub fn deserialize() {
+    pub fn read<P: AsRef<std::path::Path>>(path: P) -> std::io::Result() {
         todo!()
     }
 
-    pub fn serialize() {
+    pub fn write() {
         todo!()
     }
 }
