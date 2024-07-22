@@ -13,6 +13,78 @@ pub enum Number {
     Float(f64),
 }
 
+impl From<usize> for Number {
+    fn from(c: usize) -> Self {
+        Number::Unsigned(c)
+    }
+}
+
+impl From<u64> for Number {
+    fn from(c: u64) -> Self {
+        Number::Unsigned(c as usize)
+    }
+}
+
+impl From<u32> for Number {
+    fn from(c: u32) -> Self {
+        Number::Unsigned(c as usize)
+    }
+}
+
+impl From<u16> for Number {
+    fn from(c: u16) -> Self {
+        Number::Unsigned(c as usize)
+    }
+}
+
+impl From<u8> for Number {
+    fn from(c: u8) -> Self {
+        Number::Unsigned(c as usize)
+    }
+}
+
+impl From<isize> for Number {
+    fn from(c: isize) -> Self {
+        Number::Integer(c)
+    }
+}
+
+impl From<i64> for Number {
+    fn from(c: i64) -> Self {
+        Number::Integer(c as isize)
+    }
+}
+
+impl From<i32> for Number {
+    fn from(c: i32) -> Self {
+        Number::Integer(c as isize)
+    }
+}
+
+impl From<i16> for Number {
+    fn from(c: i16) -> Self {
+        Number::Integer(c as isize)
+    }
+}
+
+impl From<i8> for Number {
+    fn from(c: i8) -> Self {
+        Number::Integer(c as isize)
+    }
+}
+
+impl From<f64> for Number {
+    fn from(c: f64) -> Self {
+        Number::Float(c)
+    }
+}
+
+impl From<f32> for Number {
+    fn from(c: f32) -> Self {
+        Number::Float(c as f64)
+    }
+}
+
 impl Number {
     pub fn as_u8(&self) -> Vec<u8> {
         match self {
@@ -46,41 +118,77 @@ impl From<Vec<u8>> for Data {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CommandCharacter {
+    /// Also known as NULL or NONE
     Null,
+    /// Start of Heading
     StartOfHeading,
+    /// Start of Text
     StartOfText,
+    /// End of Text
     EndOfText,
+    /// End of Transmission
     EndOfTransmission,
+    /// Enquiry
     Enquiry,
+    /// Acknowledge
     Acknowledge,
+    /// Bell or Alert
     Bell,
+    /// Backspace
     Backspace,
+    /// Horizontal Tab or Tab
     HorizontalTab,
+    /// Line Feed or New Line
     LineFeed,
+    /// Vertical Tab
     VerticalTab,
+    /// Form Feed
     FormFeed,
+    /// Carriage Return
     CarriageReturn,
+    /// Shift Out
     ShiftOut,
+    /// Shift In
     ShiftIn,
+    /// Data Link Escape
     DataLinkEscape,
+    /// Device Control 1
     DeviceControl1,
+    /// Device Control 2
     DeviceControl2,
+    /// Device Control 3
     DeviceControl3,
+    /// Device Control 4
     DeviceControl4,
+    /// Negative Acknowledge
     NegativeAcknowledge,
+    /// Synchronous Idle
     SynchronousIdle,
+    /// End of Transmission Block
     EndOfTransmitBlock,
+    /// Cancel
     Cancel,
+    /// End of Medium
     EndOfMedium,
+    /// Substitute
     Substitute,
+    /// Escape
     Escape,
+    /// File Separator
     FileSeparator,
+    /// Group Separator
     GroupSeparator,
+    /// Record Separator
     RecordSeparator,
+    /// Unit Separator
     UnitSeparator,
+    /// Space
     Space,
+    /// Delete
     Delete,
+    /// Non-Breaking Space or NBSP, no new lines allowed
     NonBreakingSpace,
+    /// Soft Hyphen, no new lines allowed
     SoftHyphen,
 }
 
