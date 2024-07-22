@@ -250,5 +250,55 @@ mod tests {
         // delete file
         fs::remove_file(path).unwrap();
     }
+
+    #[test]
+    fn v0_complex_data() {
+        let path = std::path::Path::new("tests/v0_complex_data.xff");
+        let bin_data0 = std::fs::read("pictures/xff-char-chart.jpeg").unwrap();
+        let bin_data1 = std::fs::read("pictures/xff-cmd-char-chart.jpeg").unwrap();
+        let bin_data2 = std::fs::read("pictures/xff-main-chart.jpeg").unwrap();
+        let bin_data3 = std::fs::read("LICENSE").unwrap();
+        let bin_data5 = std::fs::read("README.md").unwrap();
+        let bin_data6 = std::fs::read("tests/v0.rs").unwrap();
+        let data = {
+            vec![
+                XffValue::String("Padding".to_string()),
+                XffValue::Data(Data {len: bin_data0.len(), data: bin_data0}),
+                XffValue::Number(Number::from(42.22222E-222)),
+                XffValue::CommandCharacter(CommandCharacter::UnitSeparator),
+                XffValue::Data(Data {len: bin_data6.len(), data: bin_data6}),
+                XffValue::CommandCharacter(CommandCharacter::SoftHyphen),
+                XffValue::Number(Number::from(-42.22222E222)),
+                XffValue::String("Padding".to_string()),
+                XffValue::Data(Data::from(bin_data1)),
+                XffValue::String("Padding".to_string()),
+                XffValue::Number(Number::from(42.22222E+222)),
+                XffValue::String("Padding".to_string()),
+                XffValue::Data(Data::from(bin_data2)),
+                XffValue::String("Padding".to_string()),
+                XffValue::Number(Number::from(42.22222E-222)),
+                XffValue::String("Padding".to_string()),
+                XffValue::CommandCharacter(CommandCharacter::LineFeed),
+                XffValue::CommandCharacter(CommandCharacter::DeviceControl4),
+                XffValue::String("Padding".to_string()),
+                XffValue::CommandCharacter(CommandCharacter::Escape),
+                XffValue::Data(Data::from(bin_data3)),
+                XffValue::Data(Data::from(bin_data5)),
+            ]
+        };
+        let tmp = serde::write(path, data.clone());
+        assert!(tmp.is_ok());
+        let tmp_2 = serde::read(path);
+        assert!(tmp_2.is_ok());
+        let ok = tmp_2.unwrap();
+        for n in 0..ok.len() {
+            //println!("loop: {}", n);
+            //println!("ok: {:?}", ok[n]);
+            //println!("data: {:?}", data[n]);
+            assert_eq!(ok[n], data[n]);
+        }
+        // delete file
+        fs::remove_file(path).unwrap();
+    }
 }
 
