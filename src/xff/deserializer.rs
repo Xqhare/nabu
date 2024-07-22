@@ -101,12 +101,13 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
             16 => {
                 // DLE
                 let data_length: u64 = {
-                    let mut tmp: Vec<u8> = Default::default();
-                    for _ in 0..5 {
-                        tmp.push(content.remove(0));
+                    // My first real array!
+                    let mut tmp: [u8; 8] = Default::default();
+                    for n in 0..5 {
+                        tmp[n] = content.remove(0);
                         byte_pos += 1;
                     }
-                    u64::from_be_bytes(tmp.try_into().unwrap())
+                    u64::from_le_bytes(tmp)
                 };
                 let mut data = Vec::new();
                 for _ in 0..data_length {
@@ -127,19 +128,19 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
             },
             27 => {
                 // ESC
-                while content[0] != 27 || content[0] == 27 && content[1] == 27 {
+                while content.len() > 0 {
                     let current_cmd_char = content.remove(0);
                     byte_pos += 1;
                     match current_cmd_char {
                         0..=32 | 127 | 160 | 173 => {
-                            // ESC escaped check
+                            // ESC check
                             if current_cmd_char == 27 {
                                 if content[0] == 27 {
                                     content.remove(0);
                                     byte_pos += 1;
                                     out.push(XffValue::CommandCharacter(CommandCharacter::from(27)));
                                 } else {
-                                    return Err(NabuError::InvalidXFF(format!("Unescaped ESC at byte position: {}.", byte_pos)));
+                                    break;
                                 }
                             } else {
                                 out.push(XffValue::CommandCharacter(CommandCharacter::from(current_cmd_char)));
