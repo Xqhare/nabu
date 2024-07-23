@@ -26,3 +26,26 @@ pub mod serde {
         serialize_xff(&path_with_xff_extension, data, xff_version)
     }
 }
+
+
+
+// I have two possible architechures, one simply reading and writing a hashmap or btree, and one
+// that creates a structure holding and storing the data for interaction that is also capable of serializing.
+//
+// I have chosen both, split up in two features, one containing the core functions (key_value_core == the first architecture) and one containing the store functions (key_value_store == the second architecture).
+
+//#[cfg(feature = "key_value_core")]
+pub mod key_value_core {
+    use std::collections::BTreeMap;
+
+    use crate::{error::NabuError, xff::value::XffValue};
+
+    pub fn read<P, E>(path: P) -> Result<BTreeMap<String, XffValue>, E> where P: AsRef<std::path::Path>, E: Into<NabuError> {
+        
+    }
+}
+
+#[cfg(feature = "key_value_store")]
+pub mod key_value_store {
+    
+}
