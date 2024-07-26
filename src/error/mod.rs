@@ -7,6 +7,7 @@ pub enum NabuError {
     InvalidXFF(String),
 }
 
+#[allow(dead_code)]
 pub type Result<T> = std::result::Result<T, NabuError>;
 
 impl From<std::io::Error> for NabuError {
