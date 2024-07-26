@@ -54,6 +54,30 @@ fn serialize_xff_v0(path: &Path, data: Vec<XffValue>) -> Result<(), NabuError>{
                 // DLE
                 out.push(16);
             },
+            XffValue::ArrayCmdChar(a) => {
+                if escape_open {
+                    // remove ending ESC
+                    out.remove(out.len() - 1);
+                } else {
+                    // put starting ESC
+                    out.push(27);
+                }
+                for char in a {
+                    match char {
+                        super::value::CommandCharacter::Escape => {
+                            // ESC needs to be ESC escaped
+                            out.push(27);
+                            out.push(char.as_u8());
+                        }
+                        _ => {
+                            out.push(char.as_u8());
+                        }
+                    }
+                }
+                // ESC
+                out.push(27);
+                escape_open = true;
+            },
             XffValue::CommandCharacter(c) => {
                 if escape_open {
                     // remove ending ESC

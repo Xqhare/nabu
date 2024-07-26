@@ -4,6 +4,13 @@ pub enum XffValue {
     Number(Number),
     Data(Data),
     CommandCharacter(CommandCharacter),
+    ArrayCmdChar(Vec<CommandCharacter>),
+}
+
+impl Default for XffValue {
+    fn default() -> Self {
+        XffValue::String(String::new())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
