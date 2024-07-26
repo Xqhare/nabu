@@ -30,7 +30,7 @@ pub mod serde {
 // Remember to add any and all new features to this!
 // It's literally a feature-gate for all features - leads to cleaner and leaner code I hope
 #[cfg(any(feature = "key_value_core", feature = "key_value_store"))]
-mod features;
+pub mod features;
 
 // I have two possible architechures, one simply reading and writing a hashmap or btree, and one
 // that creates a structure holding and storing the data for interaction that is also capable of serializing.
@@ -60,5 +60,8 @@ pub mod key_value_core {
 
 #[cfg(feature = "key_value_store")]
 pub mod key_value_store {
-    
+    use crate::{error::NabuError, features::key_value::store::NabuDB};
+    pub fn new_nabudb<P>(path: P) -> Result<NabuDB, NabuError> where P: AsRef<std::path::Path> {
+        NabuDB::new(path.as_ref().with_extension("xff"))
+    }
 }
