@@ -7,8 +7,8 @@ mod tests {
 
     #[test]
     fn v0_serializer_deserializer_bare_bones() {
-        let path = std::path::Path::new("tests/v0.txt");
-        let path_2 = std::path::Path::new("tests/v0.xff");
+        let path = "tests/v0.txt";
+        let path_2 = "tests/v0.xff";
         let data = {
             vec![
                 XffValue::String("hello mom".to_string()),
