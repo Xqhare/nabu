@@ -8,3 +8,5 @@ edition = "2021"
 [features]
 key_value_core = []
 key_value_store = ["key_value_core"]
+config_wizard = []
+logging_wizard = []
