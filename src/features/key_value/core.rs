@@ -2,6 +2,21 @@ use std::{collections::BTreeMap, path::Path};
 
 use crate::{error::NabuError, key_value_core::new_core_store, serde::{read, write}, xff::value::XffValue};
 
+/// Reads the content of a XFF file and returns a BTreeMap
+/// Please note that only XFF files written by the `write_core` function are supported
+///
+/// # Arguments
+/// * `path` - The path to the file to read
+///
+/// # Example
+/// ```rust
+/// use std::path::Path;
+/// use nabu::features::key_value::core::read_core;
+///
+/// let path = Path::new("xff-example-data/key_value_core.xff");
+/// let data = read_core(path);
+/// assert!(data.is_ok());
+/// ```
 pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
     let content = read(path)?;
     let mut out = new_core_store();
@@ -26,6 +41,27 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
     Ok(out)
 }
 
+/// Writes a BTreeMap to a XFF file
+///
+/// # Arguments
+/// * `path` - The path to the file to write
+/// * `data` - The BTreeMap to write
+///
+/// # Example
+/// ```rust
+/// use std::path::Path;
+/// use std::collections::BTreeMap;
+/// use nabu::features::key_value::core::write_core;
+/// use nabu::xff::value::{XffValue, Number};
+///
+/// let mut data = BTreeMap::new();
+/// data.insert("key0".to_string(), XffValue::String("value0".to_string()));
+/// data.insert("key1".to_string(), XffValue::Number(Number::from(42)));
+///
+/// let path = Path::new("xff-example-data/key_value_core.xff");
+/// let write = write_core(path, data);
+/// assert!(write.is_ok());
+/// ```
 pub fn write_core(path: &Path, data: BTreeMap<String, XffValue>) -> Result<(), NabuError> {
     let mut out: Vec<XffValue> = Default::default();
     for (key, value) in data.iter() {
