@@ -1,9 +1,18 @@
 #[derive(Debug, Clone, PartialEq)]
+/// An enum for the different types of XFF values
+/// All variants except `ArrayCmdChar` are represented in the XFF format
+/// `ArrayCmdChar` is a list of `CommandCharacter`s and seldom used in writing XFF files, but never in reading them
 pub enum XffValue {
+    /// A string value
     String(String),
+    /// A numeric value
     Number(Number),
+    /// A data value, holding a `Data` struct
     Data(Data),
+    /// An array of command characters
+    /// A command character is represented by the `CommandCharacter` enum
     CommandCharacter(CommandCharacter),
+    /// An array of `CommandCharacter`s
     ArrayCmdChar(Vec<CommandCharacter>),
 }
 
@@ -14,9 +23,14 @@ impl Default for XffValue {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// A numeric value
+/// `Number::form()` is implemented for all numeric types
 pub enum Number {
+    /// An unsigned integer
     Unsigned(usize),
+    /// An integer
     Integer(isize),
+    /// A float
     Float(f64),
 }
 
@@ -93,6 +107,7 @@ impl From<f32> for Number {
 }
 
 impl Number {
+    /// Returns the number as bytes in string (ASCII) form
     pub fn as_u8(&self) -> Vec<u8> {
         match self {
             Number::Unsigned(u) => {
@@ -112,8 +127,14 @@ impl Number {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// A data value
+/// contains `data` and `len`
+///
+/// Can be converted from `Vec<u8>` using the `From` trait
 pub struct Data {
+    /// The actual data
     pub data: Vec<u8>,
+    /// The length of the data
     pub len: usize,
 }
 
@@ -124,6 +145,9 @@ impl From<Vec<u8>> for Data {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// Represents all command characters
+///
+/// Can be converted from `u8` using the `From` trait
 pub enum CommandCharacter {
     /// Also known as NULL or NONE
     Null,
@@ -200,6 +224,7 @@ pub enum CommandCharacter {
 }
 
 impl CommandCharacter {
+    /// Returns the command character as bytes in ASCII form
     pub fn as_u8(&self) -> u8 {
         match self {
             CommandCharacter::Null => 0,
