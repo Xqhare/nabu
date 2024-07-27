@@ -4,6 +4,17 @@ use crate::error::NabuError;
 
 use super::value::XffValue;
 
+/// Writes a Vec of XffValues as a XFF file
+///
+/// Determines the XFF version to use and calls the appropriate serializer
+///
+/// # Arguments
+/// * `path` - The path to the file to write
+/// * `data` - The Vec of XffValues to write
+/// * `ver` - The XFF version to use
+///
+/// # Errors
+/// Returns IO errors when issues with reading the file from disk occur
 pub fn serialize_xff(path: &Path, data: Vec<XffValue>, ver: u8) -> Result<(), NabuError> {
     match ver {
         0 => serialize_xff_v0(path, data),

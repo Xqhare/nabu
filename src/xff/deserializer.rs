@@ -4,7 +4,16 @@ use crate::error::NabuError;
 
 use super::value::{CommandCharacter, Data, Number, XffValue};
 
-
+/// Reads the content of a XFF file and returns a Vec
+///
+/// Reads the first byte of the file to determine the version and then calls the appropriate deserializer for the version
+///
+/// # Arguments
+/// * `path` - The path to the file to read
+///
+/// # Errors
+/// Returns IO errors when issues with reading the file from disk occur
+/// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
 pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
     let content = std::fs::read(path);
     if content.is_err() {
@@ -27,7 +36,8 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
         return Err(NabuError::InvalidXFF("Missing end of file marker".to_string()));
     }
     let mut out: Vec<XffValue> = Default::default();
-    // byte 0 is the version, removed before
+    // byte 0 is the version, removed before, the +1 again for normal counting is not done
+    // here, remember that if counting bytes in files to find an error!
     let mut byte_pos: u64 = 1;
     while content.len() > 0 {
         let current_bytes = content.remove(0);
