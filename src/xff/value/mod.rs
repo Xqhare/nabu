@@ -22,6 +22,132 @@ impl Default for XffValue {
     }
 }
 
+impl From<Vec<u8>> for XffValue {
+    fn from(c: Vec<u8>) -> Self {
+        XffValue::Data(Data::from(c))
+    }
+}
+
+impl From<Vec<CommandCharacter>> for XffValue {
+    fn from(c: Vec<CommandCharacter>) -> Self {
+        XffValue::ArrayCmdChar(c)
+    }
+}
+
+impl From<String> for XffValue {
+    fn from(c: String) -> Self {
+        let check_usize = c.parse::<usize>();
+        if check_usize.is_ok() {
+            XffValue::Number(Number::from(check_usize.unwrap()))
+        } else {
+            let check_isize = c.parse::<isize>();
+            if check_isize.is_ok() {
+                XffValue::Number(Number::from(check_isize.unwrap()))
+            } else {
+                let check_float = c.parse::<f64>();
+                if check_float.is_ok() {
+                    XffValue::Number(Number::from(check_float.unwrap()))
+                } else {
+                    XffValue::String(c)
+                }
+            }
+        }
+    }
+}
+
+impl From<&str> for XffValue {
+    fn from(c: &str) -> Self {
+        let check_usize = c.parse::<usize>();
+        if check_usize.is_ok() {
+            XffValue::Number(Number::from(check_usize.unwrap()))
+        } else {
+            let check_isize = c.parse::<isize>();
+            if check_isize.is_ok() {
+                XffValue::Number(Number::from(check_isize.unwrap()))
+            } else {
+                let check_float = c.parse::<f64>();
+                if check_float.is_ok() {
+                    XffValue::Number(Number::from(check_float.unwrap()))
+                } else {
+                    XffValue::String(c.to_string())
+                }
+            }
+        }
+    }
+}
+
+impl From<usize> for XffValue {
+    fn from(c: usize) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<isize> for XffValue {
+    fn from(c: isize) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<f64> for XffValue {
+    fn from(c: f64) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<u64> for XffValue {
+    fn from(c: u64) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<i64> for XffValue {
+    fn from(c: i64) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<f32> for XffValue {
+    fn from(c: f32) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<u32> for XffValue {
+    fn from(c: u32) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<i32> for XffValue {
+    fn from(c: i32) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<u16> for XffValue {
+    fn from(c: u16) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<i16> for XffValue {
+    fn from(c: i16) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<u8> for XffValue {
+    fn from(c: u8) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
+impl From<i8> for XffValue {
+    fn from(c: i8) -> Self {
+        XffValue::Number(Number::from(c))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 /// A numeric value
 /// `Number::form()` is implemented for all numeric types
