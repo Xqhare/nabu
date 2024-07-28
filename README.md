@@ -15,6 +15,9 @@ Just read the examples below and have fun.
 On a technical note, the byte-structure of `.xff` does not change, however a `.xff` file written with the default `serde` module will be different from a `.xff` file written with `key_value_store` in the way the data inside is structured and interpreted.
 This means that any `.xff` file in existence can be read using the `serde` module without data loss, but there may be some loss of interpreted data (the logging wizard for example builds blocks of valid `xff` and appends them into the same file. Reading it with the `serde` module would return all values in it in order, however the logs contained would need to be decoded from that.).
 
+This modularity is important, as it allows `.xff` files to be read and written in a way that is compatible with different use-cases. I found the non-guaranteed usability of the same extension in different use-cases shockingly prevalent, especially with older standards like CSV.
+I do also recognise that this approach of splintering `.xff` into several extensions more or less exclusive to each other may not be the best idea, I see it as necessary for the implementation of the vision I have for `.xff` and honestly have no better Idea and expect an absolute maximum of one user ever, me.
+
 ## 1. Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation.
