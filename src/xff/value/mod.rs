@@ -16,6 +16,15 @@ pub enum XffValue {
     ArrayCmdChar(Vec<CommandCharacter>),
 }
 
+impl XffValue {
+    pub fn as_string(&self) -> Option<String> {
+        match self {
+            XffValue::String(s) => Some(s.clone()),
+            _ => None
+        }
+    }
+}
+
 impl Default for XffValue {
     fn default() -> Self {
         XffValue::String(String::new())
