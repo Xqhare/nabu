@@ -37,7 +37,6 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
             };
         }
     }
-
     Ok(out)
 }
 
