@@ -26,21 +26,65 @@ use crate::{error::NabuError, xff::value::XffValue, key_value_core::{read, write
 ///
 /// # Example
 /// ```rust
+/// use std::collections::BTreeMap;
 /// use nabu::key_value_store::new_nabudb;
 /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
-/// 
+///
 /// let path = "xff-example-data/nabuDB_main_example.xff";
 /// let mut db = new_nabudb(path).unwrap();
+///
 /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
 /// db.insert("key1".to_string(), XffValue::Number(Number::from(-42)));
 /// db.insert("key2".to_string(), XffValue::CommandCharacter(CommandCharacter::LineFeed));
 /// db.insert("key3".to_string(), XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+///
 /// db.save();
+/// 
 /// let read = new_nabudb(path).unwrap();
 /// assert_eq!(read.get("key0").unwrap(), db.get("key0").unwrap());
 /// assert_eq!(read.get("key1").unwrap(), db.get("key1").unwrap());
 /// assert_eq!(read.get("key2").unwrap(), db.get("key2").unwrap());
 /// assert_eq!(read.get("key3").unwrap(), db.get("key3").unwrap());
+///
+/// db.set_auto_save(true);
+/// db.insert("key4".to_string(), XffValue::String("value4".to_string()));
+/// let read = new_nabudb(path).unwrap();
+/// assert_eq!(db.get("key4").unwrap(), read.get("key4").unwrap());
+///
+/// if db.contains_key("key4") {
+///     let _ = db.remove("key4");
+/// }
+///
+/// println!("All keys:");
+/// for key in db.keys() {
+///     println!("{}", key);
+/// }
+///
+/// let map: BTreeMap<String, XffValue> = db.to_map();
+///
+/// let get_key_0 = db.get("key0");
+/// assert_eq!(get_key_0.unwrap(), &XffValue::String("value0".to_string()));
+///
+/// let (key, value) = db.get_key_value("key0").unwrap();
+/// assert_eq!(key, &"key0".to_string());
+/// assert_eq!(value, &XffValue::String("value0".to_string()));
+///
+/// println!("All key-values:");
+/// for (key, value) in db.iter() {
+///     println!("{}: {:?}", key, value);
+/// }
+///
+/// let len = db.len();
+///
+/// assert_eq!(db.get("key0").unwrap(), &XffValue::String("value0".to_string()));
+/// assert_eq!(db.get("key1").unwrap(), &XffValue::Number(Number::from(-42)));
+/// assert_eq!(db.get("key2").unwrap(), &XffValue::CommandCharacter(CommandCharacter::LineFeed));
+/// assert_eq!(db.get("key3").unwrap(), &XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+/// assert_eq!(len, 4);
+///
+/// db.clear();
+/// let read = new_nabudb(path).unwrap();
+/// assert!(read.len() == 0);
 /// ```
 pub struct NabuDB {
     core: BTreeMap<String, XffValue>,
@@ -217,7 +261,7 @@ impl NabuDB {
     /// ```
     pub fn insert(&mut self, key: String, value: XffValue) {
         self.core.insert(key, value);
-        self.length += 1;
+        self.length = self.core.len();
         let _ = self.auto_save();
     }
 
