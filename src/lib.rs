@@ -361,7 +361,7 @@ const XFF_VERSION: u8 = 0;
 pub mod serde {
     use crate::error::NabuError;
     use crate::xff::deserializer::deserialize_xff;
-    use crate::xff::serializer::serialize_xff;
+    use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
     use crate::xff::value::XffValue;
     use crate::XFF_VERSION;
 
@@ -414,7 +414,8 @@ pub mod serde {
     /// ```
     pub fn write<P>(path: P, data: Vec<XffValue>) -> Result<(), NabuError> where P: AsRef<std::path::Path> {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        serialize_xff(&path_with_xff_extension, data, XFF_VERSION)
+        let byte_data = serialize_xff(data, XFF_VERSION)?;
+        write_bytes_to_file(&path_with_xff_extension, byte_data)
     }
 
     /// Writes a Vec of XffValues to a XFF file with a specific XFF version
@@ -443,7 +444,8 @@ pub mod serde {
     /// ```
     pub fn write_legacy<P>(path: P, data: Vec<XffValue>, xff_version: u8) -> Result<(), NabuError> where P: AsRef<std::path::Path> {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        serialize_xff(&path_with_xff_extension, data, xff_version)
+        let byte_data = serialize_xff(data, xff_version)?;
+        write_bytes_to_file(&path_with_xff_extension, byte_data)
     }
 
     /// A convenience function to delete any XFF file from disk
