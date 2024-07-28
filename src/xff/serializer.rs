@@ -15,14 +15,16 @@ use super::value::XffValue;
 ///
 /// # Errors
 /// Returns IO errors when issues with reading the file from disk occur
-pub fn serialize_xff(path: &Path, data: Vec<XffValue>, ver: u8) -> Result<(), NabuError> {
+pub fn serialize_xff(data: Vec<XffValue>, ver: u8) -> Result<Vec<u8>, NabuError> {
     match ver {
-        0 => serialize_xff_v0(path, data),
+        0 => {
+            serialize_xff_v0(data)
+        },
         _ => Err(NabuError::UnknownXFFVersion(ver)),
     }
 }
 
-fn serialize_xff_v0(path: &Path, data: Vec<XffValue>) -> Result<(), NabuError>{
+fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
     let mut out: Vec<u8> = Default::default();
     // Only true if the last pushed data was a command character
     let mut escape_open = false;
@@ -115,6 +117,10 @@ fn serialize_xff_v0(path: &Path, data: Vec<XffValue>) -> Result<(), NabuError>{
     }
     // EM
     out.push(25);
-    std::fs::write(path, out)?;
+    Ok(out)
+}
+
+pub fn write_bytes_to_file(path: &Path, data: Vec<u8>) -> Result<(), NabuError> {
+    std::fs::write(path, data)?;
     Ok(())
 }
