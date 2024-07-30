@@ -1,37 +1,65 @@
-use std::collections::BTreeMap;
-use crate::{serde::{read, write}, xff::value::{XffValue, CommandCharacter}, error::NabuError, features::logging_wizard::{Log, LogData}};
+use std::{collections::BTreeMap, path::Path};
+use crate::{XFF_VERSION, serde::{read, write}, xff::{value::{XffValue, CommandCharacter, Data}, serializer::{serialize_xff, write_bytes_to_file}}, error::NabuError, features::logging_wizard::{LoggingWizard, Log, LogData}};
 
-use super::LoggingWizard;
+pub fn write_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
+    let byte_data = logs_to_bytes(data)?;
+    write_bytes_to_file(path, byte_data)
+}
 
-impl LoggingWizard {
+pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
+    let mut file_as_bytes: Vec<u8> = std::fs::read(path)?;
+    // Dropping the last byte, EM byte
+    let _ = file_as_bytes[file_as_bytes.len() - 1];
+    let data = logs_to_bytes(data)?;
+    // appending data to file, this should move the data instead of copying it into the vector.
+    // I hope
+    file_as_bytes.extend(data);
+    std::fs::write(path, file_as_bytes)?;
+    Ok(())
+}
 
-    pub fn write_log_wizard(&self) -> Result<(), NabuError> {
-        todo!()
+pub fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
+    let tokens = logs_tokenizer(data)?;
+    // returns a vec of bytes
+    serialize_xff(tokens, XFF_VERSION)
+}
+
+pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
+    let mut out: Vec<XffValue> = Default::default();
+    let cmd1 = XffValue::CommandCharacter(CommandCharacter::FileSeparator);
+    let cmd2 = XffValue::CommandCharacter(CommandCharacter::GroupSeparator);
+    let cmd3 = XffValue::CommandCharacter(CommandCharacter::RecordSeparator);
+    let cmd4 = XffValue::CommandCharacter(CommandCharacter::UnitSeparator);
+    for log in data {
+        out.push(cmd1.clone());
+        for data in log.log_data.clone() {
+            out.push(cmd2.clone());
+            out.push(XffValue::String(data.name));
+            out.push(data.value);
+            out.push(cmd3.clone());
+            if !data.optional_metadata.is_empty() {
+                for (key, value) in data.optional_metadata {
+                    out.push(cmd4.clone());
+                    out.push(XffValue::String(key));
+                    out.push(XffValue::String(value));
+                    out.push(cmd4.clone());
+                }
+            }
+            out.push(cmd3.clone());
+            out.push(cmd2.clone());
+        }
+        out.push(cmd1.clone());
     }
-
-    fn append(&self) -> Result<(), NabuError> {
-        let mut file_as_bytes = std::fs::read(self.path.clone())?;
-        // Dropping the last byte, EM byte
-        let _ = file_as_bytes[file_as_bytes.len() - 1];
-        let data = self.to_bytes();
-        // appending data to file
-        file_as_bytes.extend(data);
-        std::fs::write(self.path.clone(), file_as_bytes)?;
-        Ok(())
-    }
-
-    fn to_bytes(&self) -> Vec<u8> {
-        todo!()
-    }
+    Ok(out)
 }
 
 pub fn read_log_wizard<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
     let mut data = read(path.as_ref())?;
     let mut logs: Vec<Log> = Vec::new();
     while data.len() > 0 {
-        let current_entry: XffValue = data.remove(0);
-        match current_entry {
+        match data[0] {
             XffValue::CommandCharacter(CommandCharacter::FileSeparator) => {
+                let _ = data.remove(0);
                 // Logdata starts here
                 let mut log_data: Vec<LogData> = Vec::new();
                 let next_entry: XffValue = data.remove(0);
@@ -96,7 +124,7 @@ pub fn read_log_wizard<P>(path: P) -> Result<LoggingWizard, NabuError> where P: 
                 }
             }
             _ => {
-                Err(NabuError::InvalidXFF(format!("Invalid XFF, expected FileSeparator got {:?}", current_entry)))?
+                Err(NabuError::InvalidXFF(format!("Invalid XFF, expected FileSeparator got {:?}", data[0])))?
             }
         }
     }
