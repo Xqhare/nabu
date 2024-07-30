@@ -1,6 +1,6 @@
 mod serde;
 
-use crate::{xff::value::{XffValue, CommandCharacter}, features::logging_wizard::serde::read_log_wizard, error::NabuError};
+use crate::{xff::value::{XffValue, CommandCharacter}, {features::logging_wizard::serde::read_log_wizard, append_to_log_wizard}, error::NabuError};
 
 use std::collections::BTreeMap;
 
@@ -11,6 +11,8 @@ use std::collections::BTreeMap;
 ///
 /// Should you want to load all previous logs, you can use the `LoggingWizard::from_file` function.
 ///
+/// This function will decode the file and return a LoggingWizard.
+/// Should no file exist, a new LoggingWizard will be created.
 /// ## Example
 /// ```rust
 /// use nabu::features::logging_wizard::LoggingWizard;
@@ -21,7 +23,8 @@ use std::collections::BTreeMap;
 /// ```
 ///
 /// If you want to create a new LoggingWizard or want to add logs to an existing one, you can use the `LoggingWizard::new` function.
-/// Here the file would not be decoded, but loaded into memory and all new logs would be appended
+/// The file is not loaded at all until you call the `LoggingWizard::save` function.
+/// During saving the file would not be decoded from the byte form, but loaded into memory and all new logs would be appended
 /// to the end.
 /// If the supplied file does not exist, it would be created.
 ///
@@ -37,7 +40,10 @@ use std::collections::BTreeMap;
 /// You can split up the logs into multiple files by calling the `LoggingWiard::new` function with
 /// a different path if you so desire, however the LoggingWiard is designed to work with a single
 /// file, think of it more like a single .log file.
+#[derive(Clone)]
 pub struct LoggingWizard {
+    /// This stores if the logs are to be appended or not
+    append: bool,
     /// This stores the path of the file where the logs are written, this file would only be
     /// crated if not existent, otherwise a simple append would be used
     path: std::path::PathBuf,
@@ -61,8 +67,12 @@ impl LoggingWizard {
     /// assert!(wizard.is_ok());
     /// ```
     pub fn from_file<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
-        let data = read_log_wizard(path)?;
-        todo!()
+        let path = path.as_ref().to_path_buf().with_extension("xff");
+        if path.exists() {
+            read_log_wizard(path)
+        } else {
+            Ok(LoggingWizard { append: false, path, logs: Vec::new() })
+        }
     }
 
     /// Creates a new LoggingWizard
@@ -80,18 +90,39 @@ impl LoggingWizard {
     /// assert!(wizard.is_ok());
     /// ```
     pub fn new<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
-        let path = path.as_ref().to_path_buf();
-        todo!()
+        let path = path.as_ref().to_path_buf().with_extension("xff");
+        Ok(LoggingWizard { append: true, path, logs: Vec::new() })
+    }
+
+    /// Saves the LoggingWizard to the file
+    ///
+    /// # Example
+    /// ```rust
+    /// use std::path::Path;
+    /// use nabu::features::logging_wizard::LoggingWizard;
+    ///
+    /// let path = Path::new("xff-example-data/logging_wizard.xff");
+    /// let mut wizard = LoggingWizard::new(path).unwrap();
+    /// wizard.save();
+    /// ```
+    pub fn save(&self) -> Result<(), NabuError> {
+        if self.append {
+            append_to_log_wizard(&self.path, &self.logs)
+        } else {
+            write_log_wizard(&self.path, &self.logs)
+        }
     }
 }
 
 /// Stores all data of a single log. This can be as much data as you want.
+#[derive(Clone)]
 pub struct Log {
     /// Every data point of the log is stored here
     pub log_data: Vec<LogData>,
 }
 
 /// Stores a single data point of the log
+#[derive(Clone)]
 pub struct LogData {
     /// The name of the data point
     pub name: String,
