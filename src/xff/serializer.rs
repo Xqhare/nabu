@@ -4,7 +4,7 @@ use crate::error::NabuError;
 
 use super::value::XffValue;
 
-/// Writes a Vec of XffValues as a XFF file
+/// Takes in a Vec of XffValues and serializes it into a byte vector
 ///
 /// Determines the XFF version to use and calls the appropriate serializer
 ///
@@ -120,6 +120,14 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
     Ok(out)
 }
 
+/// Writes a vector of bytes to a file
+///
+/// # Arguments
+/// * `path` - The path to the file to write
+/// * `data` - The vector of bytes to write
+///
+/// # Errors
+/// Returns IO errors should issues with writing the file to disk arise
 pub fn write_bytes_to_file(path: &Path, data: Vec<u8>) -> Result<(), NabuError> {
     std::fs::write(path, data)?;
     Ok(())
