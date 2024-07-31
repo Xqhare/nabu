@@ -29,34 +29,36 @@ This library's namesake is the ancient Babylonian god Nabu, the god of literacy,
 As the inventor of writing, Nabu is a fitting namesake for a tool designed to create and interpret a new form of written data.
 
 ## 3. Contents
-- [1. Motivation](#1.-Motivation)
-- [2. Naming](#2.-Naming)
-- [3. Contents](#3.-Contents)
-- [4. Roadmap](#4.-Roadmap)
-- [5. Implemented Features](#5.-Implemented-Features)
-- [6. `.xff` specifications](#6.-.xff-specifications)
-- [7. Usage](#7.-Usage)
-    - [7.1. Importing](#7.1.-Importing)
-    - [7.2. Default Modules](#7.2.-Default-Modules)
-        - [7.2.1. Usage of serde](#7.2.1.-Usage-of-serde)
-    - [7.3. XffValue](#7.3.-XffValue)
-    - [7.4. Feature Flags](#7.4.-Feature-Flags)
-        - [7.4.1. Logging Wizard](#7.4.1.-Logging-Wizard)
-        - [7.4.2. Config Wizard](#7.4.2.-Config-Wizard)
-        - [7.4.3. Key Value Store](#7.4.3.-Key-Value-Store)
-            - [7.4.3.1. Key Value Core](#7.4.3.1.-Key-Value-Core)
-                - [7.4.3.1.1. Key Value Core Usage](#7.4.3.1.1.-Key-Value-Core-Usage)
-            - [7.4.3.2. Key Value Store](#7.4.3.2.-Key-Value-Store)
-                - [7.4.3.2.1. Key Value Store Usage](#7.4.3.2.1.-Key-Value-Store-Usage)
+- [1. Motivation](#motivation)
+- [2. Naming](#naming)
+- [3. Contents](#contents)
+- [4. Roadmap](#roadmap)
+- [5. Implemented Features](#implemented-features)
+- [6. `.xff` specifications](#.xff-specifications)
+- [7. Usage](#usage)
+    - [7.1. Importing](#importing)
+    - [7.2. Default Modules](#default-modules)
+        - [7.2.1. Usage of serde](#usage-of-serde)
+    - [7.3. XffValue](#xffvalue)
+    - [7.4. Feature Flags](#feature-flags)
+        - [7.4.1. Logging Wizard](#logging-wizard)
+        - [7.4.2. Config Wizard](#config-wizard)
+        - [7.4.3. Key Value Store](#key-value-store)
+            - [7.4.3.1. Key Value Core](#key-value-core)
+                - [7.4.3.1.1. Key Value Core Usage](#key-value-core-usage)
+            - [7.4.3.2. Key Value Store](#key-value-store)
+                - [7.4.3.2.1. Key Value Store Usage](#key-value-store-usage)
 
 ## 4. Roadmap
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself
-- Logging wizard
-    - For writing and reading `.xff` files containing all data needed for a project to log its behaviour
+
 
 ## 5. Implemented Features
 - Key-value store
+    - For working with persistent data stored in `.xff` files as simple key-value pairs
+- Logging wizard
+    - For writing and reading `.xff` files containing all data needed for a project to log its behaviour
 
 ## 6. `.xff` specifications
 All specifications are in the `specifications` directory. 
@@ -219,9 +221,14 @@ All possible flags are:
 nabu = { git = "https://github.com/Xqhare/nabu", features = ["logging_wizard", "config_wizard", "key_value_store", "key_value_core"] }
 ```
 
-#### 7.4.1. Logging Wizard
+> [!note]
+> Most features rely on their own `.xff` extension, meaning that `.xff` files created using the Key Value Store would error if loaded as a config Wizard. 
 
-Saving will probably be done by loading the file as bytes, removing EM, appending the new logs, finishing with another EM and writing to disk.
+#### 7.4.1. Logging Wizard
+Nabu provides a logging feature that can be enabled by the `logging_wizard` feature flag.
+
+This feature can be used one of two ways:
+Either by using `nabu::logging_wizard::new()`
 
 #### 7.4.2. Config Wizard
 
@@ -332,3 +339,4 @@ db.clear();
 let read = new_nabudb(path).unwrap();
 assert!(read.len() == 0);
 # }
+```
