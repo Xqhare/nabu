@@ -1,6 +1,6 @@
 mod serde;
 
-use crate::{xff::value::{XffValue, CommandCharacter}, {features::logging_wizard::serde::read_log_wizard, append_to_log_wizard}, error::NabuError};
+use crate::{xff::value::XffValue, features::logging_wizard::serde::{read_log_wizard, append_to_log_wizard, write_log_wizard}, error::NabuError};
 
 use std::collections::BTreeMap;
 
@@ -40,7 +40,7 @@ use std::collections::BTreeMap;
 /// You can split up the logs into multiple files by calling the `LoggingWiard::new` function with
 /// a different path if you so desire, however the LoggingWiard is designed to work with a single
 /// file, think of it more like a single .log file.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LoggingWizard {
     /// This stores if the logs are to be appended or not
     append: bool,
@@ -69,7 +69,7 @@ impl LoggingWizard {
     pub fn from_file<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
         let path = path.as_ref().to_path_buf().with_extension("xff");
         if path.exists() {
-            read_log_wizard(path)
+            read_log_wizard(path, false)
         } else {
             Ok(LoggingWizard { append: false, path, logs: Vec::new() })
         }
@@ -89,9 +89,9 @@ impl LoggingWizard {
     /// let wizard = LoggingWizard::new(path);
     /// assert!(wizard.is_ok());
     /// ```
-    pub fn new<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
+    pub fn new<P>(path: P) -> LoggingWizard where P: AsRef<std::path::Path> {
         let path = path.as_ref().to_path_buf().with_extension("xff");
-        Ok(LoggingWizard { append: true, path, logs: Vec::new() })
+        LoggingWizard { append: true, path, logs: Vec::new() }
     }
 
     /// Saves the LoggingWizard to disk
@@ -112,10 +112,30 @@ impl LoggingWizard {
             write_log_wizard(&self.path, &self.logs)
         }
     }
+
+    /// Adds a new log to the LoggingWizard
+    ///
+    /// # Arguments
+    /// * `log` - The log to add
+    ///
+    /// # Example
+    /// ```rust
+    /// use std::path::Path;
+    /// use nabu::features::logging_wizard::LoggingWizard;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let path = Path::new("xff-example-data/logging_wizard.xff");
+    /// let mut wizard = LoggingWizard::new(path).unwrap();
+    /// let log = Log::new();
+    /// wizard.add_log(log);
+    /// ```
+    pub fn add_log(&mut self, log: Log) {
+        self.logs.push(log);
+    }
 }
 
 /// Stores all data of a single log. This can be as much data as you want.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Log {
     /// Every data point of the log is stored here
     pub log_data: Vec<LogData>,
@@ -145,13 +165,21 @@ impl Log {
     /// let mut log = Log::new();
     /// log.add_log_data(data);
     /// ```
-    pub fn push_log_data(&mut self, log_data: LogData) {
+    pub fn add_log_data(&mut self, log_data: LogData) {
         self.log_data.push(log_data);
+    }
+
+    /// Creates a new Log
+    /// Alternatively use the `default` function
+    ///
+    /// Used to populate a LoggingWizard
+    pub fn new() -> Log {
+        Log { log_data: Vec::new() }
     }
 }
 
 /// Stores a single data point of the log
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LogData {
     /// The name of the data point
     pub name: String,
@@ -170,6 +198,7 @@ pub struct LogData {
 impl LogData {
 
     /// Creates a new LogData from name, value and optional metadata
+    /// Alternatively use the `new` function
     ///
     /// Used to populate a Log
     ///
@@ -178,11 +207,25 @@ impl LogData {
     /// * `value` - The value of the data point
     /// * `optional_metadata` - The optional metadata of the data point
     ///
-    pub fn create(name: String, value: XffValue, optional_metadata: Option<BTreeMap<String, String>>) -> LogData {
+    pub fn create<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
         match optional_metadata {
-            Some(metadata) => LogData { name, value, optional_metadata: metadata },
-            None => LogData { name, value, optional_metadata: BTreeMap::new() },
+            Some(metadata) => LogData { name: name.into(), value, optional_metadata: metadata.into_iter().map(|(k, v)| (k.into(), v.into())).collect() },
+            None => LogData { name: name.into(), value, optional_metadata: BTreeMap::new() },
         }
+    }
+
+    /// Creates a new LogData from name, value and optional metadata
+    /// Alternatively use the `create` function
+    ///
+    /// Used to populate a Log
+    ///
+    /// # Arguments
+    /// * `name` - The name of the data point
+    /// * `value` - The value of the data point
+    /// * `optional_metadata` - The optional metadata of the data point
+    ///
+    pub fn new<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
+        Self::create(name, value, optional_metadata)
     }
 
     /// Adds a new metadata entry
