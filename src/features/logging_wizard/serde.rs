@@ -1,29 +1,58 @@
 use std::{collections::BTreeMap, path::Path};
 use crate::{XFF_VERSION, serde::{read, write}, xff::{value::{XffValue, CommandCharacter, Data}, serializer::{serialize_xff, write_bytes_to_file}}, error::NabuError, features::logging_wizard::{LoggingWizard, Log, LogData}};
 
+/// Encodes a Vec of logs into bytes
+/// Writes an entirely new xff file to the given path
+///
+/// # Arguments
+/// * `path` - The path to the file to write
+/// * `data` - The data to write
 pub fn write_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
     let byte_data = logs_to_bytes(data)?;
     write_bytes_to_file(path, byte_data)
 }
 
+
+/// Appends a Vec of logs to an existing xff file
+/// Drops the last byte of the file
+///
+/// # Arguments
+/// * `path` - The path to the file to write
+/// * `data` - The data to write
 pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
-    let mut file_as_bytes: Vec<u8> = std::fs::read(path)?;
-    // Dropping the last byte, EM byte
-    let _ = file_as_bytes[file_as_bytes.len() - 1];
     let data = logs_to_bytes(data)?;
-    // appending data to file, this should move the data instead of copying it into the vector.
-    // I hope
-    file_as_bytes.extend(data);
-    std::fs::write(path, file_as_bytes)?;
-    Ok(())
+    if !path.exists() {
+        std::fs::write(path, file_as_bytes)?;
+        Ok(())
+    } else {
+        let mut file_as_bytes: Vec<u8> = std::fs::read(path)?;
+        // Dropping the last byte, EM byte
+        let _ = file_as_bytes[file_as_bytes.len() - 1];
+        // appending data to file, this should move the data instead of copying it into the vector.
+        // I hope at least.
+        file_as_bytes.extend(data);
+        std::fs::write(path, file_as_bytes)?;
+        Ok(())
+    }
+    
 }
 
+/// Takes a Vec of logs and returns an xff encoded byte vector
+///
+/// The xff version used is always the latest version
+///
+/// # Arguments
+/// * `data` - The data to encode
 pub fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
     let tokens = logs_tokenizer(data)?;
     // returns a vec of bytes
     serialize_xff(tokens, XFF_VERSION)
 }
 
+/// Takes a Vec of logs and returns a Vec of XffValues
+///
+/// # Arguments
+/// * `data` - The data to encode
 pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
     let mut out: Vec<XffValue> = Default::default();
     let cmd1 = XffValue::CommandCharacter(CommandCharacter::FileSeparator);
@@ -53,6 +82,10 @@ pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
     Ok(out)
 }
 
+/// Reads a LoggingWizard from a xff file
+///
+/// # Arguments
+/// * `path` - The path to the file
 pub fn read_log_wizard<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
     let mut data = read(path.as_ref())?;
     let mut logs: Vec<Log> = Vec::new();
