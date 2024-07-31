@@ -162,6 +162,8 @@ pub struct LogData {
     /// here in the form of `("extension", "jpg")`
     ///
     /// There is no limit on the number of metadata entries, but they have to be ASCII strings
+    /// Instead of using a Optional type, an empty BTreeMap is used, this way adding new
+    /// metadata entries is very easy
     pub optional_metadata: BTreeMap<String, String>,
 }
 
@@ -181,6 +183,17 @@ impl LogData {
             Some(metadata) => LogData { name, value, optional_metadata: metadata },
             None => LogData { name, value, optional_metadata: BTreeMap::new() },
         }
+    }
+
+    /// Adds a new metadata entry
+    ///
+    /// # Arguments
+    /// * `key` - The key of the metadata entry
+    /// * `value` - The value of the metadata entry
+    ///
+    /// Both key and value have to be ASCII strings
+    pub fn add_metadata(&mut self, key: String, value: String) {
+        self.optional_metadata.insert(key, value);
     }
 }
 
