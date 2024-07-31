@@ -24,7 +24,7 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
     for (index, entry) in content.iter().enumerate() {
         if index.saturating_add(1) % 2 == 0 {
             if key.len() == 0 {
-                return Err(NabuError::InvalidXFF(format!("Expected String longer than 0, got {:?}", entry)));
+                return Err(NabuError::InvalidXFFExtension(format!("Expected key_value_core extension. Expected String longer than 0, got {:?}", entry)));
             } else {
                 out.insert(key.clone(), entry.clone());
             }
@@ -32,7 +32,7 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
             key = {
                 match entry {
                     XffValue::String(s) => s.to_string(),
-                    _ => return Err(NabuError::InvalidXFF(format!("Expected String for key, got {:?}", entry))),
+                    _ => return Err(NabuError::InvalidXFFExtension(format!("Expected key_value_core extension. Expected String for key, got {:?}", entry))),
                 }
             };
         }
