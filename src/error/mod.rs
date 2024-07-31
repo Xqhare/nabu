@@ -5,6 +5,7 @@ pub enum NabuError {
     IoError(std::io::Error),
     UnknownXFFVersion(u8),
     InvalidXFF(String),
+    InvalidXFFExtension(String),
 }
 
 #[allow(dead_code)]
@@ -22,6 +23,7 @@ impl fmt::Display for NabuError {
             NabuError::IoError(err) => err.fmt(f),
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {}", ver),
             NabuError::InvalidXFF(err) => write!(f, "Invalid XFF: {}", err),
+            NabuError::InvalidXFFExtension(err) => write!(f, "Invalid XFF extension: {}", err),
         }
     }
 }
