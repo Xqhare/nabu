@@ -52,7 +52,7 @@ pub struct LoggingWizard {
 }
 
 impl LoggingWizard {
-    /// Creates a new LoggingWizard from a file
+    /// Creates a new LoggingWizard from disk
     ///
     /// # Arguments
     /// * `path` - The path to the file to read
@@ -94,7 +94,7 @@ impl LoggingWizard {
         Ok(LoggingWizard { append: true, path, logs: Vec::new() })
     }
 
-    /// Saves the LoggingWizard to the file
+    /// Saves the LoggingWizard to disk
     ///
     /// # Example
     /// ```rust
@@ -121,6 +121,35 @@ pub struct Log {
     pub log_data: Vec<LogData>,
 }
 
+impl Default for Log {
+    fn default() -> Self {
+        Log { log_data: Default::default() }
+    }
+}
+
+impl Log {
+
+    /// Adds a new data point to the log
+    ///
+    /// To create a new data point, use the `LogData` struct
+    /// 
+    /// # Arguments
+    /// * `log_data` - The data point to add
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LogData;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let mut log = Log::new();
+    /// log.add_log_data(data);
+    /// ```
+    pub fn push_log_data(&mut self, log_data: LogData) {
+        self.log_data.push(log_data);
+    }
+}
+
 /// Stores a single data point of the log
 #[derive(Clone)]
 pub struct LogData {
@@ -134,6 +163,25 @@ pub struct LogData {
     ///
     /// There is no limit on the number of metadata entries, but they have to be ASCII strings
     pub optional_metadata: BTreeMap<String, String>,
+}
+
+impl LogData {
+
+    /// Creates a new LogData from name, value and optional metadata
+    ///
+    /// Used to populate a Log
+    ///
+    /// # Arguments
+    /// * `name` - The name of the data point
+    /// * `value` - The value of the data point
+    /// * `optional_metadata` - The optional metadata of the data point
+    ///
+    pub fn create(name: String, value: XffValue, optional_metadata: Option<BTreeMap<String, String>>) -> LogData {
+        match optional_metadata {
+            Some(metadata) => LogData { name, value, optional_metadata: metadata },
+            None => LogData { name, value, optional_metadata: BTreeMap::new() },
+        }
+    }
 }
 
 
