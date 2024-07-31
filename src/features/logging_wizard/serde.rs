@@ -1,5 +1,5 @@
 use std::{collections::BTreeMap, path::Path};
-use crate::{XFF_VERSION, serde::{read, write}, xff::{value::{XffValue, CommandCharacter, Data}, serializer::{serialize_xff, write_bytes_to_file}}, error::NabuError, features::logging_wizard::{LoggingWizard, Log, LogData}};
+use crate::{XFF_VERSION, serde::read, xff::{value::{XffValue, CommandCharacter}, serializer::{serialize_xff, write_bytes_to_file}}, error::NabuError, features::logging_wizard::{LoggingWizard, Log, LogData}};
 
 /// Encodes a Vec of logs into bytes
 /// Writes an entirely new xff file to the given path
@@ -22,7 +22,7 @@ pub fn write_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
 pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
     let data = logs_to_bytes(data)?;
     if !path.exists() {
-        std::fs::write(path, file_as_bytes)?;
+        std::fs::write(path, data)?;
         Ok(())
     } else {
         let mut file_as_bytes: Vec<u8> = std::fs::read(path)?;
@@ -89,9 +89,10 @@ pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
 ///
 /// # Arguments
 /// * `path` - The path to the file
-pub fn read_log_wizard<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
+pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
     let mut data = read(path.as_ref())?;
     let mut logs: Vec<Log> = Vec::new();
+    println!("{:?}", data);
     while data.len() > 0 {
         match data[0] {
             XffValue::CommandCharacter(CommandCharacter::FileSeparator) => {
@@ -111,6 +112,10 @@ pub fn read_log_wizard<P>(path: P) -> Result<LoggingWizard, NabuError> where P: 
                                     while data[0] != XffValue::CommandCharacter(CommandCharacter::RecordSeparator) {
                                         if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
                                             let _ = data.remove(0);
+                                            if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
+                                                let _ = data.remove(0);
+                                                break;
+                                            }
                                             let key = data.remove(0).as_string();
                                             let value = data.remove(0).as_string();
                                             if key.is_none() || value.is_none() {
@@ -164,5 +169,5 @@ pub fn read_log_wizard<P>(path: P) -> Result<LoggingWizard, NabuError> where P: 
             }
         }
     }
-    Ok(LoggingWizard { logs, path: path.as_ref().to_path_buf() })
+    Ok(LoggingWizard { logs, append, path: path.as_ref().to_path_buf() })
 }
