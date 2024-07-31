@@ -1,4 +1,28 @@
 #[cfg(test)]
+#[cfg(feature = "logging_wizard")]
+mod tests {
+    use std::path::Path;
+    use nabu::{logging_wizard::{LoggingWizard, Log, LogData}, xff::value::{CommandCharacter, Data, Number, XffValue}};
+    #[test]
+    fn test_name() {
+        let mut wizard = LoggingWizard::new(Path::new("test_name.xff"));
+        let mut log = Log::new();
+        log.add_log_data(LogData::new("name", XffValue::String("value".to_string()), None));
+        wizard.add_log(log);
+        let out = wizard.save();
+        assert!(out.is_ok());
+        let read_wizard = LoggingWizard::from_file(Path::new("test_name.xff")).unwrap();
+        assert_eq!(read_wizard.logs.len(), 1);
+        assert_eq!(read_wizard.logs[0].log_data.len(), 1);
+        assert_eq!(read_wizard.logs[0].log_data[0].name, "name");
+        assert_eq!(read_wizard.logs[0].log_data[0].value, XffValue::String("value".to_string()));
+        assert_eq!(read_wizard.logs[0].log_data[0].optional_metadata.is_empty(), true);
+    }
+}
+
+
+
+#[cfg(test)]
 #[cfg(feature = "key_value_core")]
 mod core {
     use std::path::Path;
