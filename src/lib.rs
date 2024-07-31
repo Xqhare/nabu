@@ -594,3 +594,9 @@ pub mod key_value_store {
         NabuDB::new(path.as_ref().with_extension("xff"))
     }
 }
+
+#[cfg(any(feature = "logging_wizard", doc))]
+/// Module to create and manage a logging wizard
+pub mod logging_wizard {
+    pub use crate::features::logging_wizard::{LoggingWizard, Log, LogData};
+}
