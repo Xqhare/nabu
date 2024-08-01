@@ -227,8 +227,67 @@ nabu = { git = "https://github.com/Xqhare/nabu", features = ["logging_wizard", "
 #### 7.4.1. Logging Wizard
 Nabu provides a logging feature that can be enabled by the `logging_wizard` feature flag.
 
-This feature can be used one of two ways:
-Either by using `nabu::logging_wizard::new()`
+This feature can be used one of two ways.
+Either by using `LoggingWizard::new()`, or by using `LoggingWizard::from_file`.
+
+Using `LoggingWizard::new()` is recommended for general logging use, as it is designed to minimise disk operations and free memory after writing to disk.
+`LoggingWizard::from_file()` is recommended for interpretation of `.xff` log files. The entire file is loaded into memory as entries inside a `LoggingWizard` struct and can then be used for processing.
+
+Please note that `LoggingWizard::from_file()` and `LoggingWizard::new()` do not save their state to disk automatically. To save the state, use `.save()` or add a log using `.add_log_and_save()`. Using the latter method, the created log will be written to disk immediately, with the memory being freed right after. This method is recommended, especially if you do not expect a large amount of logs to be generated, and don't want to deal with creating a saving logic.
+To help to create a saving logic, the `LoggingWizard` struct contains a `logs_len` field that contains the amount of logs in the `logs` field and could be used to check if the `LoggingWizard` has reached a specific length to then call `.save()`.
+
+##### 7.4.1.1. Structure
+The `LoggingWizard` struct holds all the logs that have been added to it. The logs it holds are of type `Log`, these hold the data points of the logs as `LogData`.
+The structure, as well as all functions are listed below.
+
+- `LoggingWizard`
+    - `logs: Vec<Log>`
+    - `logs_len: usize`
+    - `save()`
+    - `add_log(log: Log)`
+    - `add_log_and_save(log: Log)`
+- `Log`
+    - `logs: Vec<LogData>`
+    - `new()` / `default()`
+    - `add_log_data(log_data: LogData)`
+- `LogData`
+    - `name: String`
+    - `value: XffValue`
+    - `optional_metadata: BTreeMap<String, String>`
+    - `new(name: String, value: XffValue, optional_metadata: Option<BTreeMap<String, String>>)` / `create(name: String, value: XffValue, optional_metadata: Option<BTreeMap<String, String>>)`
+    - `add_optional_metadata(key: String, value: String)`
+
+##### 7.4.1.2. `from_file()` Usage
+```rust
+use nabu::{logging_wizard::{LoggingWizard, Log}, xff::value::XffValue};
+        let wizard = LoggingWizard::from_file("xff-example-data/logging-wizard-main-example.xff");
+        assert!(wizard.is_ok());
+        for log in wizard.unwrap().logs {
+            // Do stuff
+            println!("{:?}", log);
+        }
+```
+
+##### 7.4.1.3. `new()` Usage
+```rust
+use nabu::{logging_wizard::{LoggingWizard, Log, LogData}, xff::value::XffValue};
+        let mut wizard = LoggingWizard::new("xff-example-data/logging-wizard-main-example.xff");
+        let mut log = Log::new();
+        log.add_log_data(LogData::new("data point name", XffValue::String("value".to_string()), None));
+        wizard.add_log(log);
+        let out = wizard.save();
+        assert!(out.is_ok());
+
+```
+
+Alternatively, using the `add_log_and_save` method:
+```rust
+use nabu::{logging_wizard::{LoggingWizard, Log, LogData}, xff::value::XffValue};
+        let mut wizard = LoggingWizard::new("xff-example-data/logging-wizard-main-example.xff");
+        let mut log = Log::new();
+        log.add_log_data(LogData::new("data point name", XffValue::String("value".to_string()), None));
+        wizard.add_log_and_save(log);
+```
 
 #### 7.4.2. Config Wizard
 
