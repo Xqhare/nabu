@@ -49,6 +49,10 @@ pub struct LoggingWizard {
     path: std::path::PathBuf,
     /// This stores all the logs in chronological order
     pub logs: Vec<Log>,
+    /// This stores the length of the logs, provided for convenience
+    ///
+    /// e.g. if logs should be held in memory and written to disk as a batch, you could use this to call `save` if the len == 10
+    pub logs_len: usize,
 }
 
 impl LoggingWizard {
@@ -71,7 +75,7 @@ impl LoggingWizard {
         if path.exists() {
             read_log_wizard(path, false)
         } else {
-            Ok(LoggingWizard { append: false, path, logs: Vec::new() })
+            Ok(LoggingWizard { append: false, path, logs: Vec::new(), logs_len: 0 })
         }
     }
 
@@ -91,7 +95,7 @@ impl LoggingWizard {
     /// ```
     pub fn new<P>(path: P) -> LoggingWizard where P: AsRef<std::path::Path> {
         let path = path.as_ref().to_path_buf().with_extension("xff");
-        LoggingWizard { append: true, path, logs: Vec::new() }
+        LoggingWizard { append: true, path, logs: Vec::new(), logs_len: 0 }
     }
 
     /// Saves the LoggingWizard to disk
@@ -107,7 +111,16 @@ impl LoggingWizard {
     /// ```
     pub fn save(&self) -> Result<(), NabuError> {
         if self.append {
-            append_to_log_wizard(&self.path, &self.logs)
+            match append_to_log_wizard(&self.path, &self.logs) {
+                Ok(_) => {
+                    self.logs.clear();
+                    self.logs_len = 0;
+                    Ok(())
+                },
+                Err(e) => {
+                    Err(e)
+                }
+            }
         } else {
             write_log_wizard(&self.path, &self.logs)
         }
@@ -131,6 +144,32 @@ impl LoggingWizard {
     /// ```
     pub fn add_log(&mut self, log: Log) {
         self.logs.push(log);
+        self.logs_len = self.logs.len().saturating_add(1);
+    }
+
+    /// Adds a new log to the LoggingWizard and saves it to disk
+    ///
+    /// This is a convenience function that calls `add_log` and `save` in succession, and can
+    /// be used to save every log as it is added, minimising memory usage by trading it with IO
+    /// operations.
+    ///
+    /// # Arguments
+    /// * `log` - The log to add
+    ///
+    /// # Example
+    /// ```rust
+    /// use std::path::Path;
+    /// use nabu::features::logging_wizard::LoggingWizard;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let path = Path::new("xff-example-data/logging_wizard.xff");
+    /// let mut wizard = LoggingWizard::new(path).unwrap();
+    /// let log = Log::new();
+    /// wizard.add_log_and_save(log);
+    /// ```
+    pub fn add_log_and_save(&mut self, log: Log) -> Result<(), NabuError> {
+        self.add_log(log);
+        self.save()
     }
 }
 
