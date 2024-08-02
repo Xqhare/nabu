@@ -40,7 +40,7 @@ use std::collections::BTreeMap;
 /// You can split up the logs into multiple files by calling the `LoggingWiard::new` function with
 /// a different path if you so desire, however the LoggingWiard is designed to work with a single
 /// file, think of it more like a single .log file.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LoggingWizard {
     /// This stores if the logs are to be appended or not
     append: bool,
@@ -63,11 +63,9 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use std::path::Path;
     /// use nabu::features::logging_wizard::LoggingWizard;
     ///
-    /// let path = Path::new("xff-example-data/logging_wizard.xff");
-    /// let wizard = LoggingWizard::from_file(path);
+    /// let wizard = LoggingWizard::from_file("xff-example-data/logging_wizard.xff");
     /// assert!(wizard.is_ok());
     /// ```
     pub fn from_file<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
@@ -86,11 +84,9 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use std::path::Path;
     /// use nabu::features::logging_wizard::LoggingWizard;
     ///
-    /// let path = Path::new("xff-example-data/logging_wizard.xff");
-    /// let wizard = LoggingWizard::new(path);
+    /// let wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// assert!(wizard.is_ok());
     /// ```
     pub fn new<P>(path: P) -> LoggingWizard where P: AsRef<std::path::Path> {
@@ -102,14 +98,12 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use std::path::Path;
     /// use nabu::features::logging_wizard::LoggingWizard;
     ///
-    /// let path = Path::new("xff-example-data/logging_wizard.xff");
-    /// let mut wizard = LoggingWizard::new(path).unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
     /// wizard.save();
     /// ```
-    pub fn save(&self) -> Result<(), NabuError> {
+    pub fn save(&mut self) -> Result<(), NabuError> {
         if self.append {
             match append_to_log_wizard(&self.path, &self.logs) {
                 Ok(_) => {
@@ -133,12 +127,10 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use std::path::Path;
     /// use nabu::features::logging_wizard::LoggingWizard;
     /// use nabu::xff::value::XffValue;
     ///
-    /// let path = Path::new("xff-example-data/logging_wizard.xff");
-    /// let mut wizard = LoggingWizard::new(path).unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
     /// let log = Log::new();
     /// wizard.add_log(log);
     /// ```
@@ -158,12 +150,10 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use std::path::Path;
     /// use nabu::features::logging_wizard::LoggingWizard;
     /// use nabu::xff::value::XffValue;
     ///
-    /// let path = Path::new("xff-example-data/logging_wizard.xff");
-    /// let mut wizard = LoggingWizard::new(path).unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
     /// let log = Log::new();
     /// wizard.add_log_and_save(log);
     /// ```
@@ -171,18 +161,40 @@ impl LoggingWizard {
         self.add_log(log);
         self.save()
     }
+
+    /// Removes a log from the LoggingWizard
+    ///
+    /// # Arguments
+    /// * `index` - The index of the log to remove
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LoggingWizard;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
+    /// let log = Log::new();
+    /// wizard.add_log(log);
+    /// wizard.remove_log(0);
+    /// ```
+    pub fn remove_log(&mut self, index: usize) {
+        self.logs.remove(index);
+        self.logs_len = self.logs.len();
+    }
 }
 
 /// Stores all data of a single log. This can be as much data as you want.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Log {
     /// Every data point of the log is stored here
     pub log_data: Vec<LogData>,
+    /// The number of data points in the log
+    pub log_data_len: usize,
 }
 
 impl Default for Log {
     fn default() -> Self {
-        Log { log_data: Default::default() }
+        Log { log_data: Default::default(), log_data_len: 0 }
     }
 }
 
@@ -206,19 +218,48 @@ impl Log {
     /// ```
     pub fn add_log_data(&mut self, log_data: LogData) {
         self.log_data.push(log_data);
+        self.log_data_len = self.log_data.len().saturating_add(1);
+    }
+
+    /// Removes a data point from the log
+    ///
+    /// # Arguments
+    /// * `index` - The index of the data point to remove
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LogData;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let mut log = Log::new();
+    /// log.add_log_data(data);
+    /// log.remove_log_data(0);
+    /// ```
+    pub fn remove_log_data(&mut self, index: usize) {
+        self.log_data.remove(index);
+        self.log_data_len = self.log_data.len().saturating_sub(1);
     }
 
     /// Creates a new Log
     /// Alternatively use the `default` function
     ///
     /// Used to populate a LoggingWizard
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::Log;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let log = Log::new();
+    /// ```
     pub fn new() -> Log {
-        Log { log_data: Vec::new() }
+        Log { log_data: Vec::new() , log_data_len: 0 }
     }
 }
 
 /// Stores a single data point of the log
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LogData {
     /// The name of the data point
     pub name: String,
