@@ -155,7 +155,7 @@ pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuEr
                         if data[0] != XffValue::CommandCharacter(CommandCharacter::GroupSeparator) {
                             Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected FileSeparator got {:?}", data[0])))?
                         } else {
-                            logs.push(Log { log_data });
+                            logs.push(Log { log_data_len: log_data.len(), log_data });
                             let _ = data.remove(0);
                         }
                     }
@@ -169,5 +169,5 @@ pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuEr
             }
         }
     }
-    Ok(LoggingWizard { logs, append, path: path.as_ref().to_path_buf() })
+    Ok(LoggingWizard { logs_len: logs.len(), logs, append, path: path.as_ref().to_path_buf()})
 }
