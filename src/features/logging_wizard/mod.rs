@@ -101,7 +101,8 @@ impl LoggingWizard {
     /// use nabu::features::logging_wizard::LoggingWizard;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
-    /// wizard.save();
+    /// let save = wizard.save();
+    /// assert!(save.is_ok());
     /// ```
     pub fn save(&mut self) -> Result<(), NabuError> {
         if self.append {
@@ -133,6 +134,7 @@ impl LoggingWizard {
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
     /// let log = Log::new();
     /// wizard.add_log(log);
+    /// assert!(wizard.logs_len == 1);
     /// ```
     pub fn add_log(&mut self, log: Log) {
         self.logs.push(log);
@@ -155,7 +157,9 @@ impl LoggingWizard {
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
     /// let log = Log::new();
-    /// wizard.add_log_and_save(log);
+    /// let save = wizard.add_log_and_save(log);
+    /// assert!(save.is_ok());
+    /// assert!(wizard.logs_len == 0);
     /// ```
     pub fn add_log_and_save(&mut self, log: Log) -> Result<(), NabuError> {
         self.add_log(log);
@@ -176,6 +180,7 @@ impl LoggingWizard {
     /// let log = Log::new();
     /// wizard.add_log(log);
     /// wizard.remove_log(0);
+    /// assert!(wizard.logs_len == 0);
     /// ```
     pub fn remove_log(&mut self, index: usize) {
         self.logs.remove(index);
@@ -286,7 +291,17 @@ impl LogData {
     /// * `name` - The name of the data point
     /// * `value` - The value of the data point
     /// * `optional_metadata` - The optional metadata of the data point
+    /// 
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LogData;
+    /// use nabu::xff::value::XffValue;
     ///
+    /// let data = LogData::create("name", XffValue::Number(42), None);
+    /// assert!(data.name == "name");
+    /// assert!(data.value == XffValue::Number(42));
+    /// assert!(data.optional_metadata.is_none());
+    /// ```
     pub fn create<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
         match optional_metadata {
             Some(metadata) => LogData { name: name.into(), value, optional_metadata: metadata.into_iter().map(|(k, v)| (k.into(), v.into())).collect() },
@@ -303,7 +318,17 @@ impl LogData {
     /// * `name` - The name of the data point
     /// * `value` - The value of the data point
     /// * `optional_metadata` - The optional metadata of the data point
+    /// 
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LogData;
+    /// use nabu::xff::value::XffValue;
     ///
+    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// assert!(data.name == "name");
+    /// assert!(data.value == XffValue::Number(42));
+    /// assert!(data.optional_metadata.is_empty());
+    /// ```
     pub fn new<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
         Self::create(name, value, optional_metadata)
     }
@@ -315,8 +340,40 @@ impl LogData {
     /// * `value` - The value of the metadata entry
     ///
     /// Both key and value have to be ASCII strings
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LogData;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let mut log = Log::new();
+    /// log.add_log_data(data);
+    /// log.add_metadata("extension", "jpg");
+    /// assert!(log.log_data[0].optional_metadata.contains_key("extension"));
+    /// ```
     pub fn add_metadata(&mut self, key: String, value: String) {
         self.optional_metadata.insert(key, value);
+    }
+
+    /// Removes a metadata entry
+    ///
+    /// # Arguments
+    /// * `key` - The key of the metadata entry
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::features::logging_wizard::LogData;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let mut log = Log::new();
+    /// log.add_log_data(data);
+    /// log.remove_log_data("name");
+    /// assert!(log.log_data[0].optional_metadata.is_empty());
+    /// ```
+    pub fn remove_metadata(&mut self, key: &str) {
+        self.optional_metadata.remove(key);
     }
 }
 
