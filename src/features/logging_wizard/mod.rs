@@ -104,8 +104,8 @@ impl LoggingWizard {
     /// use nabu::features::logging_wizard::LoggingWizard;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
-    /// let save = wizard.save();
-    /// assert!(save.is_ok());
+    /// let write_result = wizard.save();
+    /// assert!(write_result.is_ok());
     /// ```
     pub fn save(&mut self) -> Result<(), NabuError> {
         if self.append {
@@ -162,8 +162,8 @@ impl LoggingWizard {
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
     /// let log = Log::new();
-    /// let save = wizard.add_log_and_save(log);
-    /// assert!(save.is_ok());
+    /// let write_result = wizard.add_log_and_save(log);
+    /// assert!(write_result.is_ok());
     /// assert!(wizard.logs_len == 0);
     /// ```
     pub fn add_log_and_save(&mut self, log: Log) -> Result<(), NabuError> {
