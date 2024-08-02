@@ -261,6 +261,13 @@ The structure, as well as all functions are listed below.
     - `add_metadata(key: String, value: String)`
     - `remove_metadata(key: String)`
 
+A `LogData` is used to represent a single data point inside a log, like the current CPU temperature or the current time for example.
+It contains the name of the data point, the value of the data point, and any metadata that is associated with it. The metadata is stored as string key-value pairs with no limit on the number of pairs.
+
+A `Log` represents a single log. The contained `Vec<LogData>` contains all the data points of the log. This could be a failure of some kind, with several `LogData` entries for the error message, time and CPU usage, for example.
+
+The `LoggingWizard` struct holds a `Vec<Log>` that contains all the logs that have been added to it. It also serves as the way to save the state of the `LoggingWizard` to disk.
+
 ##### 7.4.1.2. `from_file()` Usage
 ```rust
 use nabu::{logging_wizard::{LoggingWizard, Log}, xff::value::XffValue};
