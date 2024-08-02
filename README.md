@@ -10,7 +10,7 @@ The overarching goal of this project is to create a rust library that can be use
 I am also trying out the `Feature` flags for the first time, to extend the usability of `.xff` files for a wide range of use-cases without needing to roll a bespoke library.
 
 As with all my projects, this documentation contains everything you never wanted to know about `.xff` files, Nabu and how to work with them.
-Just read the examples below and have fun.
+The README is not intended to be comprehensive, a lot more info is provided in the in-built rust documentation.
 
 On a technical note, the byte-structure of `.xff` does not change, however a `.xff` file written with the default `serde` module will be different from a `.xff` file written with `key_value_store` in the way the data inside is structured and interpreted.
 This means that any `.xff` file in existence can be read using the `serde` module without data loss, but there may be some loss of interpreted data (the logging wizard for example builds blocks of valid `xff` and appends them into the same file. Reading it with the `serde` module would return all values in it in order, however the logs contained would need to be decoded from that.).
@@ -246,16 +246,20 @@ The structure, as well as all functions are listed below.
     - `save()`
     - `add_log(log: Log)`
     - `add_log_and_save(log: Log)`
+    - `remove_log(index: usize)`
 - `Log`
-    - `logs: Vec<LogData>`
+    - `log_data: Vec<LogData>`
+    - `log_data_len: usize`
     - `new()` / `default()`
     - `add_log_data(log_data: LogData)`
+    - `remove_log_data(index: usize)`
 - `LogData`
     - `name: String`
     - `value: XffValue`
     - `optional_metadata: BTreeMap<String, String>`
     - `new(name: String, value: XffValue, optional_metadata: Option<BTreeMap<String, String>>)` / `create(name: String, value: XffValue, optional_metadata: Option<BTreeMap<String, String>>)`
-    - `add_optional_metadata(key: String, value: String)`
+    - `add_metadata(key: String, value: String)`
+    - `remove_metadata(key: String)`
 
 ##### 7.4.1.2. `from_file()` Usage
 ```rust
