@@ -308,6 +308,9 @@ assert!(write_result.is_ok());
 ```
 
 #### 7.4.2. Config Wizard
+One of the most used, if not the most used file format for configuration files is `.json`. As the name suggests its primary feature, especially useful or configuration data, is the "notation" of "objects". Because of this, the `LoggingWizard` is basically an object store and closely based on `ECMA-404`. The only addition to it, is the ability to store arbitrary data inside it, like a logo for example.
+
+This makes it possible to store all data needed for startup in a single file.
 
 #### 7.4.3. Key Value Store
 The key value store is a simple key value store for in place storage and manipulation of data.
