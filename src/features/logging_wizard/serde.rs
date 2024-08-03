@@ -20,17 +20,21 @@ pub fn write_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
 /// * `path` - The path to the file to write
 /// * `data` - The data to write
 pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
-    let data = logs_to_bytes(data)?;
+    let mut byte_data = logs_to_bytes(data)?;
     if !path.exists() {
-        std::fs::write(path, data)?;
+        std::fs::write(path, byte_data)?;
         Ok(())
     } else {
         let mut file_as_bytes: Vec<u8> = std::fs::read(path)?;
         // Dropping the last byte, EM byte
-        let _ = file_as_bytes[file_as_bytes.len() - 1];
+        let _ = file_as_bytes.remove(file_as_bytes.len().saturating_sub(1));
+        // The first byte of data is the xff version and needs to be dropped too!
+        // For prosperity: I noticed this by looking at the bytes of logging_test_name.xff!
+        // Like a real nerd!
+        let _ = byte_data.remove(0);
         // appending data to file, this should move the data instead of copying it into the vector.
         // I hope at least.
-        file_as_bytes.extend(data);
+        file_as_bytes.extend(byte_data);
         std::fs::write(path, file_as_bytes)?;
         Ok(())
     }
