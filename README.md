@@ -10,64 +10,70 @@ The overarching goal of this project is to create a rust library that can be use
 I am also trying out the `Feature` flags for the first time, to extend the usability of `.xff` files for a wide range of use-cases without needing to roll a bespoke library.
 
 As with all my projects, this documentation contains everything you never wanted to know about `.xff` files, Nabu and how to work with them.
-The README is not intended to be comprehensive, a lot more info is provided in the in-built rust documentation.
+But the README is not intended to be comprehensive, a lot more detail is provided in the in-built rust documentation. It is more of a primer, jumping off point and appendix in one.
 
 On a technical note, the byte-structure of `.xff` does not change, however a `.xff` file written with the default `serde` module will be different from a `.xff` file written with `key_value_store` in the way the data inside is structured and interpreted.
-This means that any `.xff` file in existence can be read using the `serde` module without data loss, but there may be some loss of interpreted data (the logging wizard for example builds blocks of valid `xff` and appends them into the same file. Reading it with the `serde` module would return all values in it in order, however the logs contained would need to be decoded from that.).
+This means that any `.xff` file in existence can be read using the `serde` module without data loss, but there may be some loss of interpreted data (the logging wizard for example builds blocks of valid `xff` and appends them into the same file. Reading it with the `serde` module would return all values in it in order, however the logs contained would need to be rebuilt from that.).
 
 This modularity is important, as it allows `.xff` files to be read and written in a way that is compatible with different use-cases. I found the non-guaranteed usability of the same extension in different use-cases shockingly prevalent, especially with older standards like CSV.
 I do also recognise that this approach of splintering `.xff` into several extensions more or less exclusive to each other may not be the best idea, I see it as necessary for the implementation of the vision I have for `.xff` and honestly have no better Idea and expect an absolute maximum of one user ever, me.
 
-## 1. Motivation
+## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation.
 This library is also a major part of my own tech stack.
 As `xff` is meant to be a jack of all trades, it is important that it can be used in a wide range of use-cases.
 
-## 2. Naming
+## Naming
 This library's namesake is the ancient Babylonian god Nabu, the god of literacy, rational arts and scribes.
 As the inventor of writing, Nabu is a fitting namesake for a tool designed to create and interpret a new form of written data.
 
-## 3. Contents
-- [1. Motivation](#1.-motivation)
-- [2. Naming](#naming)
-- [3. Contents](#contents)
-- [4. Roadmap](#roadmap)
-- [5. Implemented Features](#implemented-features)
-- [6. `.xff` specifications](#.xff-specifications)
-- [7. Usage](#usage)
-    - [7.1. Importing](#importing)
-    - [7.2. Default Modules](#default-modules)
-        - [7.2.1. Usage of serde](#usage-of-serde)
-    - [7.3. XffValue](#xffvalue)
-    - [7.4. Feature Flags](#feature-flags)
-        - [7.4.1. Logging Wizard](#logging-wizard)
-        - [7.4.2. Config Wizard](#config-wizard)
-        - [7.4.3. Key Value Store](#key-value-store)
-            - [7.4.3.1. Key Value Core](#key-value-core)
-                - [7.4.3.1.1. Key Value Core Usage](#key-value-core-usage)
-            - [7.4.3.2. Key Value Store](#key-value-store)
-                - [7.4.3.2.1. Key Value Store Usage](#key-value-store-usage)
+## Contents
+- [Motivation](#motivation)
+- [Naming](#naming)
+- [Contents](#contents)
+- [Roadmap](#roadmap)
+- [Implemented Features](#implemented-features)
+- [`.xff` specifications](#xff-specifications)
+- [Usage](#usage)
+    - [Importing](#importing)
+    - [Default Modules](#default-modules)
+        - [Usage of serde](#usage-of-serde)
+    - [XffValue](#xffvalue)
+    - [Feature Flags](#feature-flags)
+        - [Logging Wizard](#logging-wizard)
+            - [Structure](#structure)
+                - [Removing a log from a LoggingWizard](#removing-a-log-from-a-loggingwizard)
+                - [File Byte-Structure](#file-byte-structure)
+            - [from_file() Usage](#from_file-usage)
+            - [new() Usage](#new-usage)
+        - [Config Wizard](#config-wizard)
+        - [Key Value Store](#key-value-store)
+            - [Key Value Core](#key-value-core)
+                - [Key Value Core Usage](#key-value-core-usage)
+            - [Key Value Store](#key-value-store)
+                - [Key Value Store Usage](#key-value-store-usage)
 
-## 4. Roadmap
+## Roadmap
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself
 
 
-## 5. Implemented Features
+## Implemented Features
 - Key-value store
     - For working with persistent data stored in `.xff` files as simple key-value pairs
 - Logging wizard
     - For writing and reading `.xff` files containing all data needed for a project to log its behaviour
 
-## 6. `.xff` specifications
-All specifications are in the `specifications` directory. 
+## `.xff` specification
+All specifications are in the `specifications` directory.
+
 V0 can be found [here](specifications/v0.md).
 
-## 7. Usage
+## Usage
 All paths shown in example code are valid paths inside this repository.
 
-### 7.1. Importing
+### Importing
 Nabu can be imported from GitHub directly:
 ```toml
 [dependencies]
@@ -80,13 +86,13 @@ Nabu provides many features, they can be enabled by adding the following to your
 nabu = { git = "https://github.com/Xqhare/nabu", features = ["logging_wizard", "config_wizard", "key_value_store"] }
 ```
 
-### 7.2. Default Modules
+### Default Modules
 The only module active by default is `serde`, which is used for serialization and deserialization of `.xff` files.
 It represents the core of Nabu and by itself is very bare-bones.
 
 This means that using only this module is enough to read and write `.xff` files, and implement any further functionality you want.
 
-#### 7.2.1. Usage of serde
+#### Usage of serde
 No matter what the extension of the path you provide, it will be converted to .xff.
 For example, if you provide "example.txt", it will be converted to "example.xff".
 This behaviour only ever changes when a function expects a `Path` instead of a `&str` or similar.
@@ -110,7 +116,7 @@ assert_eq!(ok[0], data[0]);
 remove_file(path_2).unwrap();
 ```
 
-### 7.3. XffValue
+### XffValue
 XffValue is the main data type used in Nabu to store and manipulate data.
 Basic types are `String`, `Number`, `CommandCharacter` and `Data`, all representing data stored in `.xff` files.
 There is also `ArrayCmdChar` which is an array of `CommandCharacter`, only used in a few features.
@@ -148,8 +154,6 @@ let data_1 = XffValue::from(vec![152, 142, 202, 33, 54, 5, 86, 197, 38, 209]);
 let command_character_array_0 = XffValue::from(vec![CommandCharacter::Escape, CommandCharacter::StartOfText]);
 
 
-let string_2 = XffValue::String("hello mom".to_string());
-
 let number_9 = XffValue::Number(Number::from(-42));
 let number_10 = XffValue::Number(Number::from(42));
 let number_11 = XffValue::Number(Number::from(42.2));
@@ -164,19 +168,20 @@ let number_17 = XffValue::Number(Number::from(i8::MAX));
 let command_character_0 = XffValue::CommandCharacter(CommandCharacter::from(26));
 let command_character_1 = XffValue::CommandCharacter(CommandCharacter::from(27));
 let command_character_2 = XffValue::CommandCharacter(CommandCharacter::from(28));
-let command_character_3 = XffValue::CommandCharacter(CommandCharacter::from(29));
-let command_character_4 = XffValue::CommandCharacter(CommandCharacter::from(30));
-let command_character_5 = XffValue::CommandCharacter(CommandCharacter::from(31));
 
 let data_2 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 let data_3 = XffValue::Data(Data::from(vec![152, 142, 202, 33, 54, 5, 86, 197, 38, 209]));
 
 
+let string_2 = XffValue::String("hello mom".to_string());
+
 let number_18 = XffValue::Number(Number::Unsigned(42));
 let number_19 = XffValue::Number(Number::Integer(-42));
 let number_20 = XffValue::Number(Number::Float(42.2));
 
-let command_character_6 = XffValue::CommandCharacter(CommandCharacter::LineFeed);
+let command_character_3 = XffValue::CommandCharacter(CommandCharacter::LineFeed);
+let command_character_4 = XffValue::CommandCharacter(CommandCharacter::CarriageReturn);
+let command_character_5 = XffValue::CommandCharacter(CommandCharacter::Tab);
 
 let command_character_array_1 = XffValue::ArrayCmdChar(vec![CommandCharacter::Escape, CommandCharacter::StartOfText]);
 ```
@@ -210,9 +215,11 @@ The `XffValue` also has several associated functions.
 - `XffValue::Data`
 - `XffValue::ArrayCmdChar`
 
-### 7.4 Feature Flags
+### Feature Flags
 Nabu provides an ever-increasing number of feature flags that can be enabled to extend its capabilities.
 These flags have been carefully designed for full interoperability. Meaning no mutually exclusive features are present at all.
+
+You can think of it more like sideloading extensions to increase the capabilities of `Nabu`.
 
 All possible flags are:
 ```toml
@@ -223,7 +230,7 @@ nabu = { git = "https://github.com/Xqhare/nabu", features = ["logging_wizard", "
 > [!note]
 > Most features rely on their own `.xff` extension, meaning that `.xff` files created using the Key Value Store would error if loaded as a config Wizard. 
 
-#### 7.4.1. Logging Wizard
+#### Logging Wizard
 Nabu provides a logging feature that can be enabled by the `logging_wizard` feature flag.
 
 This feature can be used one of two ways.
@@ -238,7 +245,7 @@ To help to create a saving logic, the `LoggingWizard` struct contains a `logs_le
 
 To optimise the usage of `LoggingWizard`, think of a `.xff` file not as a store for every log you create period, but more like a store of alike logs. An example would be to store all logs created because of crashes in one file, and more benign errors in another, or even their own. The `.xff` file assumes the traditional role of a directory of log-files, or a simpler way of generating one file for transmission.
 
-##### 7.4.1.1. Structure
+##### Structure
 The `LoggingWizard` struct holds all the logs that have been added to it. The logs it holds are of type `Log`, these hold the data points of the logs as `LogData`.
 
 Put another way, the `LoggingWizard` struct holds a `Vec<Log>` that contains all the logs that have been added to it, and it also serves as the way to save the state of the `LoggingWizard` to disk.
@@ -246,6 +253,7 @@ A `Log` represents a single log. The contained `Vec<LogData>` contains all the d
 A `LogData` is used to represent a single data point inside a log, like the current CPU temperature or the current time for example. It contains the name of the data point, the value of the data point, and any metadata that is associated with it. The metadata is stored as string key-value pairs with no limit on the number of pairs.
 
 The structure, as well as all functions are listed here:
+
 - `LoggingWizard`
     - `logs: Vec<Log>`
     - `logs_len: usize`
@@ -269,7 +277,11 @@ The structure, as well as all functions are listed here:
 
 For more information and examples on a specific function, please refer to the crate documentation.
 
-###### 7.4.1.1.1. File Structure
+###### Removing a log from a `LoggingWizard`
+Should the state of the `LoggingWizard` be already saved to disk, the memory holding the `Log` to be removed has already been freed, and no log can be dropped.
+To remove a `Log` that has been saved to disk, read the file into memory using `from_file()` and then use the `remove_log` function.
+
+###### File Byte-Structure
 This chapter takes a closer look at the byte structure of a `LoggingWizard` `.xff` file.
 The information provided in this chapter is not necessary to understand the `LoggingWizard` struct, but it is useful to understand the byte structure of a `.xff` file, should you feel the need to implement something on or with it.
 
@@ -281,7 +293,7 @@ As `ESC` is escaped with `ESC`, any implementation has to think about how to app
 Any `LoggingWizard` `.xff` file ends with the HEX bytes `1B` and `19`. By dropping them, along with the first two bytes of the generated byte stream (the version and starting `1B` byte), the file can be easily appended to.
 ![Chart of the composition of a `.xff` file containing a `LoggingWizard`, in token form.](pictures/nabu-logging-wizard.jpeg)
 
-##### 7.4.1.2. `from_file()` Usage
+##### `from_file()` Usage
 ```rust
 use nabu::{logging_wizard::{LoggingWizard, Log}, xff::value::XffValue};
 let wizard = LoggingWizard::from_file("xff-example-data/logging-wizard-main-example.xff");
@@ -298,7 +310,7 @@ let write_result = wizard.unwrap().save();
 assert!(write_result .is_ok());
 ```
 
-##### 7.4.1.3. `new()` Usage
+##### `new()` Usage
 ```rust
 use nabu::{logging_wizard::{LoggingWizard, Log, LogData}, xff::value::XffValue};
 let mut wizard = LoggingWizard::new("xff-example-data/logging-wizard-main-example.xff");
@@ -319,26 +331,26 @@ let write_result = wizard.add_log_and_save(log);
 assert!(write_result.is_ok());
 ```
 
-#### 7.4.2. Config Wizard
+#### Config Wizard
 One of the most used, if not the most used file format for configuration files is `.json`. As the name suggests its primary feature, especially useful or configuration data, is the "notation" of "objects". Because of this, the `LoggingWizard` is basically an object store and closely based on `ECMA-404`. The only addition to it, is the ability to store arbitrary data inside it, like a logo for example.
 
 This makes it possible to store all data needed for startup in a single file.
 
-#### 7.4.3. Key Value Store
+#### Key Value Store
 The key value store is a simple key value store for in place storage and manipulation of data.
 It consists of two feature flags, `key_value_core` and `key_value_store`.
 `key_value_core` provides the core functionality and can be enabled separately from `key_value_store`, however `key_value_store` can not be enabled separately from `key_value_core` as it depends on it.
 
 Using `key_value_store` is recommended, especially if you want to store it as a `.xff` file.
 
-##### 7.4.3.1. Key Value Core
+##### Key Value Core
 `key_value_core` is a small feature flag containing `read_core()` and `write_core()`.
 
 `read_core()` takes a path and returns a `BTreeMap<String, XffValue>`.
 A `BTreeMap<String, XffValue>` can be saved to a `.xff` file using `write_core()`.
 All interaction with the `BTreeMap` and its values is handled by the caller.
 
-###### 7.4.3.1.1. Key Value Core Usage
+###### Key Value Core Usage
 ```rust
 use nabu::features::key_value::core::{read_core, write_core};
 use nabu::xff::value::{XffValue, Number, Data};
@@ -357,7 +369,7 @@ assert!(read.is_ok());
 # }
 ```
 
-##### 7.4.3.2. Key Value Store
+##### Key Value Store
 `key_value_store` is a feature flag containing `NabuDB`, a struct for in place storage and manipulation of data.
 `NabuDB` is a one-stop solution for key value store holding arbitrary data.
 While it is possible to simply save ASCII text and control characters, it is also possible to store arbitrary data like a picture.
@@ -366,7 +378,7 @@ Storing this metadata is left to the user.
 
 All possible interactions with it are shown in the example code below.
 
-###### 7.4.3.2.1. Key Value Store Usage
+###### Key Value Store Usage
 ```rust
 use std::collections::BTreeMap;
 use nabu::key_value_store::new_nabudb;
