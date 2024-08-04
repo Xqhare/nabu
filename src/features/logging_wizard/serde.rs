@@ -94,51 +94,75 @@ pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
 /// # Arguments
 /// * `path` - The path to the file
 pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
+    // first byte is version
+    let mut value_pos = 2;
     let mut data = read(path.as_ref())?;
     let mut logs: Vec<Log> = Vec::new();
-    println!("{:?}", data);
+    println!("START DATA: {:?}", data);
     while data.len() > 0 {
+        println!("FS: {:?}", data[0]);
         match data[0] {
             XffValue::CommandCharacter(CommandCharacter::FileSeparator) => {
                 let _ = data.remove(0);
+                value_pos += 1;
                 // Logdata starts here
                 let mut log_data: Vec<LogData> = Vec::new();
                 let next_entry: XffValue = data.remove(0);
+                println!("GS: {:?}", next_entry);
+                value_pos += 1;
                 match next_entry {
                     XffValue::CommandCharacter(CommandCharacter::GroupSeparator) => {
                         while data[0] != XffValue::CommandCharacter(CommandCharacter::GroupSeparator) {
+                            println!("NAME: {:?}", data[0]);
                             let name = data.remove(0);
+                            value_pos += 1;
+                            println!("VALUE: {:?}", data[0]);
                             let value = data.remove(0);
+                            value_pos += 1;
                             let optional_metadata: BTreeMap<String, String> = {
                                 let mut out: BTreeMap<String, String> = BTreeMap::new();
                                 if data[0] == XffValue::CommandCharacter(CommandCharacter::RecordSeparator) {
                                     let _ = data.remove(0);
+                            println!("RS: {:?}", data[0]);
+                                    value_pos += 1;
                                     while data[0] != XffValue::CommandCharacter(CommandCharacter::RecordSeparator) {
                                         if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
                                             let _ = data.remove(0);
+                            println!("US: {:?}", data[0]);
+                                            value_pos += 1;
                                             if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
                                                 let _ = data.remove(0);
+                            println!("US: {:?}", data[0]);
+                                                value_pos += 1;
                                                 break;
                                             }
                                             let key = data.remove(0).as_string();
+                            println!("KEY: {:?}", data[0]);
+                                            value_pos += 1;
                                             let value = data.remove(0).as_string();
+                            println!("VALUE: {:?}", data[0]);
+                                            value_pos += 1;
                                             if key.is_none() || value.is_none() {
-                                                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (LoggingWizard), expected a String key-value pair got KEY: {:?}, VALUE {:?}", key, value)))?
+                                                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (LoggingWizard), expected a String key-value pair at position {} got KEY: {:?}, VALUE {:?}", value_pos, key, value)))?
                                             } else {
                                                 out.insert(key.unwrap(), value.unwrap());
                                                 let exit_marker = data.remove(0);
+                            println!("US: {:?}", data[0]);
+                                                value_pos += 1;
                                                 if exit_marker != XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
-                                                    Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected UnitSeparator got {:?}", exit_marker)))?
+                                                    Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected UnitSeparator at value position {} got {:?}", value_pos, exit_marker)))?
                                                 }
                                             }
                                         } else {
-                                            Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected UnitSeparator got {:?}", data[0])))?
+                                            Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected UnitSeparator at value position {} got {:?}", value_pos, data[0])))?
                                         }
                                     }
                                     // remove the trailing RecordSeparator
                                     let trailing = data.remove(0);
+                            println!("RS: {:?}", data[0]);
+                                    value_pos += 1;
                                     if trailing != XffValue::CommandCharacter(CommandCharacter::RecordSeparator) {
-                                        Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected RecordSeparator got {:?}", trailing)))?
+                                        Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected RecordSeparator at value position {} got {:?}", value_pos, trailing)))?
                                     }
                                     out
                                 } else {
@@ -146,30 +170,37 @@ pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuEr
                                 }
                             };
                             if data[0] != XffValue::CommandCharacter(CommandCharacter::GroupSeparator) {
-                                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected GroupSeparator got {:?}", data[0])))?
+                                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected GroupSeparator at value position {} got {:?}", value_pos, data[0])))?
                             } else {
+                                println!("GS21: {:?}", data[0]);
+                                let _ = data.remove(0);
                                 log_data.push(LogData {
                                 name: name.as_string().unwrap(),
                                 value,
                                 optional_metadata
                                 });
-                                let _ = data.remove(0);
+                                
+                                println!("GS22: {:?}", data[0]);
+                                value_pos += 1;
                             }
                         }
                         if data[0] != XffValue::CommandCharacter(CommandCharacter::GroupSeparator) {
-                            Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected FileSeparator got {:?}", data[0])))?
+                            Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected FileSeparator at value position {} got {:?}", value_pos, data[0])))?
                         } else {
                             logs.push(Log { log_data_len: log_data.len(), log_data });
+                            println!("GS2: {:?}", data[0]);
                             let _ = data.remove(0);
+                            println!("GS3: {:?}", data[0]);
+                            value_pos += 1;
                         }
                     }
                     _ => {
-                        Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected GroupSeparator got {:?}", next_entry)))?
+                        Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected GroupSeparator at value position {} got {:?}", value_pos, next_entry)))?
                     }
                 }
             }
             _ => {
-                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected FileSeparator got {:?}", data[0])))?
+                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected FileSeparator at value position {} got {:?}", value_pos, data[0])))?
             }
         }
     }
