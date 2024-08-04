@@ -55,6 +55,34 @@ pub struct LoggingWizard {
 }
 
 impl LoggingWizard {
+
+    /// Removes the log at the specified index and returns it
+    ///
+    /// # Arguments
+    /// * `index` - The index of the log to remove
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::logging_wizard::{LoggingWizard, Log};
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
+    /// let log = Log::new();
+    /// wizard.add_log(log);
+    /// assert!(wizard.logs_len == 1);
+    /// let removed = wizard.remove_log(0);
+    /// assert!(wizard.logs_len == 0);
+    /// assert!(removed.is_some());
+    /// ```
+    pub fn get_log(&mut self, index: usize) -> Option<Log> {
+        if index >= self.logs_len {
+            return None
+        }
+        let out = self.logs.remove(index);
+        self.logs_len -= 1;
+        Some(out)
+    }
+
     /// Creates a new LoggingWizard from disk
     ///
     /// # Arguments
