@@ -34,7 +34,6 @@ use std::collections::BTreeMap;
 /// use nabu::xff::value::XffValue;
 ///
 /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
-/// assert!(wizard.is_ok());
 /// ```
 ///
 /// You can split up the logs into multiple files by calling the `LoggingWiard::new` function with
@@ -64,7 +63,6 @@ impl LoggingWizard {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LoggingWizard;
-    /// use nabu::features::logging_wizard::LoggingWizard;
     ///
     /// let wizard = LoggingWizard::from_file("xff-example-data/logging_wizard.xff");
     /// assert!(wizard.is_ok());
@@ -78,7 +76,8 @@ impl LoggingWizard {
         }
     }
 
-    /// Creates a new LoggingWizard
+    /// Creates a new LoggingWizard without reading the file from disk to memory, appends all
+    /// new logs to the end
     ///
     /// # Arguments
     /// * `path` - The path to the file to write
@@ -86,10 +85,8 @@ impl LoggingWizard {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LoggingWizard;
-    /// use nabu::features::logging_wizard::LoggingWizard;
     ///
     /// let wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
-    /// assert!(wizard.is_ok());
     /// ```
     pub fn new<P>(path: P) -> LoggingWizard where P: AsRef<std::path::Path> {
         let path = path.as_ref().to_path_buf().with_extension("xff");
@@ -101,11 +98,13 @@ impl LoggingWizard {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LoggingWizard;
-    /// use nabu::features::logging_wizard::LoggingWizard;
     ///
-    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let write_result = wizard.save();
     /// assert!(write_result.is_ok());
+    ///
+    /// # // clean up
+    /// # std::fs::remove_file("xff-example-data/logging_wizard.xff").unwrap();
     /// ```
     pub fn save(&mut self) -> Result<(), NabuError> {
         if self.append {
@@ -131,18 +130,17 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::logging_wizard::LoggingWizard;
-    /// use nabu::features::logging_wizard::LoggingWizard;
+    /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
-    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
     /// wizard.add_log(log);
     /// assert!(wizard.logs_len == 1);
     /// ```
     pub fn add_log(&mut self, log: Log) {
         self.logs.push(log);
-        self.logs_len = self.logs.len().saturating_add(1);
+        self.logs_len = self.logs_len.saturating_add(1);
     }
 
     /// Adds a new log to the LoggingWizard and saves it to disk
@@ -156,15 +154,17 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::logging_wizard::LoggingWizard;
-    /// use nabu::features::logging_wizard::LoggingWizard;
+    /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
-    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
     /// let write_result = wizard.add_log_and_save(log);
     /// assert!(write_result.is_ok());
     /// assert!(wizard.logs_len == 0);
+    ///
+    /// # // clean up
+    /// # std::fs::remove_file("xff-example-data/logging_wizard.xff").unwrap();
     /// ```
     pub fn add_log_and_save(&mut self, log: Log) -> Result<(), NabuError> {
         self.add_log(log);
@@ -178,11 +178,10 @@ impl LoggingWizard {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::logging_wizard::LoggingWizard;
-    /// use nabu::features::logging_wizard::LoggingWizard;
+    /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
-    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff").unwrap();
+    /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
     /// wizard.add_log(log);
     /// wizard.remove_log(0);
@@ -190,7 +189,7 @@ impl LoggingWizard {
     /// ```
     pub fn remove_log(&mut self, index: usize) {
         self.logs.remove(index);
-        self.logs_len = self.logs.len();
+        self.logs_len = self.logs_len.saturating_sub(1);
     }
 }
 
@@ -221,17 +220,17 @@ impl Log {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::{Log, LogData};
-    /// use nabu::features::logging_wizard::;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::xff::value::{XffValue, Number};
     ///
-    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let data = LogData::new("name", XffValue::Number(Number::from(42)), None);
     /// let mut log = Log::new();
     /// log.add_log_data(data);
+    /// println!("{:?}", log);
     /// assert!(log.log_data_len == 1);
     /// ```
     pub fn add_log_data(&mut self, log_data: LogData) {
         self.log_data.push(log_data);
-        self.log_data_len = self.log_data.len().saturating_add(1);
+        self.log_data_len = self.log_data_len.saturating_add(1);
     }
 
     /// Removes a data point from the log
@@ -242,11 +241,9 @@ impl Log {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::{Log, LogData};
-    /// use nabu::logging_wizard::LogData;
-    /// use nabu::features::logging_wizard::LogData;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::xff::value::{XffValue, Number};
     ///
-    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let data = LogData::new("name", XffValue::Number(Number::from(42)), None);
     /// let mut log = Log::new();
     /// log.add_log_data(data);
     /// log.remove_log_data(0);
@@ -254,7 +251,7 @@ impl Log {
     /// ```
     pub fn remove_log_data(&mut self, index: usize) {
         self.log_data.remove(index);
-        self.log_data_len = self.log_data.len().saturating_sub(1);
+        self.log_data_len = self.log_data_len.saturating_sub(1);
     }
 
     /// Creates a new Log
@@ -265,7 +262,6 @@ impl Log {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::Log;
-    /// use nabu::features::logging_wizard::Log;
     /// use nabu::xff::value::XffValue;
     ///
     /// let log = Log::new();
@@ -308,13 +304,12 @@ impl LogData {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::features::logging_wizard::LogData;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::xff::value::{XffValue, Number};
     ///
-    /// let data = LogData::create("name", XffValue::Number(42), None);
+    /// let data = LogData::create("name", XffValue::Number(Number::from(42)), None);
     /// assert!(data.name == "name");
-    /// assert!(data.value == XffValue::Number(42));
-    /// assert!(data.optional_metadata.is_none());
+    /// assert!(data.value == XffValue::Number(Number::from(42)));
+    /// assert!(data.optional_metadata.len() == 0);
     /// ```
     pub fn create<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
         match optional_metadata {
@@ -336,12 +331,11 @@ impl LogData {
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::features::logging_wizard::LogData;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::xff::value::{XffValue, Number};
     ///
-    /// let data = LogData::new("name", XffValue::Number(42), None);
+    /// let data = LogData::new("name", XffValue::Number(Number::from(42)), None);
     /// assert!(data.name == "name");
-    /// assert!(data.value == XffValue::Number(42));
+    /// assert!(data.value == XffValue::Number(Number::from(42)));
     /// assert!(data.optional_metadata.is_empty());
     /// ```
     pub fn new<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
@@ -358,15 +352,18 @@ impl LogData {
     ///
     /// # Example
     /// ```rust
+    /// use std::collections::BTreeMap;
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::xff::value::{XffValue, Number};
     ///
-    /// let data = LogData::new("name", XffValue::Number(42), Some(BTreeMap::from("time", "12:34")));
-    /// log.add_metadata("extension", "jpg");
-    /// assert!(log.log_data[0].optional_metadata.contains_key("extension"));
+    /// let mut data = LogData::new("name", XffValue::Number(Number::from(42)), Some(BTreeMap::new()));
+    /// data.add_metadata("time", "12:34");
+    /// data.add_metadata("extension", "jpg");
+    /// assert!(data.optional_metadata.contains_key("time"));
+    /// assert!(data.optional_metadata.contains_key("extension"));
     /// ```
-    pub fn add_metadata(&mut self, key: String, value: String) {
-        self.optional_metadata.insert(key, value);
+    pub fn add_metadata<S: Into<String>>(&mut self, key: S, value: S) {
+        self.optional_metadata.insert(key.into(), value.into());
     }
 
     /// Removes a metadata entry
@@ -378,11 +375,12 @@ impl LogData {
     /// ```rust
     /// use std::collections::BTreeMap;
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::xff::value::{XffValue, Number};
     ///
-    /// let data = LogData::new("name", XffValue::Number(42), Some(BTreeMap::from("extension", "jpg")));
-    /// log.remove_metadata("extension");
-    /// assert!(!log.log_data[0].optional_metadata.contains_key("extension"));
+    /// let mut data = LogData::new("name", XffValue::Number(Number::from(42)), Some(BTreeMap::new()));
+    /// data.add_metadata("extension", "jpg");
+    /// data.remove_metadata("extension");
+    /// assert!(!data.optional_metadata.contains_key("extension"));
     /// ```
     pub fn remove_metadata(&mut self, key: &str) {
         self.optional_metadata.remove(key);
