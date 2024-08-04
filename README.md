@@ -29,7 +29,7 @@ This library's namesake is the ancient Babylonian god Nabu, the god of literacy,
 As the inventor of writing, Nabu is a fitting namesake for a tool designed to create and interpret a new form of written data.
 
 ## 3. Contents
-- [1. Motivation](#motivation)
+- [1. Motivation](#1.-motivation)
 - [2. Naming](#naming)
 - [3. Contents](#contents)
 - [4. Roadmap](#roadmap)
@@ -87,9 +87,9 @@ It represents the core of Nabu and by itself is very bare-bones.
 This means that using only this module is enough to read and write `.xff` files, and implement any further functionality you want.
 
 #### 7.2.1. Usage of serde
-No matter what the extension of the path you provide, it will be converted to .xff
-For example, if you provide "example.txt", it will be converted to "example.xff"
-This behaviour only ever changes when a function expects a `Path` instead of a `&str` or similar
+No matter what the extension of the path you provide, it will be converted to .xff.
+For example, if you provide "example.txt", it will be converted to "example.xff".
+This behaviour only ever changes when a function expects a `Path` instead of a `&str` or similar.
 
 ```rust
 use nabu::serde::{read, write, remove_file};
