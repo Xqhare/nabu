@@ -231,8 +231,10 @@ fn decode_metadata(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Ve
 
 fn decode_metadata_entry(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<(String, String), NabuError> {
     let name = data.remove(0).as_string();
+    //println!("name: {:?}", name);
     *value_pos += 1;
     let value = data.remove(0).as_string();
+    //println!("value: {:?}", value);
     *value_pos += 1;
     if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
         // remove the trailing UnitSeparator
