@@ -70,9 +70,9 @@ impl LoggingWizard {
     /// let log = Log::new();
     /// wizard.add_log(log);
     /// assert!(wizard.logs_len == 1);
-    /// let removed = wizard.remove_log(0);
+    /// let get = wizard.get_log(0);
     /// assert!(wizard.logs_len == 0);
-    /// assert!(removed.is_some());
+    /// assert!(get.is_some());
     /// ```
     pub fn get_log(&mut self, index: usize) -> Option<Log> {
         if index >= self.logs_len {
@@ -215,9 +215,13 @@ impl LoggingWizard {
     /// wizard.remove_log(0);
     /// assert!(wizard.logs_len == 0);
     /// ```
-    pub fn remove_log(&mut self, index: usize) {
-        self.logs.remove(index);
+    pub fn remove_log(&mut self, index: usize) -> Option<Log> {
         self.logs_len = self.logs_len.saturating_sub(1);
+        if index >= self.logs_len {
+            return None
+        } else {
+            return Some(self.logs.remove(index))
+        }
     }
 }
 
@@ -228,6 +232,12 @@ pub struct Log {
     pub log_data: Vec<LogData>,
     /// The number of data points in the log
     pub log_data_len: usize,
+}
+
+impl From<Vec<LogData>> for Log {
+    fn from(log_data: Vec<LogData>) -> Self {
+        Log { log_data_len: log_data.len(), log_data }
+    }
 }
 
 impl Default for Log {
