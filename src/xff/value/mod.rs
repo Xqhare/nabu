@@ -20,6 +20,7 @@ impl XffValue {
     pub fn as_string(&self) -> Option<String> {
         match self {
             XffValue::String(s) => Some(s.clone()),
+            XffValue::Number(n) => Some(n.as_string()),
             _ => None
         }
     }
@@ -269,6 +270,14 @@ impl Number {
                 let tmp = format!("{}", f);
                 tmp.into_bytes()
             },
+        }
+    }
+
+    pub fn as_string(&self) -> String {
+        match self {
+            Number::Unsigned(u) => format!("{}", u),
+            Number::Integer(i) => format!("{}", i),
+            Number::Float(f) => format!("{}", f),
         }
     }
 }
