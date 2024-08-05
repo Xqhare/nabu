@@ -71,7 +71,6 @@ All specifications are in the `specifications` directory.
 V0 can be found [here](specifications/v0.md).
 
 ## Usage
-All paths shown in example code are valid paths inside this repository.
 
 ### Importing
 Nabu can be imported from GitHub directly:
