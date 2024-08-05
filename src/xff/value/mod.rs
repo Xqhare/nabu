@@ -25,6 +25,18 @@ impl XffValue {
     }
 }
 
+impl From<CommandCharacter> for XffValue {
+    fn from(c: CommandCharacter) -> Self {
+        XffValue::CommandCharacter(c)
+    }
+}
+
+impl From<Data> for XffValue {
+    fn from(c: Data) -> Self {
+        XffValue::Data(c)
+    }
+}
+
 impl Default for XffValue {
     fn default() -> Self {
         XffValue::String(String::new())
