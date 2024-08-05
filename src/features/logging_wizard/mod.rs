@@ -351,7 +351,7 @@ impl LogData {
     /// ```
     pub fn create<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
         match optional_metadata {
-            Some(metadata) => LogData { name: name.into(), value, optional_metadata: metadata.into_iter().map(|(k, v)| (k.into(), v.into())).collect() },
+            Some(m) => LogData { name: name.into(), value, optional_metadata: m.into_iter().map(|(k, v)| (k.into(), v.into())).collect() },
             None => LogData { name: name.into(), value, optional_metadata: BTreeMap::new() },
         }
     }
