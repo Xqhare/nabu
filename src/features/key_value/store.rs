@@ -1,6 +1,10 @@
 use std::{collections::BTreeMap, path::PathBuf};
 
-use crate::{error::NabuError, xff::value::XffValue, key_value_core::{read, write}};
+use crate::{
+    error::NabuError,
+    key_value_core::{read, write},
+    xff::value::XffValue,
+};
 
 #[derive(Debug)]
 /// A simple key-value store for storing XFF values
@@ -39,7 +43,7 @@ use crate::{error::NabuError, xff::value::XffValue, key_value_core::{read, write
 /// db.insert("key3".to_string(), XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
 ///
 /// db.save();
-/// 
+///
 /// let read = new_nabudb(path).unwrap();
 /// assert_eq!(read.get("key0").unwrap(), db.get("key0").unwrap());
 /// assert_eq!(read.get("key1").unwrap(), db.get("key1").unwrap());
@@ -139,7 +143,7 @@ impl NabuDB {
     /// ```rust
     /// use nabu::key_value_store::new_nabudb;
     /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
-    /// 
+    ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
     /// db.insert("key1".to_string(), XffValue::Number(Number::from(-42)));
@@ -198,7 +202,7 @@ impl NabuDB {
     ///
     /// assert_eq!(db.len(), 0);
     /// ```
-    pub fn clear(&mut self)  -> Result<(), NabuError> {
+    pub fn clear(&mut self) -> Result<(), NabuError> {
         self.core.clear();
         self.length = 0;
         let _ = self.auto_save();

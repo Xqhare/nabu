@@ -21,7 +21,7 @@ impl XffValue {
         match self {
             XffValue::String(s) => Some(s.clone()),
             XffValue::Number(n) => Some(n.as_string()),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -261,15 +261,15 @@ impl Number {
             Number::Unsigned(u) => {
                 let tmp = format!("{}", u);
                 tmp.into_bytes()
-            },
+            }
             Number::Integer(i) => {
                 let tmp = format!("{}", i);
                 tmp.into_bytes()
-            },
+            }
             Number::Float(f) => {
                 let tmp = format!("{}", f);
                 tmp.into_bytes()
-            },
+            }
         }
     }
 
@@ -296,7 +296,10 @@ pub struct Data {
 
 impl From<Vec<u8>> for Data {
     fn from(data: Vec<u8>) -> Self {
-        Data { data: data.clone(), len: data.len() }
+        Data {
+            data: data.clone(),
+            len: data.len(),
+        }
     }
 }
 

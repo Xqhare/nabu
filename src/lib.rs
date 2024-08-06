@@ -56,7 +56,7 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
 - Key-value store
 
 ## 6. `.xff` specifications
-All specifications are in the `specifications` directory. 
+All specifications are in the `specifications` directory.
 V0 can be found [here](specifications/v0.md).
 
 ## 7. Usage
@@ -177,7 +177,7 @@ let command_character_array_1 = XffValue::ArrayCmdChar(vec![CommandCharacter::Es
 ```
 
 This list contains all types that can be converted to `XffValue` by using `XffValue::from()`.
-- `XffValue` 
+- `XffValue`
     - `&str`, `String`
     - `usize`, `u8`, `u16`, `u32`, `u64`
     - `isize`, `i8`, `i16`, `i32`, `i64`
@@ -336,7 +336,7 @@ pub mod xff;
 const XFF_VERSION: u8 = 0;
 
 /// Module to serialize and deserialize XFF files
-/// 
+///
 /// # Example
 /// ```rust
 /// use nabu::serde::{read, write, remove_file};
@@ -386,7 +386,10 @@ pub mod serde {
     ///     println!("{:?}", value);
     /// }
     /// ```
-    pub fn read<P>(path: P) -> Result<Vec<XffValue>, NabuError> where P: AsRef<std::path::Path> {
+    pub fn read<P>(path: P) -> Result<Vec<XffValue>, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         deserialize_xff(&path_with_xff_extension)
     }
@@ -412,7 +415,10 @@ pub mod serde {
     /// let tmp = write("xff-example-data/v0.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write<P>(path: P, data: Vec<XffValue>) -> Result<(), NabuError> where P: AsRef<std::path::Path> {
+    pub fn write<P>(path: P, data: Vec<XffValue>) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         let byte_data = serialize_xff(data, XFF_VERSION)?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
@@ -442,7 +448,10 @@ pub mod serde {
     /// let tmp = write_legacy("xff-example-data/v0.xff", data.clone(), 0);
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write_legacy<P>(path: P, data: Vec<XffValue>, xff_version: u8) -> Result<(), NabuError> where P: AsRef<std::path::Path> {
+    pub fn write_legacy<P>(path: P, data: Vec<XffValue>, xff_version: u8) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         let byte_data = serialize_xff(data, xff_version)?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
@@ -469,7 +478,10 @@ pub mod serde {
     /// let tmp = remove_file("xff-example-data/remove.xff");
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn remove_file<P>(path: P) -> Result<(), NabuError> where P: AsRef<std::path::Path> {
+    pub fn remove_file<P>(path: P) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         Ok(std::fs::remove_file(path_with_xff_extension)?)
     }
@@ -477,7 +489,13 @@ pub mod serde {
 
 // Remember to add any and all new features to this!
 // It's literally a feature-gate for all features - leads to cleaner and leaner code I hope
-#[cfg(any(doc, feature = "key_value_core", feature = "key_value_store", feature = "config_wizard", feature = "logging_wizard"))]
+#[cfg(any(
+    doc,
+    feature = "key_value_core",
+    feature = "key_value_store",
+    feature = "config_wizard",
+    feature = "logging_wizard"
+))]
 pub mod features;
 
 #[cfg(any(doc, feature = "key_value_core"))]
@@ -496,7 +514,11 @@ pub mod features;
 pub mod key_value_core {
     use std::collections::BTreeMap;
 
-    use crate::{error::NabuError, features::key_value::core::{read_core, write_core}, xff::value::XffValue};
+    use crate::{
+        error::NabuError,
+        features::key_value::core::{read_core, write_core},
+        xff::value::XffValue,
+    };
 
     /// Reads the content of a XFF file and returns a BTreeMap
     /// Please note that only XFF files written by the `write` function of this module are supported
@@ -515,7 +537,10 @@ pub mod key_value_core {
     /// assert!(data.is_ok());
     /// let map: BTreeMap<String, XffValue> = data.unwrap();
     /// ```
-    pub fn read<P>(path: P) -> Result<BTreeMap<String, XffValue>, NabuError> where P: AsRef<std::path::Path>{
+    pub fn read<P>(path: P) -> Result<BTreeMap<String, XffValue>, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         read_core(&path_with_xff_extension)
     }
@@ -538,7 +563,10 @@ pub mod key_value_core {
     /// let tmp = write("xff-example-data/key_value_core.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write<P>(path: P, data: BTreeMap<String, XffValue>) -> Result<(), NabuError> where P: AsRef<std::path::Path> {
+    pub fn write<P>(path: P, data: BTreeMap<String, XffValue>) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         write_core(&path_with_xff_extension, data)
     }
@@ -576,7 +604,7 @@ pub mod key_value_store {
     /// use nabu::key_value_store::new_nabudb;
     /// use nabu::features::key_value::store::NabuDB;
     /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
-    /// 
+    ///
     /// let path = "xff-example-data/nabuDB_main_example.xff";
     /// let mut db: NabuDB = new_nabudb(path).unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -590,7 +618,10 @@ pub mod key_value_store {
     /// assert_eq!(read.get("key2").unwrap(), db.get("key2").unwrap());
     /// assert_eq!(read.get("key3").unwrap(), db.get("key3").unwrap());
     /// ```
-    pub fn new_nabudb<P>(path: P) -> Result<NabuDB, NabuError> where P: AsRef<std::path::Path> {
+    pub fn new_nabudb<P>(path: P) -> Result<NabuDB, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         NabuDB::new(path.as_ref().with_extension("xff"))
     }
 }
@@ -598,5 +629,5 @@ pub mod key_value_store {
 #[cfg(any(feature = "logging_wizard", doc))]
 /// Module to create and manage a logging wizard
 pub mod logging_wizard {
-    pub use crate::features::logging_wizard::{LoggingWizard, Log, LogData};
+    pub use crate::features::logging_wizard::{Log, LogData, LoggingWizard};
 }

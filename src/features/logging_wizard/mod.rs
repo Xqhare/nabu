@@ -1,6 +1,10 @@
 mod serde;
 
-use crate::{xff::value::XffValue, features::logging_wizard::serde::{read_log_wizard, append_to_log_wizard, write_log_wizard}, error::NabuError};
+use crate::{
+    error::NabuError,
+    features::logging_wizard::serde::{append_to_log_wizard, read_log_wizard, write_log_wizard},
+    xff::value::XffValue,
+};
 
 use std::collections::BTreeMap;
 
@@ -55,7 +59,6 @@ pub struct LoggingWizard {
 }
 
 impl LoggingWizard {
-
     /// Removes the log at the specified index and returns it
     ///
     /// # Arguments
@@ -76,7 +79,7 @@ impl LoggingWizard {
     /// ```
     pub fn get_log(&mut self, index: usize) -> Option<Log> {
         if index >= self.logs_len {
-            return None
+            return None;
         }
         let out = self.logs.remove(index);
         self.logs_len -= 1;
@@ -95,12 +98,20 @@ impl LoggingWizard {
     /// let wizard = LoggingWizard::from_file("xff-example-data/logging_wizard.xff");
     /// assert!(wizard.is_ok());
     /// ```
-    pub fn from_file<P>(path: P) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
+    pub fn from_file<P>(path: P) -> Result<LoggingWizard, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path = path.as_ref().to_path_buf().with_extension("xff");
         if path.exists() {
             read_log_wizard(path, false)
         } else {
-            Ok(LoggingWizard { append: false, path, logs: Vec::new(), logs_len: 0 })
+            Ok(LoggingWizard {
+                append: false,
+                path,
+                logs: Vec::new(),
+                logs_len: 0,
+            })
         }
     }
 
@@ -116,9 +127,17 @@ impl LoggingWizard {
     ///
     /// let wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// ```
-    pub fn new<P>(path: P) -> LoggingWizard where P: AsRef<std::path::Path> {
+    pub fn new<P>(path: P) -> LoggingWizard
+    where
+        P: AsRef<std::path::Path>,
+    {
         let path = path.as_ref().to_path_buf().with_extension("xff");
-        LoggingWizard { append: true, path, logs: Vec::new(), logs_len: 0 }
+        LoggingWizard {
+            append: true,
+            path,
+            logs: Vec::new(),
+            logs_len: 0,
+        }
     }
 
     /// Saves the LoggingWizard to disk
@@ -141,10 +160,8 @@ impl LoggingWizard {
                     self.logs.clear();
                     self.logs_len = 0;
                     Ok(())
-                },
-                Err(e) => {
-                    Err(e)
                 }
+                Err(e) => Err(e),
             }
         } else {
             write_log_wizard(&self.path, &self.logs)
@@ -218,9 +235,9 @@ impl LoggingWizard {
     pub fn remove_log(&mut self, index: usize) -> Option<Log> {
         self.logs_len = self.logs_len.saturating_sub(1);
         if index >= self.logs_len {
-            return None
+            return None;
         } else {
-            return Some(self.logs.remove(index))
+            return Some(self.logs.remove(index));
         }
     }
 }
@@ -236,22 +253,27 @@ pub struct Log {
 
 impl From<Vec<LogData>> for Log {
     fn from(log_data: Vec<LogData>) -> Self {
-        Log { log_data_len: log_data.len(), log_data }
+        Log {
+            log_data_len: log_data.len(),
+            log_data,
+        }
     }
 }
 
 impl Default for Log {
     fn default() -> Self {
-        Log { log_data: Default::default(), log_data_len: 0 }
+        Log {
+            log_data: Default::default(),
+            log_data_len: 0,
+        }
     }
 }
 
 impl Log {
-
     /// Adds a new data point to the log
     ///
     /// To create a new data point, use the `LogData` struct
-    /// 
+    ///
     /// # Arguments
     /// * `log_data` - The data point to add
     ///
@@ -306,7 +328,10 @@ impl Log {
     /// assert!(log.log_data_len == 0);
     /// ```
     pub fn new() -> Log {
-        Log { log_data: Vec::new() , log_data_len: 0 }
+        Log {
+            log_data: Vec::new(),
+            log_data_len: 0,
+        }
     }
 }
 
@@ -328,7 +353,6 @@ pub struct LogData {
 }
 
 impl LogData {
-
     /// Creates a new LogData from name, value and optional metadata
     /// Alternatively use the `new` function
     ///
@@ -338,7 +362,7 @@ impl LogData {
     /// * `name` - The name of the data point
     /// * `value` - The value of the data point
     /// * `optional_metadata` - The optional metadata of the data point
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LogData;
@@ -349,10 +373,22 @@ impl LogData {
     /// assert!(data.value == XffValue::Number(Number::from(42)));
     /// assert!(data.optional_metadata.len() == 0);
     /// ```
-    pub fn create<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
+    pub fn create<T: Into<String>>(
+        name: T,
+        value: XffValue,
+        optional_metadata: Option<BTreeMap<T, T>>,
+    ) -> LogData {
         match optional_metadata {
-            Some(m) => LogData { name: name.into(), value, optional_metadata: m.into_iter().map(|(k, v)| (k.into(), v.into())).collect() },
-            None => LogData { name: name.into(), value, optional_metadata: BTreeMap::new() },
+            Some(m) => LogData {
+                name: name.into(),
+                value,
+                optional_metadata: m.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
+            },
+            None => LogData {
+                name: name.into(),
+                value,
+                optional_metadata: BTreeMap::new(),
+            },
         }
     }
 
@@ -365,7 +401,7 @@ impl LogData {
     /// * `name` - The name of the data point
     /// * `value` - The value of the data point
     /// * `optional_metadata` - The optional metadata of the data point
-    /// 
+    ///
     /// # Example
     /// ```rust
     /// use nabu::logging_wizard::LogData;
@@ -376,7 +412,11 @@ impl LogData {
     /// assert!(data.value == XffValue::Number(Number::from(42)));
     /// assert!(data.optional_metadata.is_empty());
     /// ```
-    pub fn new<T: Into<String>>(name: T, value: XffValue, optional_metadata: Option<BTreeMap<T, T>>) -> LogData {
+    pub fn new<T: Into<String>>(
+        name: T,
+        value: XffValue,
+        optional_metadata: Option<BTreeMap<T, T>>,
+    ) -> LogData {
         Self::create(name, value, optional_metadata)
     }
 
@@ -424,5 +464,3 @@ impl LogData {
         self.optional_metadata.remove(key);
     }
 }
-
-

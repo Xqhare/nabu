@@ -1,5 +1,14 @@
+use crate::{
+    error::NabuError,
+    features::logging_wizard::{Log, LogData, LoggingWizard},
+    serde::read,
+    xff::{
+        serializer::{serialize_xff, write_bytes_to_file},
+        value::{CommandCharacter, XffValue},
+    },
+    XFF_VERSION,
+};
 use std::{collections::BTreeMap, path::Path};
-use crate::{XFF_VERSION, serde::read, xff::{value::{XffValue, CommandCharacter}, serializer::{serialize_xff, write_bytes_to_file}}, error::NabuError, features::logging_wizard::{LoggingWizard, Log, LogData}};
 
 /// Encodes a Vec of logs into bytes
 /// Writes an entirely new xff file to the given path
@@ -11,7 +20,6 @@ pub fn write_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
     let byte_data = logs_to_bytes(data)?;
     write_bytes_to_file(path, byte_data)
 }
-
 
 /// Appends a Vec of logs to an existing xff file
 /// Drops the last byte of the file
@@ -42,7 +50,6 @@ pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuErro
         std::fs::write(path, file_as_bytes)?;
         Ok(())
     }
-    
 }
 
 /// Takes a Vec of logs and returns an xff encoded byte vector
@@ -93,7 +100,10 @@ pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
     Ok(out)
 }
 
-pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuError> where P: AsRef<std::path::Path> {
+pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuError>
+where
+    P: AsRef<std::path::Path>,
+{
     let mut value_pos: usize = 1;
     // creating the Token array
     let mut data = read(path.as_ref())?;
@@ -118,10 +128,18 @@ pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuEr
                     }
                 }
             }
-            _ => Err(NabuError::InvalidXFFExtension(format!("Invalid XFF Extension (expected LoggingWizard), expected FileSeparator at value position {} got {:?}", value_pos, data[0])))?
+            _ => Err(NabuError::InvalidXFFExtension(format!(
+                "Invalid XFF Extension (expected LoggingWizard), expected FileSeparator at value position {} got {:?}",
+                value_pos, data[0]
+            )))?
         }
     }
-    Ok(LoggingWizard {logs_len: logs.len(), logs, append, path: path.as_ref().to_path_buf().with_extension("xff") })
+    Ok(LoggingWizard {
+        logs_len: logs.len(),
+        logs,
+        append,
+        path: path.as_ref().to_path_buf().with_extension("xff"),
+    })
 }
 
 fn decode_log(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Log, NabuError> {
@@ -146,15 +164,24 @@ fn decode_log(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Log, Na
                             // build log
                             return Ok(Log::from(log_data));
                         },
-                        _ => Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected FileSeparator or GroupSeparator at value position {} got {:?}", value_pos, data[0])))?
+                        _ => Err(NabuError::InvalidXFFExtension(format!(
+                            "Invalid XFF, expected FileSeparator or GroupSeparator at value position {} got {:?}",
+                            value_pos, data[0]
+                        )))?
                     }
                 }
             }
-            _ => Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected GroupSeparator at value position {} got {:?}", value_pos, data[0])))?
-        }    
+            _ => Err(NabuError::InvalidXFFExtension(format!(
+                "Invalid XFF, expected GroupSeparator at value position {} got {:?}",
+                value_pos, data[0]
+            )))?,
+        }
     }
     // should never get here, so error
-    Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected GroupSeparator at value position {} got End of file!", value_pos)))
+    Err(NabuError::InvalidXFFExtension(format!(
+        "Invalid XFF, expected GroupSeparator at value position {} got End of file!",
+        value_pos
+    )))
 }
 
 fn decode_log_data(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<LogData, NabuError> {
@@ -181,17 +208,26 @@ fn decode_log_data(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Lo
                 return Ok(LogData {
                     name: name.unwrap(),
                     value,
-                    optional_metadata
+                    optional_metadata,
                 });
             } else {
-                Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected RecordSeparator at value position {} got {:?}", value_pos, data[0])))?
+                Err(NabuError::InvalidXFFExtension(format!(
+                    "Invalid XFF, expected RecordSeparator at value position {} got {:?}",
+                    value_pos, data[0]
+                )))?
             }
         }
-        _ => Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected RecordSeparator at value position {} got {:?} dododo ", value_pos, data[0])))?,
+        _ => Err(NabuError::InvalidXFFExtension(format!(
+            "Invalid XFF, expected RecordSeparator at value position {} got {:?} dododo ",
+            value_pos, data[0]
+        )))?,
     }
 }
 
-fn decode_metadata(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Vec<(String, String)>, NabuError> {
+fn decode_metadata(
+    data: &mut Vec<XffValue>,
+    value_pos: &mut usize,
+) -> Result<Vec<(String, String)>, NabuError> {
     let mut out: Vec<(String, String)> = Vec::new();
     // sanity match
     match data[0] {
@@ -222,14 +258,23 @@ fn decode_metadata(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Ve
                     }
                 }
             }
-            Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected RecordSeparator at value position {} got End of file!", value_pos)))
-        },
+            Err(NabuError::InvalidXFFExtension(format!(
+                "Invalid XFF, expected RecordSeparator at value position {} got End of file!",
+                value_pos
+            )))
+        }
         // This should never ever happen, decode_metadata is only ever called with data that is a UnitSeparator
-        _ => Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected UnitSeparator at value position {} got {:?}", value_pos, data[0])))?
+        _ => Err(NabuError::InvalidXFFExtension(format!(
+            "Invalid XFF, expected UnitSeparator at value position {} got {:?}",
+            value_pos, data[0]
+        )))?,
     }
 }
 
-fn decode_metadata_entry(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<(String, String), NabuError> {
+fn decode_metadata_entry(
+    data: &mut Vec<XffValue>,
+    value_pos: &mut usize,
+) -> Result<(String, String), NabuError> {
     let name = data.remove(0).as_string();
     //println!("name: {:?}", name);
     *value_pos += 1;
@@ -242,7 +287,9 @@ fn decode_metadata_entry(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Res
         *value_pos += 1;
         Ok((name.unwrap(), value.unwrap()))
     } else {
-        Err(NabuError::InvalidXFFExtension(format!("Invalid XFF, expected UnitSeparator at value position {} got {:?}", value_pos, data[0])))
+        Err(NabuError::InvalidXFFExtension(format!(
+            "Invalid XFF, expected UnitSeparator at value position {} got {:?}",
+            value_pos, data[0]
+        )))
     }
 }
-

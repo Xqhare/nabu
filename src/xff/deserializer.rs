@@ -33,7 +33,9 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
 ///   - Add better support for ECMA-404 numbers
 fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
     if content.len() == 0 {
-        return Err(NabuError::InvalidXFF("Missing end of file marker".to_string()));
+        return Err(NabuError::InvalidXFF(
+            "Missing end of file marker".to_string(),
+        ));
     }
     let mut out: Vec<XffValue> = Default::default();
     // byte 0 is the version, removed before, the +1 again for normal counting is not done
@@ -56,38 +58,44 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                                 8 => {
                                     // Backspace
                                     tmp_string_binding.push('\x08')
-                                },
+                                }
                                 9 => {
                                     // Horizontal Tab
                                     tmp_string_binding.push('\t')
-                                },
+                                }
                                 10 => {
                                     // Line Feed
                                     tmp_string_binding.push('\n')
-                                },
+                                }
                                 11 => {
                                     // Vertical Tab
                                     tmp_string_binding.push('\x0b')
-                                },
+                                }
                                 12 => {
                                     // Form Feed
                                     tmp_string_binding.push('\x0c')
-                                },
+                                }
                                 13 => {
                                     // Carriage Return
                                     tmp_string_binding.push('\r')
-                                },
+                                }
                                 // Cannot happen
                                 _ => {
-                                    return Err(NabuError::InvalidXFF(format!("Invalid command character: {} at byte position: {}.", current_char, byte_pos)));
+                                    return Err(NabuError::InvalidXFF(format!(
+                                        "Invalid command character: {} at byte position: {}.",
+                                        current_char, byte_pos
+                                    )));
                                 }
                             }
-                        },
+                        }
                         32..=126 | 128 | 130..=140 | 142 | 145..=156 | 158..=255 => {
                             tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
-                        },
+                        }
                         _ => {
-                            return Err(NabuError::InvalidXFF(format!("Invalid ASCII character: {}.", current_char)));
+                            return Err(NabuError::InvalidXFF(format!(
+                                "Invalid ASCII character: {}.",
+                                current_char
+                            )));
                         }
                     }
                 }
@@ -96,16 +104,25 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                     byte_pos += 1;
                     // very much the lazy man's number parsing, inefficient but it works
                     if tmp_string_binding.parse::<usize>().is_ok() {
-                        out.push(XffValue::Number(Number::Unsigned(tmp_string_binding.parse::<usize>().unwrap())));
+                        out.push(XffValue::Number(Number::Unsigned(
+                            tmp_string_binding.parse::<usize>().unwrap(),
+                        )));
                     } else if tmp_string_binding.parse::<isize>().is_ok() {
-                        out.push(XffValue::Number(Number::Integer(tmp_string_binding.parse::<isize>().unwrap())));
+                        out.push(XffValue::Number(Number::Integer(
+                            tmp_string_binding.parse::<isize>().unwrap(),
+                        )));
                     } else if tmp_string_binding.parse::<f64>().is_ok() {
-                        out.push(XffValue::Number(Number::Float(tmp_string_binding.parse::<f64>().unwrap())));
+                        out.push(XffValue::Number(Number::Float(
+                            tmp_string_binding.parse::<f64>().unwrap(),
+                        )));
                     } else {
                         out.push(XffValue::String(tmp_string_binding));
                     }
                 } else {
-                    return Err(NabuError::InvalidXFF(format!("Missing end of transmission marker at byte position: {}", byte_pos)));
+                    return Err(NabuError::InvalidXFF(format!(
+                        "Missing end of transmission marker at byte position: {}",
+                        byte_pos
+                    )));
                 }
             }
             16 => {
@@ -127,15 +144,20 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 if content[0] == 16 {
                     content.remove(0);
                     byte_pos += 1;
-                    out.push(XffValue::Data(Data { data, len: data_length as usize }));
+                    out.push(XffValue::Data(Data {
+                        data,
+                        len: data_length as usize,
+                    }));
                 } else {
-                    return Err(NabuError::InvalidXFF("Missing end of text marker".to_string()));
+                    return Err(NabuError::InvalidXFF(
+                        "Missing end of text marker".to_string(),
+                    ));
                 }
-            },
+            }
             25 => {
                 // EM
                 return Ok(out);
-            },
+            }
             27 => {
                 // ESC
                 while content.len() > 0 {
@@ -148,22 +170,32 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                                 if content[0] == 27 {
                                     content.remove(0);
                                     byte_pos += 1;
-                                    out.push(XffValue::CommandCharacter(CommandCharacter::from(27)));
+                                    out.push(XffValue::CommandCharacter(CommandCharacter::from(
+                                        27,
+                                    )));
                                 } else {
                                     break;
                                 }
                             } else {
-                                out.push(XffValue::CommandCharacter(CommandCharacter::from(current_cmd_char)));
+                                out.push(XffValue::CommandCharacter(CommandCharacter::from(
+                                    current_cmd_char,
+                                )));
                             }
-                        },
+                        }
                         _ => {
-                            return Err(NabuError::InvalidXFF(format!("Invalid command character: {} at byte position: {}.", current_cmd_char, byte_pos)));
+                            return Err(NabuError::InvalidXFF(format!(
+                                "Invalid command character: {} at byte position: {}.",
+                                current_cmd_char, byte_pos
+                            )));
                         }
                     }
                 }
-            },
+            }
             _ => {
-                return Err(NabuError::InvalidXFF(format!("Unknown byte: {} at byte position: {}.", current_bytes, byte_pos)));
+                return Err(NabuError::InvalidXFF(format!(
+                    "Unknown byte: {} at byte position: {}.",
+                    current_bytes, byte_pos
+                )));
             }
         }
     }

@@ -17,14 +17,12 @@ use super::value::XffValue;
 /// Returns IO errors when issues with reading the file from disk occur
 pub fn serialize_xff(data: Vec<XffValue>, ver: u8) -> Result<Vec<u8>, NabuError> {
     match ver {
-        0 => {
-            serialize_xff_v0(data)
-        },
+        0 => serialize_xff_v0(data),
         _ => Err(NabuError::UnknownXFFVersion(ver)),
     }
 }
 
-fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
+fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError> {
     let mut out: Vec<u8> = Default::default();
     // Only true if the last pushed data was a command character
     let mut escape_open = false;
@@ -41,7 +39,7 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
                 }
                 // ETX
                 out.push(3);
-            },
+            }
             XffValue::Number(n) => {
                 escape_open = false;
                 // STX
@@ -51,13 +49,13 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
                 }
                 // ETX
                 out.push(3);
-            },
+            }
             XffValue::Data(d) => {
                 escape_open = false;
                 // DLE
                 out.push(16);
                 let len = d.len.to_le_bytes().to_vec();
-                let len_bind: Vec<&u8> = len.iter().take(5).collect(); 
+                let len_bind: Vec<&u8> = len.iter().take(5).collect();
                 for entry in len_bind {
                     out.push(*entry);
                 }
@@ -66,7 +64,7 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
                 }
                 // DLE
                 out.push(16);
-            },
+            }
             XffValue::ArrayCmdChar(a) => {
                 if escape_open {
                     // remove ending ESC
@@ -90,7 +88,7 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
                 // ESC
                 out.push(27);
                 escape_open = true;
-            },
+            }
             XffValue::CommandCharacter(c) => {
                 if escape_open {
                     // remove ending ESC
@@ -112,7 +110,7 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError>{
                 // ESC
                 out.push(27);
                 escape_open = true;
-            },
+            }
         }
     }
     // EM
