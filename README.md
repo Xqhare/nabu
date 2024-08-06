@@ -58,6 +58,9 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself
 
+- Error rework
+    - actual casting of unique and meaningful errors
+
 
 ## Implemented Features
 - Key-value store
