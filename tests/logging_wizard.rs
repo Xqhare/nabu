@@ -119,7 +119,7 @@ mod logging_wizard {
     fn simulated_data() {
         let mut wiz = LoggingWizard::new("xff-example-data/simulated_data.xff");
 
-        for i in 1..51 {
+        for i in 1..510 {
             let mut log = Log::new();
             for j in 1..6 {
                 let mut meta: BTreeMap<String, String> = BTreeMap::new();
@@ -135,7 +135,7 @@ mod logging_wizard {
             wiz.add_log(log);
         }
 
-        for i in 51..102 {
+        for i in 510..702 {
             let mut log = Log::new();
             for j in 1..14 {
                 let mut meta: BTreeMap<String, String> = BTreeMap::new();
@@ -200,6 +200,6 @@ mod logging_wizard {
         }
 
         //clear the file
-        std::fs::remove_file("xff-example-data/simulated_data.xff").unwrap();
+        //std::fs::remove_file("xff-example-data/simulated_data.xff").unwrap();
     }
 }

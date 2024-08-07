@@ -2,8 +2,134 @@
 mod tests {
     use std::fs;
 
+    use tyche::prelude::*;
+
     use nabu::serde::{self};
     use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+
+    #[test]
+    fn v0_create_simulated_data() {
+        /* let mut data: Vec<XffValue> = Default::default();
+        let mut gen_len = 15000;
+        while gen_len > 0 {
+            let seed = random_from_range(1, 4).unwrap();
+            match seed {
+                1 => data.push(make_random_string()),
+                2 => data.push(make_random_number()),
+                3 => data.push(make_random_command_character()),
+                4 => data.push(make_random_data()),
+                _ => unreachable!(),
+            }
+            gen_len -= 1;
+        }
+        let write = serde::write("tests/v0_simulated_data3.xff", data);
+        assert!(write.is_ok()); */
+
+        // write
+        // 21MB file
+        //let path = "tests/v0_simulated_data.xff";
+        // 1MB file
+        //let path = "xff-example-data/simulated_data.xff";
+        // 1.5MB file
+        let path = "tests/v0_simulated_data2.xff";
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        // cleanup
+        //let _ = std::fs::remove_file(path);
+    }
+
+    fn make_random_command_character() -> XffValue {
+        let data = vec![
+            CommandCharacter::Null,
+            CommandCharacter::StartOfHeading,
+            CommandCharacter::StartOfText,
+            CommandCharacter::EndOfText,
+            CommandCharacter::EndOfTransmission,
+            CommandCharacter::Enquiry,
+            CommandCharacter::Acknowledge,
+            CommandCharacter::Bell,
+            CommandCharacter::Backspace,
+            CommandCharacter::HorizontalTab,
+            CommandCharacter::LineFeed,
+            CommandCharacter::VerticalTab,
+            CommandCharacter::FormFeed,
+            CommandCharacter::CarriageReturn,
+            CommandCharacter::ShiftOut,
+            CommandCharacter::ShiftIn,
+            CommandCharacter::DataLinkEscape,
+            CommandCharacter::DeviceControl1,
+            CommandCharacter::DeviceControl2,
+            CommandCharacter::DeviceControl3,
+            CommandCharacter::DeviceControl4,
+            CommandCharacter::NegativeAcknowledge,
+            CommandCharacter::SynchronousIdle,
+            CommandCharacter::EndOfTransmitBlock,
+            CommandCharacter::Cancel,
+            CommandCharacter::EndOfMedium,
+            CommandCharacter::Substitute,
+            CommandCharacter::Escape,
+            CommandCharacter::FileSeparator,
+            CommandCharacter::GroupSeparator,
+            CommandCharacter::RecordSeparator,
+            CommandCharacter::UnitSeparator,
+            CommandCharacter::Space,
+            CommandCharacter::Delete,
+            CommandCharacter::NonBreakingSpace,
+            CommandCharacter::SoftHyphen,
+        ];
+        XffValue::CommandCharacter(data[random_index(data.len()).unwrap()].clone())
+    }
+
+    fn make_random_data() -> XffValue {
+        let seed = random_from_range(1, 666).unwrap();
+        let mut out: Vec<u8> = Default::default();
+        for _ in 0..seed {
+            out.push(random_u8().unwrap());
+        }
+        XffValue::from(out)
+    }
+
+    fn make_random_number() -> XffValue {
+        match random_from_range(0, 2).unwrap() {
+            0 => {
+                // negative
+                let seed = random_from_range(1, 3524654654).unwrap();
+                let bind = format!("-{}", seed);
+                XffValue::from(bind)
+            },
+            1 => {
+                // positive
+                let seed = random_from_range(1, 3524654654).unwrap();
+                XffValue::from(seed)
+            },
+            2 => {
+                // float
+                let seed1 = random_from_range(1, 352465).unwrap();
+                let seed2 = random_from_range(1, 564253).unwrap();
+                if random_from_range(0, 1).unwrap() == 0 {
+                    // negative
+                    XffValue::from(-(seed1 as f64 / seed2 as f64))
+                } else {
+                    // positive
+                    XffValue::from(seed1 as f64 / seed2 as f64)
+                }
+            },
+            _ => unreachable!(),
+        }
+    }
+
+    fn make_random_string() -> XffValue {
+        let seed = random_from_range(1, 55).unwrap();
+        let mut out: String = Default::default();
+        for n in 0..seed {
+            if n == 0 {
+                out.push(random_latin_char().unwrap().to_uppercase().next().unwrap());
+            } else {
+                out.push(random_latin_char().unwrap().to_lowercase().next().unwrap());
+            }
+        }
+        XffValue::String(out)
+    }
 
     #[test]
     fn v0_serializer_deserializer_bare_bones() {
