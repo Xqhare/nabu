@@ -31,6 +31,7 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
 /// TODO:
 ///   - Add support for ECMA-404 numbers -> DONE
 ///   - Add better support for ECMA-404 numbers
+///   - OPTIMISE
 fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
     if content.len() == 0 {
         return Err(NabuError::InvalidXFF(
@@ -40,7 +41,9 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
     let mut out: Vec<XffValue> = Default::default();
     // byte 0 is the version, removed before, the +1 again for normal counting is not done
     // here, remember that if counting bytes in files to find an error!
-    let mut byte_pos: u64 = 1;
+    let mut byte_pos: usize = 1;
+    let mut stx_amount = usize::MIN;
+    let mut stx_time_sum: std::time::Duration = std::time::Duration::ZERO;
     while content.len() > 0 {
         let current_bytes = content.remove(0);
         byte_pos += 1;
@@ -50,75 +53,111 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 // STX
                 let now = std::time::Instant::now();
                 let mut tmp_string_binding = String::new();
+                let mut is_number = true;
                 while content[0] != 3 {
                     let current_char = content.remove(0);
                     byte_pos += 1;
-                    match current_char {
-                        8..=13 => {
-                            // command characters
-                            match current_char {
-                                8 => {
-                                    // Backspace
-                                    tmp_string_binding.push('\x08')
+                    if current_char >= 8 && current_char <= 13 {
+                        is_number = false;
+                        // command characters
+                        match current_char {
+                            8 => {
+                                // Backspace
+                                tmp_string_binding.push('\x08')
+                            }
+                            9 => {
+                                // Horizontal Tab
+                                tmp_string_binding.push('\t')
+                            }
+                            10 => {
+                                // Line Feed
+                                tmp_string_binding.push('\n')
+                            }
+                            11 => {
+                                // Vertical Tab
+                                tmp_string_binding.push('\x0b')
+                            }
+                            12 => {
+                                // Form Feed
+                                tmp_string_binding.push('\x0c')
+                            }
+                            13 => {
+                                // Carriage Return
+                                tmp_string_binding.push('\r')
+                            }
+                            _ => {
+                                unreachable!()
+                            }
+                        }
+                    }
+                    if is_number {
+                        // Only valid ASCII number characters
+                        if current_char >= 48 && current_char <= 57
+                            || current_char >= 43 && current_char <= 46
+                            || current_char == 69 || current_char == 101
+                        {
+                            let mut tmp_number_binding = String::from_utf8(vec![current_char]).expect("Windows 1252 is a subset of utf8");
+                            while is_number {
+                                if content[0] == 3 {
+                                    tmp_string_binding = tmp_number_binding;
+                                    is_number = false;
+                                    break;
                                 }
-                                9 => {
-                                    // Horizontal Tab
-                                    tmp_string_binding.push('\t')
-                                }
-                                10 => {
-                                    // Line Feed
-                                    tmp_string_binding.push('\n')
-                                }
-                                11 => {
-                                    // Vertical Tab
-                                    tmp_string_binding.push('\x0b')
-                                }
-                                12 => {
-                                    // Form Feed
-                                    tmp_string_binding.push('\x0c')
-                                }
-                                13 => {
-                                    // Carriage Return
-                                    tmp_string_binding.push('\r')
-                                }
-                                // Cannot happen
-                                _ => {
-                                    return Err(NabuError::InvalidXFF(format!(
-                                        "Invalid command character: {} at byte position: {}.",
-                                        current_char, byte_pos
-                                    )));
+                                let current_char = content.remove(0);
+                                byte_pos += 1;
+                                if current_char >= 48 && current_char <= 57
+                                    || current_char >= 43 && current_char <= 46
+                                    || current_char == 69 || current_char == 101
+                                {
+                                    tmp_number_binding
+                                        .push(char::from_u32(current_char as u32).unwrap());
+                                } else {
+                                    tmp_string_binding = tmp_number_binding;
+                                    is_number = false;
+                                    break;
                                 }
                             }
                         }
-                        32..=126 | 128 | 130..=140 | 142 | 145..=156 | 158..=255 => {
-                            tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
-                        }
-                        _ => {
-                            return Err(NabuError::InvalidXFF(format!(
-                                "Invalid ASCII character: {}.",
-                                current_char
-                            )));
-                        }
+                    }
+                    // All valid ASCII string characters
+                    if current_char >= 32 && current_char <= 126
+                        || current_char == 128
+                        || current_char >= 130 && current_char <= 140
+                        || current_char == 142
+                        || current_char >= 145 && current_char <= 156
+                        || current_char >= 158
+                    {
+                        is_number = false;
+                        tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
+                    } else {
+                        return Err(NabuError::InvalidXFF(format!(
+                            "Invalid ASCII character: {}.",
+                            current_char
+                        )));
                     }
                 }
                 if content[0] == 3 {
                     content.remove(0);
                     byte_pos += 1;
-                    // very much the lazy man's number parsing, inefficient but it works
-                    //
-                    //
-                    if tmp_string_binding.parse::<usize>().is_ok() {
+                    if is_number {
+                        if tmp_string_binding.parse::<usize>().is_ok() {
                         out.push(XffValue::Number(Number::Unsigned(
                             tmp_string_binding.parse::<usize>().unwrap(),
                         )));
-                    } else if tmp_string_binding.parse::<isize>().is_ok() {
-                        out.push(XffValue::Number(Number::Integer(
-                            tmp_string_binding.parse::<isize>().unwrap(),
-                        )));
-                    } else if tmp_string_binding.parse::<f64>().is_ok() {
-                        out.push(XffValue::Number(Number::Float(
-                            tmp_string_binding.parse::<f64>().unwrap(),
-                        )));
+                        } else if tmp_string_binding.parse::<isize>().is_ok() {
+                            out.push(XffValue::Number(Number::Integer(
+                                tmp_string_binding.parse::<isize>().unwrap(),
+                            )));
+                        } else if tmp_string_binding.parse::<f64>().is_ok() {
+                            out.push(XffValue::Number(Number::Float(
+                                tmp_string_binding.parse::<f64>().unwrap(),
+                            )));
+                        } else {
+                            Err(NabuError::InvalidXFF(format!(
+                                "Unable to convert correct number syntax: '{}' to a number.",
+                                tmp_string_binding
+                            )))?
+                        };
                     } else {
                         out.push(XffValue::String(tmp_string_binding));
                     }
@@ -130,6 +169,8 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 }
                 let elapsed = now.elapsed();
                 println!("STX Elapsed: {:.2?}", elapsed);
+                stx_amount += 1;
+                stx_time_sum += elapsed;
             }
             16 => {
                 let now = std::time::Instant::now();
@@ -207,6 +248,10 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 )));
             }
         }
-    }
+    };
+    println!("DODODOD");
+    println!("STX Amount: {}", stx_amount);
+    println!("STX Time Sum: {:.2?}", stx_time_sum);
+    println!("STX Time Average: {:.2?}", stx_time_sum / stx_amount.try_into().unwrap());
     Ok(out)
 }
