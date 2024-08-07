@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, rc::Rc, sync::Mutex};
 
 use crate::error::NabuError;
 
@@ -44,9 +44,11 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
     while content.len() > 0 {
         let current_bytes = content.remove(0);
         byte_pos += 1;
+        println!("Main loop, byte pos is: {}", byte_pos);
         match current_bytes {
             2 => {
                 // STX
+                let now = std::time::Instant::now();
                 let mut tmp_string_binding = String::new();
                 while content[0] != 3 {
                     let current_char = content.remove(0);
@@ -103,6 +105,8 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                     content.remove(0);
                     byte_pos += 1;
                     // very much the lazy man's number parsing, inefficient but it works
+                    //
+                    //
                     if tmp_string_binding.parse::<usize>().is_ok() {
                         out.push(XffValue::Number(Number::Unsigned(
                             tmp_string_binding.parse::<usize>().unwrap(),
@@ -124,8 +128,11 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                         byte_pos
                     )));
                 }
+                let elapsed = now.elapsed();
+                println!("STX Elapsed: {:.2?}", elapsed);
             }
             16 => {
+                let now = std::time::Instant::now();
                 // DLE
                 let data_length: u64 = {
                     // My first real array!
@@ -153,43 +160,45 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                         "Missing end of text marker".to_string(),
                     ));
                 }
+                let elapsed = now.elapsed();
+                println!("DLE Elapsed: {:.2?}", elapsed);
             }
             25 => {
                 // EM
                 return Ok(out);
             }
             27 => {
+                let now = std::time::Instant::now();
                 // ESC
-                while content.len() > 0 {
+                loop {
                     let current_cmd_char = content.remove(0);
                     byte_pos += 1;
-                    match current_cmd_char {
-                        0..=32 | 127 | 160 | 173 => {
-                            // ESC check
-                            if current_cmd_char == 27 {
-                                if content[0] == 27 {
-                                    content.remove(0);
-                                    byte_pos += 1;
-                                    out.push(XffValue::CommandCharacter(CommandCharacter::from(
-                                        27,
-                                    )));
-                                } else {
-                                    break;
-                                }
-                            } else {
-                                out.push(XffValue::CommandCharacter(CommandCharacter::from(
-                                    current_cmd_char,
-                                )));
-                            }
-                        }
-                        _ => {
+                    // ESC inverse check
+                    if current_cmd_char != 27 {
+                        let val = CommandCharacter::from_u8_checked(
+                            current_cmd_char,
+                        );
+                        if val.is_none() {
                             return Err(NabuError::InvalidXFF(format!(
                                 "Invalid command character: {} at byte position: {}.",
                                 current_cmd_char, byte_pos
                             )));
                         }
+                        out.push(XffValue::CommandCharacter(val.unwrap()));
+                        continue;
                     }
+                    // Ending ESC
+                    if content[0] != 27 {
+                        break;
+                    } 
+                    content.remove(0);
+                    byte_pos += 1;
+                    out.push(XffValue::CommandCharacter(CommandCharacter::from(
+                        27,
+                    )));
                 }
+                let elapsed = now.elapsed();
+                println!("ESC Elapsed: {:.2?}", elapsed);
             }
             _ => {
                 return Err(NabuError::InvalidXFF(format!(
