@@ -55,11 +55,21 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
                 - [Key Value Store Usage](#key-value-store-usage)
 
 ## Roadmap
+- Performance
+    - is currently dog shit even compared to Mawu.
+        - Nabu parses 1.1mb in 14 seconds, in the same time Mawu parses 84.8mb using the slower CSV parser the JSON parser takes 10 seconds. That's almost exactly 84 times faster than Nabu!
+
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself
 
 - Error rework
     - actual casting of unique and meaningful errors
+
+- Finish README
+    - Look over code examples for `LoggingWizard` in particular
+    - Stabilise all code examples
+- Finish doc
+    - Finish lib doc
 
 
 ## Implemented Features
