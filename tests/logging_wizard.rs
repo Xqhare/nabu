@@ -8,7 +8,7 @@ mod logging_wizard {
     use std::collections::BTreeMap;
     #[test]
     fn logging_test_name() {
-        let mut wizard = LoggingWizard::new("xff-example-data/logging_test_name.xff");
+        let mut wizard = LoggingWizard::new("tests/logging_test_name.xff");
         let mut log = Log::new();
         log.add_log_data(LogData::new(
             "name",
@@ -19,7 +19,7 @@ mod logging_wizard {
         let out = wizard.save();
         assert!(out.is_ok());
         let read_wizard =
-            LoggingWizard::from_file("xff-example-data/logging_test_name.xff").unwrap();
+            LoggingWizard::from_file("tests/logging_test_name.xff").unwrap();
         assert_eq!(read_wizard.logs[0].log_data.len(), 1);
         assert_eq!(read_wizard.logs[0].log_data[0].name, "name");
         assert_eq!(
@@ -32,11 +32,11 @@ mod logging_wizard {
         );
 
         // clear the file
-        std::fs::remove_file("xff-example-data/logging_test_name.xff").unwrap();
+        std::fs::remove_file("tests/logging_test_name.xff").unwrap();
     }
 
     #[test]
-    fn read_and_write_log() {
+    fn read_log() {
         let read = LoggingWizard::from_file("xff-example-data/read_and_write_logging_wizard.xff");
         assert!(read.is_ok());
         let mut wizard = read.unwrap();
@@ -69,7 +69,7 @@ mod logging_wizard {
 
     #[test]
     fn complex_read_and_write() {
-        let mut wiz = LoggingWizard::new("xff-example-data/complex_read_and_write.xff");
+        let mut wiz = LoggingWizard::new("tests/complex_read_and_write.xff");
 
         let mut log = Log::new();
         log.add_log_data(LogData::new("Data_point_1", XffValue::from("value"), None));
@@ -92,7 +92,7 @@ mod logging_wizard {
         wiz.add_log(log);
         wiz.save().unwrap();
 
-        let read = LoggingWizard::from_file("xff-example-data/complex_read_and_write.xff").unwrap();
+        let read = LoggingWizard::from_file("tests/complex_read_and_write.xff").unwrap();
         assert_eq!(read.logs[0].log_data[0].name, "Data_point_1");
         assert_eq!(read.logs[0].log_data[0].value, XffValue::from("value"));
         assert_eq!(read.logs[0].log_data[3].name, "Data_point_4");
@@ -112,12 +112,12 @@ mod logging_wizard {
         );
 
         //clear the file
-        std::fs::remove_file("xff-example-data/complex_read_and_write.xff").unwrap();
+        std::fs::remove_file("tests/complex_read_and_write.xff").unwrap();
     }
 
     #[test]
     fn simulated_data() {
-        let mut wiz = LoggingWizard::new("xff-example-data/simulated_data.xff");
+        let mut wiz = LoggingWizard::new("tests/simulated_data.xff");
 
         for i in 1..510 {
             let mut log = Log::new();
@@ -178,7 +178,7 @@ mod logging_wizard {
 
         wiz.save().unwrap();
 
-        let read = LoggingWizard::from_file("xff-example-data/simulated_data.xff").unwrap();
+        let read = LoggingWizard::from_file("tests/simulated_data.xff").unwrap();
 
         // check every log in read against the one in check
         for i in 0..check.logs.len().saturating_sub(1) {
@@ -200,6 +200,6 @@ mod logging_wizard {
         }
 
         //clear the file
-        //std::fs::remove_file("xff-example-data/simulated_data.xff").unwrap();
+        std::fs::remove_file("tests/simulated_data.xff").unwrap();
     }
 }

@@ -9,33 +9,39 @@ mod tests {
 
     #[test]
     fn v0_create_simulated_data() {
-        /* let mut data: Vec<XffValue> = Default::default();
-        let mut gen_len = 15000;
-        while gen_len > 0 {
-            let seed = random_from_range(1, 4).unwrap();
-            match seed {
-                1 => data.push(make_random_string()),
-                2 => data.push(make_random_number()),
-                3 => data.push(make_random_command_character()),
-                4 => data.push(make_random_data()),
-                _ => unreachable!(),
+        let mut data: Vec<XffValue> = Default::default();
+        if false {
+            let mut gen_len = 3_000_000;
+            while gen_len > 0 {
+                println!("gen_len: {}", gen_len);
+                let seed = random_from_range(1, 4).unwrap();
+                match seed {
+                    1 => data.push(make_random_string()),
+                    2 => data.push(make_random_number()),
+                    3 => data.push(make_random_command_character()),
+                    4 => data.push(make_random_data()),
+                    _ => unreachable!(),
+                }
+                gen_len -= 1;
             }
-            gen_len -= 1;
-        }
         let write = serde::write("tests/v0_simulated_data3.xff", data);
-        assert!(write.is_ok()); */
+        assert!(write.is_ok());
+        }
 
         // write
+        // 290MB file
+        let path = "xff-example-data/v0_simulated_data_290MB.xff";
+        // 145MB file
+        //let path = "xff-example-data/v0_simulated_data_145MB.xff";
         // 21MB file
-        //let path = "tests/v0_simulated_data.xff";
-        // 1MB file
-        //let path = "xff-example-data/simulated_data.xff";
+        //let path = "xff-example-data/v0_simulated_data_21MB.xff";
         // 1.5MB file
-        let path = "tests/v0_simulated_data2.xff";
+        //let path = "xff-example-data/v0_simulated_data_1MB.xff";
         let read = serde::read(path);
+        if read.is_err() {
+            println!("Failed to read {:?}", read);
+        }
         assert!(read.is_ok());
-        // cleanup
-        //let _ = std::fs::remove_file(path);
     }
 
     fn make_random_command_character() -> XffValue {

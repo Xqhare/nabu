@@ -58,6 +58,7 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
 - Performance
     - is currently dog shit even compared to Mawu.
         - Nabu parses 1.1mb in 14 seconds, in the same time Mawu parses 84.8mb using the slower CSV parser the JSON parser takes 10 seconds. That's almost exactly 84 times faster than Nabu!
+    - now v0 decoding parses 290mb in 10 seconds.
 
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself

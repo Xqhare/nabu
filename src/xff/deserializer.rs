@@ -1,8 +1,8 @@
-use std::{path::Path, rc::Rc, sync::Mutex};
+use std::{collections::VecDeque, path::Path};
 
 use crate::error::NabuError;
 
-use super::value::{CommandCharacter, Data, Number, XffValue};
+use super::value::{CommandCharacter, Data, XffValue};
 
 /// Reads the content of a XFF file and returns a Vec
 ///
@@ -30,35 +30,48 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
 
 /// TODO:
 ///   - Add support for ECMA-404 numbers -> DONE
-///   - Add better support for ECMA-404 numbers
-///   - OPTIMISE
-fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
-    if content.len() == 0 {
+///   - Add better support for ECMA-404 numbers, I just moved the poor mans parser into
+///   XffValue::from(String)
+///   - OPTIMISE -> DONE
+fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
+    if contents.len() == 0 {
         return Err(NabuError::InvalidXFF(
             "Missing end of file marker".to_string(),
         ));
     }
+    let mut content: VecDeque<u8> = contents.drain(..).collect();
     let mut out: Vec<XffValue> = Default::default();
-    // byte 0 is the version, removed before, the +1 again for normal counting is not done
-    // here, remember that if counting bytes in files to find an error!
+    // version is byte 0
     let mut byte_pos: usize = 1;
+
+    let debug = false;
+    let mut loop_amount = usize::MIN;
+    let mut loop_time_sum: std::time::Duration = std::time::Duration::ZERO;
     let mut stx_amount = usize::MIN;
     let mut stx_time_sum: std::time::Duration = std::time::Duration::ZERO;
+    let mut dle_amount = usize::MIN;
+    let mut dle_time_sum: std::time::Duration = std::time::Duration::ZERO;
+    let mut cmd_amount = usize::MIN;
+    let mut cmd_time_sum: std::time::Duration = std::time::Duration::ZERO;
+    
     while content.len() > 0 {
-        let current_bytes = content.remove(0);
+        let now_main = std::time::Instant::now();
+        if debug {
+            // +1 for the remove below, its the position I am interested in
+            println!("Main loop, byte pos is: {}", byte_pos + 1);
+            loop_amount += 1;
+        }
+        let current_bytes = content.pop_front().unwrap();
         byte_pos += 1;
-        println!("Main loop, byte pos is: {}", byte_pos);
         match current_bytes {
             2 => {
                 // STX
                 let now = std::time::Instant::now();
                 let mut tmp_string_binding = String::new();
-                let mut is_number = true;
                 while content[0] != 3 {
-                    let current_char = content.remove(0);
+                    let current_char = content.pop_front().unwrap();
                     byte_pos += 1;
                     if current_char >= 8 && current_char <= 13 {
-                        is_number = false;
                         // command characters
                         match current_char {
                             8 => {
@@ -90,35 +103,6 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                             }
                         }
                     }
-                    if is_number {
-                        // Only valid ASCII number characters
-                        if current_char >= 48 && current_char <= 57
-                            || current_char >= 43 && current_char <= 46
-                            || current_char == 69 || current_char == 101
-                        {
-                            let mut tmp_number_binding = String::from_utf8(vec![current_char]).expect("Windows 1252 is a subset of utf8");
-                            while is_number {
-                                if content[0] == 3 {
-                                    tmp_string_binding = tmp_number_binding;
-                                    is_number = false;
-                                    break;
-                                }
-                                let current_char = content.remove(0);
-                                byte_pos += 1;
-                                if current_char >= 48 && current_char <= 57
-                                    || current_char >= 43 && current_char <= 46
-                                    || current_char == 69 || current_char == 101
-                                {
-                                    tmp_number_binding
-                                        .push(char::from_u32(current_char as u32).unwrap());
-                                } else {
-                                    tmp_string_binding = tmp_number_binding;
-                                    is_number = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
                     // All valid ASCII string characters
                     if current_char >= 32 && current_char <= 126
                         || current_char == 128
@@ -127,7 +111,6 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                         || current_char >= 145 && current_char <= 156
                         || current_char >= 158
                     {
-                        is_number = false;
                         tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
                     } else {
                         return Err(NabuError::InvalidXFF(format!(
@@ -137,82 +120,92 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                     }
                 }
                 if content[0] == 3 {
-                    content.remove(0);
+                    let _ = content.pop_front().unwrap();
                     byte_pos += 1;
-                    if is_number {
-                        if tmp_string_binding.parse::<usize>().is_ok() {
-                        out.push(XffValue::Number(Number::Unsigned(
-                            tmp_string_binding.parse::<usize>().unwrap(),
-                        )));
-                        } else if tmp_string_binding.parse::<isize>().is_ok() {
-                            out.push(XffValue::Number(Number::Integer(
-                                tmp_string_binding.parse::<isize>().unwrap(),
-                            )));
-                        } else if tmp_string_binding.parse::<f64>().is_ok() {
-                            out.push(XffValue::Number(Number::Float(
-                                tmp_string_binding.parse::<f64>().unwrap(),
-                            )));
-                        } else {
-                            Err(NabuError::InvalidXFF(format!(
-                                "Unable to convert correct number syntax: '{}' to a number.",
-                                tmp_string_binding
-                            )))?
-                        };
-                    } else {
-                        out.push(XffValue::String(tmp_string_binding));
-                    }
+                    out.push(XffValue::from(tmp_string_binding));
                 } else {
                     return Err(NabuError::InvalidXFF(format!(
                         "Missing end of transmission marker at byte position: {}",
                         byte_pos
                     )));
                 }
-                let elapsed = now.elapsed();
-                println!("STX Elapsed: {:.2?}", elapsed);
-                stx_amount += 1;
-                stx_time_sum += elapsed;
+                if debug {
+                   let elapsed = now.elapsed();
+                    println!("STX Elapsed: {:.2?}", elapsed);
+                    stx_amount += 1;
+                    stx_time_sum += elapsed;
+                }
             }
             16 => {
                 let now = std::time::Instant::now();
                 // DLE
                 let data_length: u64 = {
                     // My first real array!
-                    let mut tmp: [u8; 8] = Default::default();
-                    for n in 0..5 {
-                        tmp[n] = content.remove(0);
-                        byte_pos += 1;
-                    }
-                    u64::from_le_bytes(tmp)
+                    let tmp: Vec<u8> = content.drain(0..5).collect::<Vec<u8>>();
+                    byte_pos += 5;
+                    let arr = [tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], 0, 0, 0];
+                    u64::from_le_bytes(arr)
                 };
-                let mut data = Vec::new();
-                for _ in 0..data_length {
-                    data.push(content.remove(0));
-                    byte_pos += 1;
-                }
+                let data = content.drain(0..data_length as usize).collect::<Vec<u8>>();
+                byte_pos += data_length as usize;
                 if content[0] == 16 {
-                    content.remove(0);
+                    content.pop_front().unwrap();
                     byte_pos += 1;
                     out.push(XffValue::Data(Data {
-                        data,
                         len: data_length as usize,
+                        data,
                     }));
                 } else {
                     return Err(NabuError::InvalidXFF(
                         "Missing end of text marker".to_string(),
                     ));
                 }
-                let elapsed = now.elapsed();
-                println!("DLE Elapsed: {:.2?}", elapsed);
+                if debug {
+                    let elapsed = now.elapsed();
+                    println!("DLE Elapsed: {:.2?}", elapsed);
+                    dle_amount += 1;
+                    dle_time_sum += elapsed;
+                }
             }
             25 => {
                 // EM
+                if debug {
+                    let elapsed = now_main.elapsed();
+                    println!("Loop Elapsed: {:.2?}", elapsed);
+                    loop_time_sum += elapsed;
+                    if stx_amount > 0 {
+                        println!("------------------------------------");
+                        println!("STX Amount: {}", stx_amount);
+                        println!("STX Time Sum: {:.2?}", stx_time_sum);
+                        println!("STX Time Average: {:.2?}", stx_time_sum / stx_amount.try_into().unwrap());
+                    }
+                    if dle_amount > 0 {
+                        println!("------------------------------------");
+                        println!("DLE Amount: {}", dle_amount);
+                        println!("DLE Time Sum: {:.2?}", dle_time_sum);
+                        println!("DLE Time Average: {:.2?}", dle_time_sum / dle_amount.try_into().unwrap());
+                    }
+                    if cmd_amount > 0 {
+                        println!("------------------------------------");
+                        println!("CMD Amount: {}", cmd_amount);
+                        println!("CMD Time Sum: {:.2?}", cmd_time_sum);
+                        println!("CMD Time Average: {:.2?}", cmd_time_sum / cmd_amount.try_into().unwrap());
+                    }
+                    if loop_amount > 0 {
+                        println!("------------------------------------");
+                        println!("Loop Amount (Total Value Amount): {}", loop_amount);
+                        println!("Loop Time Sum: {:.2?}", loop_time_sum);
+                        println!("Loop Time Average: {:.2?}", loop_time_sum / loop_amount.try_into().unwrap());
+                        println!("------------------------------------");
+                    }
+                }
                 return Ok(out);
             }
             27 => {
                 let now = std::time::Instant::now();
                 // ESC
                 loop {
-                    let current_cmd_char = content.remove(0);
+                    let current_cmd_char = content.pop_front().unwrap();
                     byte_pos += 1;
                     // ESC inverse check
                     if current_cmd_char != 27 {
@@ -232,14 +225,18 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                     if content[0] != 27 {
                         break;
                     } 
-                    content.remove(0);
+                    content.pop_front().unwrap();
                     byte_pos += 1;
                     out.push(XffValue::CommandCharacter(CommandCharacter::from(
                         27,
                     )));
                 }
-                let elapsed = now.elapsed();
-                println!("ESC Elapsed: {:.2?}", elapsed);
+                if debug {
+                    let elapsed = now.elapsed();
+                    println!("ESC Elapsed: {:.2?}", elapsed);
+                    cmd_amount += 1;
+                    cmd_time_sum += elapsed;
+                }
             }
             _ => {
                 return Err(NabuError::InvalidXFF(format!(
@@ -248,10 +245,17 @@ fn deserialize_xff_v0(content: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError>
                 )));
             }
         }
+        if debug {
+            let elapsed = now_main.elapsed();
+            println!("Loop Elapsed: {:.2?}", elapsed);
+            loop_time_sum += elapsed;
+        }
     };
-    println!("DODODOD");
-    println!("STX Amount: {}", stx_amount);
-    println!("STX Time Sum: {:.2?}", stx_time_sum);
-    println!("STX Time Average: {:.2?}", stx_time_sum / stx_amount.try_into().unwrap());
-    Ok(out)
+    // If a length of 0 is ever read, its an error, files have to end with EM and start with
+    // version, so 2 bytes total
+    Err(NabuError::InvalidXFF(format!(
+        "Missing end of transmission marker at byte position: {}.",
+        byte_pos,
+    )))
 }
+
