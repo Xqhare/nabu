@@ -8,7 +8,7 @@ use crate::{
     },
     XFF_VERSION,
 };
-use std::{collections::BTreeMap, path::Path};
+use std::{collections::BTreeMap, VecDeque, path::Path};
 
 /// Encodes a Vec of logs into bytes
 /// Writes an entirely new xff file to the given path
