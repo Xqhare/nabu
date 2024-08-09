@@ -119,6 +119,7 @@ mod logging_wizard {
     fn simulated_data() {
         let mut wiz = LoggingWizard::new("tests/simulated_data.xff");
 
+        // generates 1MB of data
         for i in 1..510 {
             let mut log = Log::new();
             for j in 1..6 {
