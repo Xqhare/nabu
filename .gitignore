@@ -10,3 +10,4 @@ Cargo.lock
 
 xff-example-data/v0_simulated_data_14***.xff
 xff-example-data/v0_simulated_data_2*.xff
+xff-example-data/*_ignore.xff
