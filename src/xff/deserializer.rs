@@ -69,15 +69,32 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
             }
             loop_amount += 1;
         }
-        let current_bytes = content.pop_front().unwrap();
+        let current_byte = {
+            if let Some(b) = content.pop_front() {
+                byte_pos += 1;
+                b
+            } else {
+                Err(NabuError::InvalidXFF(format!(
+                    "Missing end of transmission marker at byte position: {}.",
+                    byte_pos,
+                    )))?
+            }
+        };
         byte_pos += 1;
-        match current_bytes {
+        match current_byte {
             2 => {
                 // STX
                 let now = std::time::Instant::now();
                 let mut tmp_string_binding = String::new();
                 while content[0] != 3 {
-                    let current_char = content.pop_front().unwrap();
+                    let current_char = {
+                        if let Some(b) = content.pop_front() {
+                            byte_pos += 1;
+                            b
+                        } else {
+                            Err(NabuError::TruncatedXFF(byte_pos))?
+                        }
+                    };
                     byte_pos += 1;
                     if current_char >= 8 && current_char <= 13 {
                         // command characters
@@ -128,7 +145,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                     }
                 }
                 if content[0] == 3 {
-                    let _ = content.pop_front().unwrap();
+                    let _ = content.pop_front();
                     byte_pos += 1;
                     out.push(XffValue::from(tmp_string_binding));
                 } else {
@@ -156,7 +173,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 byte_pos += data_length as usize + 5;
 
                 if content[0] == 16 {
-                    content.pop_front().unwrap();
+                    let _ = content.pop_front();
                     byte_pos += 1;
                     out.push(XffValue::Data(Data {
                         len: data_length as usize,
@@ -228,31 +245,34 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 let now = std::time::Instant::now();
                 // ESC
                 loop {
-                    let current_cmd_char = content.pop_front().unwrap();
-                    byte_pos += 1;
-                    // ESC inverse check
-                    if current_cmd_char != 27 {
-                        let val = CommandCharacter::from_u8_checked(
-                            current_cmd_char,
-                        );
-                        if val.is_none() {
-                            return Err(NabuError::InvalidXFF(format!(
-                                "Invalid command character: {} at byte position: {}.",
-                                current_cmd_char, byte_pos
-                            )));
+                    if let Some(current_cmd_char) = content.pop_front() {
+                        byte_pos += 1;
+                        // ESC inverse check
+                        if current_cmd_char != 27 {
+                            let val = CommandCharacter::from_u8_checked(
+                                current_cmd_char,
+                            );
+                            if val.is_none() {
+                                return Err(NabuError::InvalidXFF(format!(
+                                    "Invalid command character: {} at byte position: {}.",
+                                    current_cmd_char, byte_pos
+                                )));
+                            }
+                            out.push(XffValue::CommandCharacter(val.unwrap()));
+                            continue;
                         }
-                        out.push(XffValue::CommandCharacter(val.unwrap()));
-                        continue;
-                    }
-                    // Ending ESC
-                    if content[0] != 27 {
-                        break;
-                    } 
-                    content.pop_front().unwrap();
-                    byte_pos += 1;
-                    out.push(XffValue::CommandCharacter(CommandCharacter::from(
-                        27,
-                    )));
+                        // Ending ESC
+                        if content[0] != 27 {
+                            break;
+                        } 
+                        content.pop_front();
+                        byte_pos += 1;
+                        out.push(XffValue::CommandCharacter(CommandCharacter::from(
+                            27,
+                        )));
+                    } else {
+                        Err(NabuError::InvalidXFF(format!("Invalid XFF, missing command character at byte position: {}.", byte_pos)))?
+                    };
                 }
                 if debug {
                     let elapsed = now.elapsed();
@@ -266,7 +286,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
             _ => {
                 return Err(NabuError::InvalidXFF(format!(
                     "Unknown byte: {} at byte position: {}.",
-                    current_bytes, byte_pos
+                    current_byte, byte_pos
                 )));
             }
         }
