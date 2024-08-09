@@ -58,7 +58,7 @@ pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuErro
 ///
 /// # Arguments
 /// * `data` - The data to encode
-pub fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
+fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
     let tokens = logs_tokenizer(data)?;
     // returns a vec of bytes
     serialize_xff(tokens, XFF_VERSION)
@@ -68,7 +68,7 @@ pub fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
 ///
 /// # Arguments
 /// * `data` - The data to encode
-pub fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
+fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
     let mut out: Vec<XffValue> = Default::default();
     let cmd1 = XffValue::CommandCharacter(CommandCharacter::FileSeparator);
     let cmd2 = XffValue::CommandCharacter(CommandCharacter::GroupSeparator);
@@ -106,20 +106,20 @@ where
 {
     let mut value_pos: usize = 1;
     // creating the Token array
-    let mut data = read(path.as_ref())?;
+    let mut data: VecDeque<XffValue> = read(path.as_ref())?.into_iter().collect();
     let mut logs: Vec<Log> = Vec::new();
     while data.len() > 0 {
         match data[0] {
             XffValue::CommandCharacter(CommandCharacter::FileSeparator) => {
                 // remove the FileSeparator
-                let _ = data.remove(0);
+                let _ = data.pop_front();
                 value_pos += 1;
                 // build log
                 let log = decode_log(&mut data, &mut value_pos)?;
                 logs.push(log);
                 if data[0] == XffValue::CommandCharacter(CommandCharacter::FileSeparator) {
                     // drop trailing FileSeparator
-                    let _ = data.remove(0);
+                    let _ = data.pop_front();
                     value_pos += 1;
                     if data.len() == 0 {
                         break;
@@ -142,19 +142,19 @@ where
     })
 }
 
-fn decode_log(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Log, NabuError> {
+fn decode_log(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<Log, NabuError> {
     let mut log_data: Vec<LogData> = Vec::new();
     while data.len() > 0 {
         match data[0] {
             XffValue::CommandCharacter(CommandCharacter::GroupSeparator) => {
                 // remove the GroupSeparator
-                let _ = data.remove(0);
+                let _ = data.pop_front();
                 *value_pos += 1;
                 // build log data
                 log_data.push(decode_log_data(data, value_pos)?);
                 if data[0] == XffValue::CommandCharacter(CommandCharacter::GroupSeparator) {
                     // drop trailing GroupSeparator
-                    let _ = data.remove(0);
+                    let _ = data.pop_front();
                     *value_pos += 1;
                     match data[0] {
                         XffValue::CommandCharacter(CommandCharacter::GroupSeparator) => {
@@ -184,11 +184,12 @@ fn decode_log(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Log, Na
     )))
 }
 
-fn decode_log_data(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<LogData, NabuError> {
-    let name = data.remove(0).as_string();
+fn decode_log_data(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<LogData, NabuError> {
+    // I was paniking with remove(0) implicitly anyway
+    let name = data.pop_front().unwrap().as_string();
     //println!("name: {:?}", name);
     *value_pos += 1;
-    let value = data.remove(0);
+    let value = data.pop_front().unwrap();
     //println!("value: {:?}", value);
     *value_pos += 1;
     let mut optional_metadata: BTreeMap<String, String> = BTreeMap::new();
@@ -196,14 +197,14 @@ fn decode_log_data(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Lo
     match data[0] {
         XffValue::CommandCharacter(CommandCharacter::RecordSeparator) => {
             // remove the RecordSeparator
-            let _ = data.remove(0);
+            let _ = data.pop_front();
             *value_pos += 1;
             for metadata in decode_metadata(data, value_pos)? {
                 optional_metadata.insert(metadata.0, metadata.1);
             }
             if data[0] == XffValue::CommandCharacter(CommandCharacter::RecordSeparator) {
                 // drop trailing RecordSeparator
-                let _ = data.remove(0);
+                let _ = data.pop_front();
                 *value_pos += 1;
                 return Ok(LogData {
                     name: name.unwrap(),
@@ -225,7 +226,7 @@ fn decode_log_data(data: &mut Vec<XffValue>, value_pos: &mut usize) -> Result<Lo
 }
 
 fn decode_metadata(
-    data: &mut Vec<XffValue>,
+    data: &mut VecDeque<XffValue>,
     value_pos: &mut usize,
 ) -> Result<Vec<(String, String)>, NabuError> {
     let mut out: Vec<(String, String)> = Vec::new();
@@ -237,12 +238,12 @@ fn decode_metadata(
                 match data[0] {
                     XffValue::CommandCharacter(CommandCharacter::UnitSeparator) => {
                         // remove the UnitSeparator
-                        let _ = data.remove(0);
+                        let _ = data.pop_front();
                         *value_pos += 1;
                         // no metadata, so just end
                         if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
                             // drop trailing UnitSeparator
-                            let _ = data.remove(0);
+                            let _ = data.pop_front();
                             *value_pos += 1;
                             return Ok(out);
                         } else {
@@ -272,18 +273,18 @@ fn decode_metadata(
 }
 
 fn decode_metadata_entry(
-    data: &mut Vec<XffValue>,
+    data: &mut VecDeque<XffValue>,
     value_pos: &mut usize,
 ) -> Result<(String, String), NabuError> {
-    let name = data.remove(0).as_string();
+    let name = data.pop_front().unwrap().as_string();
     //println!("name: {:?}", name);
     *value_pos += 1;
-    let value = data.remove(0).as_string();
+    let value = data.pop_front().unwrap().as_string();
     //println!("value: {:?}", value);
     *value_pos += 1;
     if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
         // remove the trailing UnitSeparator
-        let _ = data.remove(0);
+        let _ = data.pop_front();
         *value_pos += 1;
         Ok((name.unwrap(), value.unwrap()))
     } else {
