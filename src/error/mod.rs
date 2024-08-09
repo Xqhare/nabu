@@ -6,6 +6,7 @@ pub enum NabuError {
     UnknownXFFVersion(String),
     InvalidXFF(String),
     InvalidXFFExtension(String),
+    TruncatedXFF(usize),
 }
 
 #[allow(dead_code)]
@@ -24,6 +25,7 @@ impl fmt::Display for NabuError {
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {}", ver),
             NabuError::InvalidXFF(err) => write!(f, "Invalid XFF: {}", err),
             NabuError::InvalidXFFExtension(err) => write!(f, "Invalid XFF extension: {}", err),
+            NabuError::TruncatedXFF(index) => write!(f, "Truncated XFF at {}", index),
         }
     }
 }
