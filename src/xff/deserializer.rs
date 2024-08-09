@@ -15,15 +15,22 @@ use super::value::{CommandCharacter, Data, XffValue};
 /// Returns IO errors when issues with reading the file from disk occur
 /// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
 pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
+    //takes about 200ms for 300mb 
     let content = std::fs::read(path);
     if content.is_err() {
         return Err(NabuError::from(content.unwrap_err()));
     } else {
         let mut ok_content = content.unwrap();
-        let ver = ok_content.remove(0);
-        match ver {
+        if ok_content.len() == 1 {
+            return Err(NabuError::InvalidXFF(
+                "Missing end of file marker".to_string(),
+            ));
+        } else if ok_content.len() == 0 {
+            return Err(NabuError::InvalidXFF("Empty XFF file".to_string()));
+        }
+        match ok_content[0] {
             0 => deserialize_xff_v0(&mut ok_content),
-            _ => Err(NabuError::UnknownXFFVersion(ver)),
+            _ => Err(NabuError::UnknownXFFVersion(format!("{:?}", ok_content[0]))),
         }
     }
 }
@@ -34,17 +41,16 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
 ///   XffValue::from(String)
 ///   - OPTIMISE -> DONE
 fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
-    if contents.len() == 0 {
-        return Err(NabuError::InvalidXFF(
-            "Missing end of file marker".to_string(),
-        ));
-    }
     let mut content: VecDeque<u8> = contents.drain(..).collect();
     let mut out: Vec<XffValue> = Default::default();
-    // version is byte 0
+    // version is byte 0; already match against and used but not removed, for performance, until now
+    let _ = content.pop_front();
     let mut byte_pos: usize = 1;
 
-    let debug = false;
+    // debug; put true for debug, use --nocapture
+    // this section takes 50ns
+    let debug = true;
+    let print_details = false;
     let mut loop_amount = usize::MIN;
     let mut loop_time_sum: std::time::Duration = std::time::Duration::ZERO;
     let mut stx_amount = usize::MIN;
@@ -57,8 +63,10 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
     while content.len() > 0 {
         let now_main = std::time::Instant::now();
         if debug {
-            // +1 for the remove below, its the position I am interested in
-            println!("Main loop, byte pos is: {}", byte_pos + 1);
+            if print_details {
+                // +1 for the remove below, its the position I am interested in
+                println!("Main loop, byte pos is: {}", byte_pos + 1);    
+            }
             loop_amount += 1;
         }
         let current_bytes = content.pop_front().unwrap();
@@ -130,24 +138,23 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                     )));
                 }
                 if debug {
-                   let elapsed = now.elapsed();
-                    println!("STX Elapsed: {:.2?}", elapsed);
+                    let elapsed = now.elapsed();
+                    if print_details {
+                        println!("STX Elapsed: {:.2?}", elapsed);
+                    }
                     stx_amount += 1;
                     stx_time_sum += elapsed;
                 }
             }
             16 => {
-                let now = std::time::Instant::now();
                 // DLE
-                let data_length: u64 = {
-                    // My first real array!
-                    let tmp: Vec<u8> = content.drain(0..5).collect::<Vec<u8>>();
-                    byte_pos += 5;
-                    let arr = [tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], 0, 0, 0];
-                    u64::from_le_bytes(arr)
-                };
+                let now = std::time::Instant::now();
+                // length, 5 bytes
+                let data_length = u64::from_le_bytes([content[0], content[1], content[2], content[3], content[4], 0, 0, 0]);
+                let _ = content.drain(0..5);
                 let data = content.drain(0..data_length as usize).collect::<Vec<u8>>();
-                byte_pos += data_length as usize;
+                byte_pos += data_length as usize + 5;
+
                 if content[0] == 16 {
                     content.pop_front().unwrap();
                     byte_pos += 1;
@@ -155,49 +162,65 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                         len: data_length as usize,
                         data,
                     }));
+                    if debug {
+                        let elapsed = now.elapsed();
+                        if print_details {
+                            println!("DLE Elapsed: {:.2?}", elapsed);
+                        }
+                        dle_amount += 1;
+                        dle_time_sum += elapsed;
+                    }
+                    continue;
                 } else {
                     return Err(NabuError::InvalidXFF(
                         "Missing end of text marker".to_string(),
                     ));
-                }
-                if debug {
-                    let elapsed = now.elapsed();
-                    println!("DLE Elapsed: {:.2?}", elapsed);
-                    dle_amount += 1;
-                    dle_time_sum += elapsed;
                 }
             }
             25 => {
                 // EM
                 if debug {
                     let elapsed = now_main.elapsed();
-                    println!("Loop Elapsed: {:.2?}", elapsed);
+                    if print_details {
+                        println!("Loop Elapsed: {:.2?}", elapsed);
+                    }
                     loop_time_sum += elapsed;
-                    if stx_amount > 0 {
-                        println!("------------------------------------");
-                        println!("STX Amount: {}", stx_amount);
-                        println!("STX Time Sum: {:.2?}", stx_time_sum);
-                        println!("STX Time Average: {:.2?}", stx_time_sum / stx_amount.try_into().unwrap());
+                    if print_details || true  {
+                        if stx_amount > 0 {
+                            println!("------------------------------------");
+                            println!("STX Amount: {}", stx_amount);
+                            println!("STX Time Sum: {:.2?}", stx_time_sum);
+                            println!("STX Time Average: {:.2?}", stx_time_sum / stx_amount.try_into().unwrap());
+                        }
+                        if dle_amount > 0 {
+                            println!("------------------------------------");
+                            println!("DLE Amount: {}", dle_amount);
+                            println!("DLE Time Sum: {:.2?}", dle_time_sum);
+                            println!("DLE Time Average: {:.2?}", dle_time_sum / dle_amount.try_into().unwrap());
+                        }
+                        if cmd_amount > 0 {
+                            println!("------------------------------------");
+                            println!("CMD Amount: {}", cmd_amount);
+                            println!("CMD Time Sum: {:.2?}", cmd_time_sum);
+                            println!("CMD Time Average: {:.2?}", cmd_time_sum / cmd_amount.try_into().unwrap());
+                        }
+                        if loop_amount > 0 {
+                            println!("------------------------------------");
+                            println!("Loop Amount: {}", loop_amount);
+                            println!("Loop Time Sum: {:.2?}", loop_time_sum);
+                            println!("Loop Time Average: {:.2?}", loop_time_sum / loop_amount.try_into().unwrap());
+                            println!("------------------------------------");
+                        }
                     }
-                    if dle_amount > 0 {
-                        println!("------------------------------------");
-                        println!("DLE Amount: {}", dle_amount);
-                        println!("DLE Time Sum: {:.2?}", dle_time_sum);
-                        println!("DLE Time Average: {:.2?}", dle_time_sum / dle_amount.try_into().unwrap());
-                    }
-                    if cmd_amount > 0 {
-                        println!("------------------------------------");
-                        println!("CMD Amount: {}", cmd_amount);
-                        println!("CMD Time Sum: {:.2?}", cmd_time_sum);
-                        println!("CMD Time Average: {:.2?}", cmd_time_sum / cmd_amount.try_into().unwrap());
-                    }
-                    if loop_amount > 0 {
-                        println!("------------------------------------");
-                        println!("Loop Amount (Total Value Amount): {}", loop_amount);
-                        println!("Loop Time Sum: {:.2?}", loop_time_sum);
-                        println!("Loop Time Average: {:.2?}", loop_time_sum / loop_amount.try_into().unwrap());
-                        println!("------------------------------------");
-                    }
+                    println!("------------------------------------");
+                    println!("TOTALS:");
+                    let t_time = stx_time_sum + dle_time_sum + cmd_time_sum + loop_time_sum;
+                    let t_amount = stx_amount + dle_amount + cmd_amount + loop_amount;
+                    let t_time_o_val = t_time / t_amount.try_into().unwrap();
+                    println!("Total Time: {:.2?}", t_time);
+                    println!("Total Values: {}", t_amount);
+                    println!("Total Time over Values: {:.2?}", t_time_o_val);
+                    println!("------------------------------------");
                 }
                 return Ok(out);
             }
@@ -233,7 +256,9 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 }
                 if debug {
                     let elapsed = now.elapsed();
-                    println!("ESC Elapsed: {:.2?}", elapsed);
+                    if print_details {
+                        println!("ESC Elapsed: {:.2?}", elapsed);
+                    }
                     cmd_amount += 1;
                     cmd_time_sum += elapsed;
                 }
@@ -247,7 +272,9 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
         }
         if debug {
             let elapsed = now_main.elapsed();
-            println!("Loop Elapsed: {:.2?}", elapsed);
+            if print_details {
+                println!("Loop Elapsed: {:.2?}", elapsed);
+            }
             loop_time_sum += elapsed;
         }
     };
