@@ -9,9 +9,9 @@ mod tests {
 
     #[test]
     fn v0_create_simulated_data() {
-        let mut data: Vec<XffValue> = Default::default();
-        if false {
-            let mut gen_len = 3_000_000;
+        if true {
+            let mut data: Vec<XffValue> = Default::default();
+            let mut gen_len = 34_567;
             while gen_len > 0 {
                 println!("gen_len: {}", gen_len);
                 let seed = random_from_range(1, 4).unwrap();
@@ -24,11 +24,10 @@ mod tests {
                 }
                 gen_len -= 1;
             }
-        let write = serde::write("tests/v0_simulated_data3.xff", data);
-        assert!(write.is_ok());
+            let write = serde::write("tests/v0_simulated_data_large_data_66_666byte_max_per.xff", data);
+            assert!(write.is_ok());
         }
 
-        // write
         // 290MB file
         let path = "xff-example-data/v0_simulated_data_290MB.xff";
         // 145MB file
@@ -87,7 +86,7 @@ mod tests {
     }
 
     fn make_random_data() -> XffValue {
-        let seed = random_from_range(1, 666).unwrap();
+        let seed = random_from_range(1, 66666).unwrap();
         let mut out: Vec<u8> = Default::default();
         for _ in 0..seed {
             out.push(random_u8().unwrap());
