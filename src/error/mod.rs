@@ -3,7 +3,7 @@ use core::fmt;
 #[derive(Debug)]
 pub enum NabuError {
     IoError(std::io::Error),
-    UnknownXFFVersion(u8),
+    UnknownXFFVersion(String),
     InvalidXFF(String),
     InvalidXFFExtension(String),
 }
