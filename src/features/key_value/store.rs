@@ -78,17 +78,17 @@ use crate::{
 ///     println!("{}: {:?}", key, value);
 /// }
 ///
-/// let len = db.len();
+/// assert_eq!(db.len(), 4);
 ///
 /// assert_eq!(db.get("key0").unwrap(), &XffValue::String("value0".to_string()));
 /// assert_eq!(db.get("key1").unwrap(), &XffValue::Number(Number::from(-42)));
 /// assert_eq!(db.get("key2").unwrap(), &XffValue::CommandCharacter(CommandCharacter::LineFeed));
 /// assert_eq!(db.get("key3").unwrap(), &XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
-/// assert_eq!(len, 4);
 ///
 /// db.clear();
+/// assert!(db.len() == 0);
 /// let read = new_nabudb(path).unwrap();
-/// assert!(read.len() == 0);
+/// assert!(read.len() == 4);
 /// ```
 pub struct NabuDB {
     core: BTreeMap<String, XffValue>,
@@ -152,8 +152,7 @@ impl NabuDB {
     /// db.save();
     /// ```
     pub fn save(&mut self) -> Result<(), NabuError> {
-        write(&self.path, self.core.clone())?;
-        Ok(())
+        write(&self.path, self.core.clone())
     }
 
     /// Enables or disables the auto-save feature
@@ -188,6 +187,7 @@ impl NabuDB {
 
     /// Clears all entries in the `NabuDB`
     /// Also saves the `NabuDB` if the `auto_save` feature is enabled
+    /// If an error is encountered during saving, the `NabuDB` will not be changed
     ///
     /// Please take care when using this function, as it will clear all entries in the `NabuDB` - Loss of data is the feature!
     ///
@@ -203,10 +203,14 @@ impl NabuDB {
     /// assert_eq!(db.len(), 0);
     /// ```
     pub fn clear(&mut self) -> Result<(), NabuError> {
-        self.core.clear();
-        self.length = 0;
-        let _ = self.auto_save();
-        Ok(())
+        let out = self.auto_save();
+        if out.is_err() {
+            out
+        } else {
+            self.core.clear();
+            self.length = 0;
+            out
+        }
     }
 
     /// Checks if the `NabuDB` contains an entry with the given key
