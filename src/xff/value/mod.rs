@@ -383,7 +383,6 @@ pub enum CommandCharacter {
 }
 
 impl CommandCharacter {
-
     /// Takes in a u8 and returns the corresponding command character
     /// If no valid command character is found, returns `CommandCharacter::Null`
     pub fn from_u8(c: u8) -> Self {

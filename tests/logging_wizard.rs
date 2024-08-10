@@ -18,8 +18,7 @@ mod logging_wizard {
         wizard.add_log(log);
         let out = wizard.save();
         assert!(out.is_ok());
-        let read_wizard =
-            LoggingWizard::from_file("tests/logging_test_name.xff").unwrap();
+        let read_wizard = LoggingWizard::from_file("tests/logging_test_name.xff").unwrap();
         assert_eq!(read_wizard.logs[0].log_data.len(), 1);
         assert_eq!(read_wizard.logs[0].log_data[0].name, "name");
         assert_eq!(
@@ -117,7 +116,6 @@ mod logging_wizard {
 
     #[test]
     fn log_create_simulated_data() {
-
         if false {
             let mut wiz = LoggingWizard::new("tests/logging_wizard_simulated_data_1MB.xff");
             // generates 1MB of data
@@ -181,7 +179,8 @@ mod logging_wizard {
             wiz.save();
         }
 
-        let read = LoggingWizard::from_file("xff-example-data/logging_wizard_simulated_data_1MB.xff");
+        let read =
+            LoggingWizard::from_file("xff-example-data/logging_wizard_simulated_data_1MB.xff");
 
         assert!(read.is_ok());
         // check every log in read against the one in check

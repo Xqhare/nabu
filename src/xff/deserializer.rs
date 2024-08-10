@@ -15,7 +15,7 @@ use super::value::{CommandCharacter, Data, XffValue};
 /// Returns IO errors when issues with reading the file from disk occur
 /// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
 pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
-    //takes about 200ms for 300mb 
+    //takes about 200ms for 300mb
     let content = std::fs::read(path);
     if content.is_err() {
         return Err(NabuError::from(content.unwrap_err()));
@@ -59,13 +59,13 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
     let mut dle_time_sum: std::time::Duration = std::time::Duration::ZERO;
     let mut cmd_amount = usize::MIN;
     let mut cmd_time_sum: std::time::Duration = std::time::Duration::ZERO;
-    
+
     while content.len() > 0 {
         let now_main = std::time::Instant::now();
         if debug {
             if print_details {
                 // +1 for the remove below, its the position I am interested in
-                println!("Main loop, byte pos is: {}", byte_pos + 1);    
+                println!("Main loop, byte pos is: {}", byte_pos + 1);
             }
             loop_amount += 1;
         }
@@ -77,7 +77,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 Err(NabuError::InvalidXFF(format!(
                     "Missing end of transmission marker at byte position: {}.",
                     byte_pos,
-                    )))?
+                )))?
             }
         };
         byte_pos += 1;
@@ -167,7 +167,9 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 // DLE
                 let now = std::time::Instant::now();
                 // length, 5 bytes
-                let data_length = u64::from_le_bytes([content[0], content[1], content[2], content[3], content[4], 0, 0, 0]);
+                let data_length = u64::from_le_bytes([
+                    content[0], content[1], content[2], content[3], content[4], 0, 0, 0,
+                ]);
                 let _ = content.drain(0..5);
                 let data = content.drain(0..data_length as usize).collect::<Vec<u8>>();
                 byte_pos += data_length as usize + 5;
@@ -202,30 +204,42 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                         println!("Loop Elapsed: {:.2?}", elapsed);
                     }
                     loop_time_sum += elapsed;
-                    if print_details || true  {
+                    if print_details || true {
                         if stx_amount > 0 {
                             println!("------------------------------------");
                             println!("STX Amount: {}", stx_amount);
                             println!("STX Time Sum: {:.2?}", stx_time_sum);
-                            println!("STX Time Average: {:.2?}", stx_time_sum / stx_amount.try_into().unwrap());
+                            println!(
+                                "STX Time Average: {:.2?}",
+                                stx_time_sum / stx_amount.try_into().unwrap()
+                            );
                         }
                         if dle_amount > 0 {
                             println!("------------------------------------");
                             println!("DLE Amount: {}", dle_amount);
                             println!("DLE Time Sum: {:.2?}", dle_time_sum);
-                            println!("DLE Time Average: {:.2?}", dle_time_sum / dle_amount.try_into().unwrap());
+                            println!(
+                                "DLE Time Average: {:.2?}",
+                                dle_time_sum / dle_amount.try_into().unwrap()
+                            );
                         }
                         if cmd_amount > 0 {
                             println!("------------------------------------");
                             println!("CMD Amount: {}", cmd_amount);
                             println!("CMD Time Sum: {:.2?}", cmd_time_sum);
-                            println!("CMD Time Average: {:.2?}", cmd_time_sum / cmd_amount.try_into().unwrap());
+                            println!(
+                                "CMD Time Average: {:.2?}",
+                                cmd_time_sum / cmd_amount.try_into().unwrap()
+                            );
                         }
                         if loop_amount > 0 {
                             println!("------------------------------------");
                             println!("Loop Amount: {}", loop_amount);
                             println!("Loop Time Sum: {:.2?}", loop_time_sum);
-                            println!("Loop Time Average: {:.2?}", loop_time_sum / loop_amount.try_into().unwrap());
+                            println!(
+                                "Loop Time Average: {:.2?}",
+                                loop_time_sum / loop_amount.try_into().unwrap()
+                            );
                             println!("------------------------------------");
                         }
                     }
@@ -249,9 +263,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                         byte_pos += 1;
                         // ESC inverse check
                         if current_cmd_char != 27 {
-                            let val = CommandCharacter::from_u8_checked(
-                                current_cmd_char,
-                            );
+                            let val = CommandCharacter::from_u8_checked(current_cmd_char);
                             if val.is_none() {
                                 return Err(NabuError::InvalidXFF(format!(
                                     "Invalid command character: {} at byte position: {}.",
@@ -264,14 +276,15 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                         // Ending ESC
                         if content[0] != 27 {
                             break;
-                        } 
+                        }
                         content.pop_front();
                         byte_pos += 1;
-                        out.push(XffValue::CommandCharacter(CommandCharacter::from(
-                            27,
-                        )));
+                        out.push(XffValue::CommandCharacter(CommandCharacter::from(27)));
                     } else {
-                        Err(NabuError::InvalidXFF(format!("Invalid XFF, missing command character at byte position: {}.", byte_pos)))?
+                        Err(NabuError::InvalidXFF(format!(
+                            "Invalid XFF, missing command character at byte position: {}.",
+                            byte_pos
+                        )))?
                     };
                 }
                 if debug {
@@ -297,7 +310,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
             }
             loop_time_sum += elapsed;
         }
-    };
+    }
     // If a length of 0 is ever read, its an error, files have to end with EM and start with
     // version, so 2 bytes total
     Err(NabuError::InvalidXFF(format!(
@@ -305,4 +318,3 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
         byte_pos,
     )))
 }
-

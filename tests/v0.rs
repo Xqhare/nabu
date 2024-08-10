@@ -105,12 +105,12 @@ mod tests {
                 let seed = random_from_range(1, 3524654654).unwrap();
                 let bind = format!("-{}", seed);
                 XffValue::from(bind)
-            },
+            }
             1 => {
                 // positive
                 let seed = random_from_range(1, 3524654654).unwrap();
                 XffValue::from(seed)
-            },
+            }
             2 => {
                 // float
                 let seed1 = random_from_range(1, 352465).unwrap();
@@ -122,7 +122,7 @@ mod tests {
                     // positive
                     XffValue::from(seed1 as f64 / seed2 as f64)
                 }
-            },
+            }
             _ => unreachable!(),
         }
     }

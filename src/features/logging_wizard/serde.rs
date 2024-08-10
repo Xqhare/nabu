@@ -8,7 +8,10 @@ use crate::{
     },
     XFF_VERSION,
 };
-use std::{collections::{BTreeMap, VecDeque}, path::Path};
+use std::{
+    collections::{BTreeMap, VecDeque},
+    path::Path,
+};
 
 /// Encodes a Vec of logs into bytes
 /// Writes an entirely new xff file to the given path
@@ -184,7 +187,10 @@ fn decode_log(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<Lo
     )))
 }
 
-fn decode_log_data(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<LogData, NabuError> {
+fn decode_log_data(
+    data: &mut VecDeque<XffValue>,
+    value_pos: &mut usize,
+) -> Result<LogData, NabuError> {
     // I was paniking with remove(0) implicitly anyway
     let name = data.pop_front().unwrap().as_string();
     //println!("name: {:?}", name);
