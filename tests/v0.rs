@@ -37,9 +37,9 @@ mod tests {
         // 145MB file
         //let path = "xff-example-data/v0_simulated_data_145MB.xff";
         // 21MB file
-        let path = "xff-example-data/v0_simulated_data_21MB.xff";
+        //let path = "xff-example-data/v0_simulated_data_21MB.xff";
         // 1.5MB file
-        //let path = "xff-example-data/v0_simulated_data_1MB.xff";
+        let path = "xff-example-data/v0_simulated_data_1MB.xff";
         let read = serde::read(path);
         if read.is_err() {
             println!("Failed to read {:?}", read);
