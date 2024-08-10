@@ -16,22 +16,16 @@ use super::value::{CommandCharacter, Data, XffValue};
 /// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
 pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
     //takes about 200ms for 300mb
-    let content = std::fs::read(path);
-    if content.is_err() {
-        return Err(NabuError::from(content.unwrap_err()));
-    } else {
-        let mut ok_content = content.unwrap();
-        if ok_content.len() == 1 {
-            return Err(NabuError::InvalidXFF(
-                "Missing end of file marker".to_string(),
-            ));
-        } else if ok_content.len() == 0 {
-            return Err(NabuError::InvalidXFF("Empty XFF file".to_string()));
-        }
-        match ok_content[0] {
-            0 => deserialize_xff_v0(&mut ok_content),
-            _ => Err(NabuError::UnknownXFFVersion(format!("{:?}", ok_content[0]))),
-        }
+    let mut content = std::fs::read(path)?;
+    if content.len() == 1 {
+        return Err(NabuError::MissingEM(2));
+    } else if content.len() == 0 {
+        return Err(NabuError::EmpthyXFF);
+    }
+    // check for 2 bytes is done
+    match content[0] {
+        0 => deserialize_xff_v0(&mut content),
+        _ => Err(NabuError::UnknownXFFVersion(content[0])),
     }
 }
 
@@ -49,7 +43,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
 
     // debug; put true for debug, use --nocapture
     // this section takes 50ns
-    let debug = true;
+    let debug = false;
     let print_details = false;
     let mut loop_amount = usize::MIN;
     let mut loop_time_sum: std::time::Duration = std::time::Duration::ZERO;
@@ -74,10 +68,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 byte_pos += 1;
                 b
             } else {
-                Err(NabuError::InvalidXFF(format!(
-                    "Missing end of transmission marker at byte position: {}.",
-                    byte_pos,
-                )))?
+                Err(NabuError::TruncatedXFF(byte_pos))?
             }
         };
         byte_pos += 1;
@@ -138,10 +129,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                     {
                         tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
                     } else {
-                        return Err(NabuError::InvalidXFF(format!(
-                            "Invalid ASCII character: {}.",
-                            current_char
-                        )));
+                        return Err(NabuError::InvalidASCIIString(current_char, byte_pos));
                     }
                 }
                 if content[0] == 3 {
@@ -149,10 +137,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                     byte_pos += 1;
                     out.push(XffValue::from(tmp_string_binding));
                 } else {
-                    return Err(NabuError::InvalidXFF(format!(
-                        "Missing end of transmission marker at byte position: {}",
-                        byte_pos
-                    )));
+                    return Err(NabuError::MissingETX(byte_pos));
                 }
                 if debug {
                     let elapsed = now.elapsed();
@@ -191,9 +176,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                     }
                     continue;
                 } else {
-                    return Err(NabuError::InvalidXFF(
-                        "Missing end of text marker".to_string(),
-                    ));
+                    return Err(NabuError::MissingDLE(byte_pos));
                 }
             }
             25 => {
@@ -265,10 +248,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                         if current_cmd_char != 27 {
                             let val = CommandCharacter::from_u8_checked(current_cmd_char);
                             if val.is_none() {
-                                return Err(NabuError::InvalidXFF(format!(
-                                    "Invalid command character: {} at byte position: {}.",
-                                    current_cmd_char, byte_pos
-                                )));
+                                return Err(NabuError::InvalidASCIICommandCharacter(current_cmd_char, byte_pos));
                             }
                             out.push(XffValue::CommandCharacter(val.unwrap()));
                             continue;
@@ -281,10 +261,8 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                         byte_pos += 1;
                         out.push(XffValue::CommandCharacter(CommandCharacter::from(27)));
                     } else {
-                        Err(NabuError::InvalidXFF(format!(
-                            "Invalid XFF, missing command character at byte position: {}.",
-                            byte_pos
-                        )))?
+                        // pop front returned None, truncation!
+                        return Err(NabuError::TruncatedXFF(byte_pos));
                     };
                 }
                 if debug {
@@ -297,10 +275,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 }
             }
             _ => {
-                return Err(NabuError::InvalidXFF(format!(
-                    "Unknown byte: {} at byte position: {}.",
-                    current_byte, byte_pos
-                )));
+                return Err(NabuError::InvalidXFFByte(current_byte, byte_pos));
             }
         }
         if debug {
@@ -311,10 +286,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
             loop_time_sum += elapsed;
         }
     }
-    // If a length of 0 is ever read, its an error, files have to end with EM and start with
-    // version, so 2 bytes total
-    Err(NabuError::InvalidXFF(format!(
-        "Missing end of transmission marker at byte position: {}.",
-        byte_pos,
-    )))
+    // Premature EoF
+    Err(NabuError::TruncatedXFF(byte_pos))
 }
+

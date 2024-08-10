@@ -18,7 +18,7 @@ use super::value::XffValue;
 pub fn serialize_xff(data: Vec<XffValue>, ver: u8) -> Result<Vec<u8>, NabuError> {
     match ver {
         0 => serialize_xff_v0(data),
-        _ => Err(NabuError::UnknownXFFVersion(ver.to_string())),
+        _ => Err(NabuError::UnknownXFFVersion(ver)),
     }
 }
 
