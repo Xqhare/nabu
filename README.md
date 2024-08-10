@@ -58,6 +58,7 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
 
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself
+    - Wait for v1 maybe?
 
 - Finish README
     - Look over code examples for `LoggingWizard` in particular
@@ -85,6 +86,8 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
 All specifications are in the `specifications` directory.
 
 V0 can be found [here](specifications/v0.md).
+
+V1 is not yet finalized, and can be found [here](specifications/v1.md).
 
 ## Usage
 
