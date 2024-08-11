@@ -3,7 +3,7 @@
 mod logging_wizard {
     use nabu::{
         logging_wizard::{Log, LogData, LoggingWizard},
-        xff::value::{self, CommandCharacter, Data, Number, XffValue},
+        xff::value::{CommandCharacter, Data, XffValue},
     };
     use std::collections::BTreeMap;
     #[test]
@@ -36,7 +36,7 @@ mod logging_wizard {
 
     #[test]
     fn read_log() {
-        let read = LoggingWizard::from_file("xff-example-data/read_and_write_logging_wizard.xff");
+        let read = LoggingWizard::from_file("xff-example-data/read_and_write_logging_wizard_v0.xff");
         assert!(read.is_ok());
         let mut wizard = read.unwrap();
         assert!(wizard.logs_len == 1);
@@ -68,7 +68,7 @@ mod logging_wizard {
 
     #[test]
     fn complex_read_and_write() {
-        let mut wiz = LoggingWizard::new("tests/complex_read_and_write.xff");
+        let mut wiz = LoggingWizard::new("tests/complex_read_and_write_v0.xff");
 
         let mut log = Log::new();
         log.add_log_data(LogData::new("Data_point_1", XffValue::from("value"), None));
@@ -89,9 +89,10 @@ mod logging_wizard {
             Some(meta1),
         ));
         wiz.add_log(log);
-        wiz.save().unwrap();
+        let save_check = wiz.save();
+        assert!(save_check.is_ok());
 
-        let read = LoggingWizard::from_file("tests/complex_read_and_write.xff").unwrap();
+        let read = LoggingWizard::from_file("tests/complex_read_and_write_v0.xff").unwrap();
         assert_eq!(read.logs[0].log_data[0].name, "Data_point_1");
         assert_eq!(read.logs[0].log_data[0].value, XffValue::from("value"));
         assert_eq!(read.logs[0].log_data[3].name, "Data_point_4");
@@ -111,7 +112,7 @@ mod logging_wizard {
         );
 
         //clear the file
-        std::fs::remove_file("tests/complex_read_and_write.xff").unwrap();
+        std::fs::remove_file("tests/complex_read_and_write_v0.xff").unwrap();
     }
 
     #[test]
@@ -174,13 +175,12 @@ mod logging_wizard {
                 wiz.add_log(log);
             }
 
-            let check = wiz.clone();
-
-            wiz.save();
+            let check = wiz.save();
+            assert!(check.is_ok());
         }
 
         let read =
-            LoggingWizard::from_file("xff-example-data/logging_wizard_simulated_data_1MB.xff");
+            LoggingWizard::from_file("xff-example-data/logging_wizard_simulated_data_1MB_v0.xff");
 
         assert!(read.is_ok());
         // check every log in read against the one in check

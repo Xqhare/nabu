@@ -29,17 +29,17 @@ mod tests {
         }
 
         // 843MB file
-        //let path = "xff-example-data/v0_simulated_data_843MB_ignore.xff";
+        //let path = "xff-example-data/v0_simulated_data_843MB_v0_ignore.xff";
         // 290MB file
-        //let path = "xff-example-data/v0_simulated_data_290MB.xff";
+        //let path = "xff-example-data/v0_simulated_data_290MB_v0.xff";
         // 290MB 66.666byte max per file
-        //let path = "xff-example-data/v0_simulated_data_large_data_66_666byte_max_per_ignore.xff";
+        //let path = "xff-example-data/v0_simulated_data_large_data_66_666byte_max_per_v0_ignore.xff";
         // 145MB file
-        //let path = "xff-example-data/v0_simulated_data_145MB.xff";
+        //let path = "xff-example-data/v0_simulated_data_145MB_v0.xff";
         // 21MB file
-        //let path = "xff-example-data/v0_simulated_data_21MB.xff";
+        //let path = "xff-example-data/v0_simulated_data_21MB_v0.xff";
         // 1.5MB file
-        let path = "xff-example-data/v0_simulated_data_1MB.xff";
+        let path = "xff-example-data/v0_simulated_data_1MB_v0.xff";
         let read = serde::read(path);
         if read.is_err() {
             println!("Failed to read {:?}", read);

@@ -23,7 +23,7 @@ use crate::{
 /// use std::path::Path;
 /// use nabu::features::key_value::store::NabuDB;
 ///
-/// let path = Path::new("xff-example-data/nabuDB_main_example.xff");
+/// let path = Path::new("xff-example-data/nabuDB_main_example_v0.xff");
 /// let mut db = NabuDB::new(path.to_path_buf());
 /// assert!(db.is_ok());
 /// ```
@@ -34,7 +34,7 @@ use crate::{
 /// use nabu::key_value_store::new_nabudb;
 /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
 ///
-/// let path = "xff-example-data/nabuDB_main_example.xff";
+/// let path = "xff-example-data/nabuDB_main_example_v0.xff";
 /// let mut db = new_nabudb(path).unwrap();
 ///
 /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -111,7 +111,7 @@ impl NabuDB {
     /// ```rust
     /// use nabu::key_value_store::new_nabudb;
     ///
-    /// let db = new_nabudb("xff-example-data/nabuDB.xff");
+    /// let db = new_nabudb("xff-example-data/nabuDB_v0.xff");
     /// assert!(db.is_ok());
     /// ```
     ///
@@ -144,7 +144,7 @@ impl NabuDB {
     /// use nabu::key_value_store::new_nabudb;
     /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
     ///
-    /// let mut db = new_nabudb("xff-example-data/nabuDB.xff").unwrap();
+    /// let mut db = new_nabudb("xff-example-data/nabuDB_v0.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
     /// db.insert("key1".to_string(), XffValue::Number(Number::from(-42)));
     /// db.insert("key2".to_string(), XffValue::CommandCharacter(CommandCharacter::LineFeed));
@@ -168,7 +168,7 @@ impl NabuDB {
     /// ```rust
     /// use nabu::key_value_store::new_nabudb;
     ///
-    /// let mut db = new_nabudb("xff-example-data/nabuDB.xff").unwrap();
+    /// let mut db = new_nabudb("xff-example-data/nabuDB_v0.xff").unwrap();
     /// db.set_auto_save(true);
     /// ```
     pub fn set_auto_save(&mut self, auto_save: bool) {
