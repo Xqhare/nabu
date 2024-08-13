@@ -1,6 +1,8 @@
-# Xff byte encoding reference table
-The reference table below is the Xff byte encoding reference table.
-It was created to be used encoding the bytes in the Xff protocol.
+# `.xff` byte encoding reference table
+The `.xff` byte encoding was created to be used to encode `.xff` files into bytes after the previously used `Windows-1252` control characters were found to be lacking for this specific use-case.
+
+Control characters are now called Command characters.
+
 It is based on `Windows-1252`. All differences can be found in the first 32 elements of the table below.
 
 | DEC | HEX | BIN | Symbol | Description |
