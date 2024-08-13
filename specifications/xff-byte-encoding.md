@@ -1,7 +1,7 @@
 # `.xff` byte encoding reference table
 The `.xff` byte encoding was created to be used to encode `.xff` files into bytes after the previously used `Windows-1252` control characters were found to be lacking for this specific use-case.
 
-Control characters are now called Command characters.
+Control characters, or unprintable characters are now called Command characters.
 
 It is based on `Windows-1252`. All differences can be found in the first 32 elements of the table below.
 
