@@ -1,9 +1,11 @@
 # `.xff` byte encoding reference table
 The `.xff` byte encoding was created to be used to encode `.xff` files into bytes after the previously used `Windows-1252` control characters were found to be lacking for this specific use-case.
 
+Despite its lofty name, `.xff` byte encoding is merely a custom subset of ASCII, specifically `Windows-1252`.
+
 Control characters, or unprintable characters are now called Command characters.
 
-It is based on `Windows-1252`. All differences can be found in the first 32 elements of the table below.
+All differences can be found in the first 32 elements of the table below.
 
 | DEC | HEX | BIN | Symbol | Description |
 | :---: | :---: | :--------: | :---: | :-- |
@@ -21,11 +23,11 @@ It is based on `Windows-1252`. All differences can be found in the first 32 elem
 | 11 | 0B | 00001011 | VT | Vertical Tabulation |
 | 12 | 0C | 00001100 | FF | Form Feed |
 | 13 | 0D | 00001101 | CR | Carriage Return |
-| 14 | 0E | 00001110 | TRU | True |
-| 15 | 0F | 00001111 | FAL  | False |
-| 16 | 10 | 00010000 | ESC | Escape  |
-| 17 | 11 | 00010001 | -- | Unused |
-| 18 | 12 | 00010010 | -- | Unused |
+| 14 | 0E | 00001110 | -- | Unused |
+| 15 | 0F | 00001111 | -- | Unused |
+| 16 | 10 | 00010000 | -- | Unused |
+| 17 | 11 | 00010001 | TRU | True |
+| 18 | 12 | 00010010 | FAL | False |
 | 19 | 13 | 00010011 | -- | Unused | 
 | 20 | 14 | 00010100 | -- | Unused |
 | 21 | 15 | 00010101 | -- | Unused |
@@ -33,8 +35,8 @@ It is based on `Windows-1252`. All differences can be found in the first 32 elem
 | 23 | 17 | 00010111 | -- | Unused |
 | 24 | 18 | 00011000 | -- | Unused |
 | 25 | 19 | 00011001 | EM | End of medium |
-| 26 | 1A | 00011010 | SEP | Separator |
-| 27 | 1B | 00011011 | VS | Value Separator |
+| 26 | 1A | 00011010 | SUB | Substitute |
+| 27 | 1B | 00011011 | ESC | Escape |
 | 28 | 1C | 00011100 | FS | File Separator
 | 29 | 1D | 00011101 | GS | Group Separator
 | 30 | 1E | 00011110 | RS | Record Separator
