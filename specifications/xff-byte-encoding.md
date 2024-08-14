@@ -24,7 +24,7 @@ It is based on `Windows-1252`. All differences can be found in the first 32 elem
 | 14 | 0E | 00001110 | TRU | True |
 | 15 | 0F | 00001111 | FAL  | False |
 | 16 | 10 | 00010000 | ESC | Escape  |
-| 17 | 11 | 00010001 | SEP | Separator |
+| 17 | 11 | 00010001 | -- | Unused |
 | 18 | 12 | 00010010 | -- | Unused |
 | 19 | 13 | 00010011 | -- | Unused | 
 | 20 | 14 | 00010100 | -- | Unused |
@@ -33,8 +33,8 @@ It is based on `Windows-1252`. All differences can be found in the first 32 elem
 | 23 | 17 | 00010111 | -- | Unused |
 | 24 | 18 | 00011000 | -- | Unused |
 | 25 | 19 | 00011001 | EM | End of medium |
-| 26 | 1A | 00011010 | -- | Unused |
-| 27 | 1B | 00011011 | -- | Unused |
+| 26 | 1A | 00011010 | SEP | Separator |
+| 27 | 1B | 00011011 | VS | Value Separator |
 | 28 | 1C | 00011100 | FS | File Separator
 | 29 | 1D | 00011101 | GS | Group Separator
 | 30 | 1E | 00011110 | RS | Record Separator
