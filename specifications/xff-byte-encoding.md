@@ -25,9 +25,9 @@ All differences can be found in the first 32 elements of the table below.
 | 13 | 0D | 00001101 | CR | Carriage Return |
 | 14 | 0E | 00001110 | -- | Unused |
 | 15 | 0F | 00001111 | -- | Unused |
-| 16 | 10 | 00010000 | -- | Unused |
-| 17 | 11 | 00010001 | TRU | True |
-| 18 | 12 | 00010010 | FAL | False |
+| 16 | 10 | 00010000 | TRU | True |
+| 17 | 11 | 00010001 | FAL | False |
+| 18 | 12 | 00010010 | -- | Unused |
 | 19 | 13 | 00010011 | -- | Unused | 
 | 20 | 14 | 00010100 | -- | Unused |
 | 21 | 15 | 00010101 | -- | Unused |
