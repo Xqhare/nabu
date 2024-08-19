@@ -7,6 +7,9 @@ use crate::{
 };
 
 #[derive(Debug)]
+/// DEPRECATED - FOR LEGACY USE ONLY (v0)
+/// v1: Please consider using the inbuilt `OBJECT` type instead
+///
 /// A simple key-value store for storing XFF values
 /// Create a new `NabuDB` by using the `NabuDB::new` method
 ///
@@ -98,6 +101,9 @@ pub struct NabuDB {
 }
 
 impl NabuDB {
+
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Creates a new `NabuDB` from a path
     /// If the path does not exist, a new `NabuDB` will be created,
     /// otherwise the `NabuDB` will be loaded from the file
@@ -137,6 +143,8 @@ impl NabuDB {
         }
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Saves the `NabuDB` to disk
     ///
     /// # Example
@@ -155,6 +163,8 @@ impl NabuDB {
         write(&self.path, self.core.clone())
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Enables or disables the auto-save feature
     /// By default, the auto-save feature is off
     ///
@@ -175,6 +185,8 @@ impl NabuDB {
         self.auto_save = auto_save;
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Helper function to call everywhere to save the `NabuDB`
     /// Checks the need to save internally and calls `save` if needed
     fn auto_save(&mut self) -> Result<(), NabuError> {
@@ -185,6 +197,8 @@ impl NabuDB {
         }
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Clears all entries in the `NabuDB`
     /// Also saves the `NabuDB` if the `auto_save` feature is enabled
     /// If an error is encountered during saving, the `NabuDB` will not be changed
@@ -213,6 +227,8 @@ impl NabuDB {
         }
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Checks if the `NabuDB` contains an entry with the given key
     ///
     /// # Arguments
@@ -233,6 +249,8 @@ impl NabuDB {
         self.core.contains_key(key)
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Returns a list of all keys in the `NabuDB`
     ///
     /// # Example
@@ -250,6 +268,8 @@ impl NabuDB {
         self.core.keys().cloned().collect()
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Inserts an entry into the `NabuDB`
     /// Also saves the `NabuDB` if the `auto_save` feature is enabled
     ///
@@ -273,6 +293,8 @@ impl NabuDB {
         let _ = self.auto_save();
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Removes an entry from the `NabuDB`
     /// Also saves the `NabuDB` if the `auto_save` feature is enabled
     ///
@@ -297,6 +319,8 @@ impl NabuDB {
         out
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Returns the value of the `NabuDB` as a `BTreeMap`
     ///
     /// # Example
@@ -313,6 +337,8 @@ impl NabuDB {
         self.core.clone()
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Returns a reference to the value of the `NabuDB` at the given key
     /// Returns `None` if the key does not exist
     ///
@@ -339,6 +365,8 @@ impl NabuDB {
         self.core.get(key)
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Returns the key-value pair of the `NabuDB` at the given key
     ///
     /// # Arguments
@@ -361,6 +389,8 @@ impl NabuDB {
         self.core.get_key_value(key)
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Returns an iterator over the key-value pairs of the `NabuDB`
     ///
     /// # Example
@@ -381,6 +411,8 @@ impl NabuDB {
         self.core.iter()
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    ///
     /// Returns the number of key-value pairs in the `NabuDB`
     ///
     /// # Example

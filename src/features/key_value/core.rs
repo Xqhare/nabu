@@ -3,10 +3,13 @@ use std::{collections::BTreeMap, path::Path};
 use crate::{
     error::NabuError,
     key_value_core::new_core_store,
-    serde::{read, write},
+    serde::{read, write_legacy},
     xff::value::XffValue,
 };
 
+/// DEPRECATED - FOR LEGACY USE ONLY (v0)
+/// v1: Please consider using the inbuilt `OBJECT` type instead
+///
 /// Reads the content of a XFF file and returns a BTreeMap
 /// Please note that only XFF files written by the `write_core` function are supported
 ///
@@ -53,6 +56,9 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
     Ok(out)
 }
 
+/// DEPRECATED - FOR LEGACY USE ONLY (v0)
+/// v1: Please consider using the inbuilt `OBJECT` type instead
+///
 /// Writes a BTreeMap to a XFF file
 ///
 /// # Arguments
@@ -80,5 +86,5 @@ pub fn write_core(path: &Path, data: BTreeMap<String, XffValue>) -> Result<(), N
         out.push(XffValue::String(key.to_string()));
         out.push(value.clone());
     }
-    write(path, out)
+    write_legacy(path, out, 0)
 }
