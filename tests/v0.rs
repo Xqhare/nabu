@@ -389,9 +389,9 @@ mod tests {
     #[test]
     fn v0_complex_data() {
         let path = std::path::Path::new("tests/v0_complex_data.xff");
-        let bin_data0 = std::fs::read("pictures/xff-char-chart.jpeg").unwrap();
-        let bin_data1 = std::fs::read("pictures/xff-cmd-char-chart.jpeg").unwrap();
-        let bin_data2 = std::fs::read("pictures/xff-main-chart.jpeg").unwrap();
+        let bin_data0 = std::fs::read("pictures/xff_v0-char-chart.jpeg").unwrap();
+        let bin_data1 = std::fs::read("pictures/xff_v0-cmd-char-chart.jpeg").unwrap();
+        let bin_data2 = std::fs::read("pictures/xff_v0-main-chart.jpeg").unwrap();
         let bin_data3 = std::fs::read("LICENSE").unwrap();
         let bin_data5 = std::fs::read("README.md").unwrap();
         let bin_data6 = std::fs::read("tests/v0.rs").unwrap();

@@ -163,9 +163,9 @@ mod core {
     fn complex() {
         let path = Path::new("test_complex_kv_store.xff");
         let mut data = new_core_store();
-        let bin_data0 = std::fs::read("pictures/xff-char-chart.jpeg").unwrap();
-        let bin_data1 = std::fs::read("pictures/xff-cmd-char-chart.jpeg").unwrap();
-        let bin_data2 = std::fs::read("pictures/xff-main-chart.jpeg").unwrap();
+        let bin_data0 = std::fs::read("pictures/xff_v0-char-chart.jpeg").unwrap();
+        let bin_data1 = std::fs::read("pictures/xff_v0-cmd-char-chart.jpeg").unwrap();
+        let bin_data2 = std::fs::read("pictures/xff_v0-main-chart.jpeg").unwrap();
         let bin_data3 = std::fs::read("LICENSE").unwrap();
         let bin_data5 = std::fs::read("README.md").unwrap();
         let bin_data6 = std::fs::read("tests/v0.rs").unwrap();
@@ -316,9 +316,9 @@ mod store {
     #[test]
     fn complex() {
         let mut db: NabuDB = new_nabudb("complex_db.xff").unwrap();
-        let bin_data0 = std::fs::read("pictures/xff-char-chart.jpeg").unwrap();
-        let bin_data1 = std::fs::read("pictures/xff-cmd-char-chart.jpeg").unwrap();
-        let bin_data2 = std::fs::read("pictures/xff-main-chart.jpeg").unwrap();
+        let bin_data0 = std::fs::read("pictures/xff_v0-char-chart.jpeg").unwrap();
+        let bin_data1 = std::fs::read("pictures/xff_v0-cmd-char-chart.jpeg").unwrap();
+        let bin_data2 = std::fs::read("pictures/xff_v0-main-chart.jpeg").unwrap();
         let bin_data3 = std::fs::read("LICENSE").unwrap();
         let bin_data5 = std::fs::read("README.md").unwrap();
         let bin_data6 = std::fs::read("tests/v0.rs").unwrap();
