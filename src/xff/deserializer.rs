@@ -35,6 +35,7 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
 ///   XffValue::from(String)
 ///   - OPTIMISE -> DONE
 fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError> {
+    let xff_ver = 0;
     let mut content: VecDeque<u8> = contents.drain(..).collect();
     let mut out: Vec<XffValue> = Default::default();
     // version is byte 0; already match against and used but not removed, for performance, until now
@@ -135,7 +136,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 if content[0] == 3 {
                     let _ = content.pop_front();
                     byte_pos += 1;
-                    out.push(XffValue::from(tmp_string_binding));
+                    out.push(XffValue::from((tmp_string_binding, xff_ver)));
                 } else {
                     return Err(NabuError::MissingETX(byte_pos));
                 }

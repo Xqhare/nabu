@@ -9,9 +9,10 @@ pub enum XffValue {
     Number(Number),
     /// A data value, holding a `Data` struct
     Data(Data),
-    /// An array of command characters
+    /// Only used in v0, deprecated
     /// A command character is represented by the `CommandCharacter` enum
     CommandCharacter(CommandCharacter),
+    /// Only used in v0, deprecated
     /// An array of `CommandCharacter`s
     ArrayCmdChar(Vec<CommandCharacter>),
 }
@@ -56,45 +57,43 @@ impl From<Vec<CommandCharacter>> for XffValue {
     }
 }
 
+impl<S> From<(S, u8)> for XffValue where S: Into<String> {
+    fn from(c: (S, u8)) -> Self {
+        match c.1 {
+            0 => {
+                let string = c.0.into();
+                let check_usize = &string.parse::<usize>();
+                if check_usize.is_ok() {
+                    XffValue::Number(Number::from(check_usize.as_ref().unwrap()))
+                } else {
+                    let check_isize = &string.parse::<isize>();
+                    if check_isize.is_ok() {
+                        XffValue::Number(Number::from(check_isize.as_ref().unwrap()))
+                    } else {
+                        let check_float = &string.parse::<f64>();
+                        if check_float.is_ok() {
+                            XffValue::Number(Number::from(check_float.as_ref().unwrap()))
+                        } else {
+                            XffValue::String(string)
+                        }
+                    }
+                }
+            },
+            1 => XffValue::String(c.0.into()),
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl From<String> for XffValue {
     fn from(c: String) -> Self {
-        let check_usize = c.parse::<usize>();
-        if check_usize.is_ok() {
-            XffValue::Number(Number::from(check_usize.unwrap()))
-        } else {
-            let check_isize = c.parse::<isize>();
-            if check_isize.is_ok() {
-                XffValue::Number(Number::from(check_isize.unwrap()))
-            } else {
-                let check_float = c.parse::<f64>();
-                if check_float.is_ok() {
-                    XffValue::Number(Number::from(check_float.unwrap()))
-                } else {
-                    XffValue::String(c)
-                }
-            }
-        }
+        XffValue::String(c)
     }
 }
 
 impl From<&str> for XffValue {
     fn from(c: &str) -> Self {
-        let check_usize = c.parse::<usize>();
-        if check_usize.is_ok() {
-            XffValue::Number(Number::from(check_usize.unwrap()))
-        } else {
-            let check_isize = c.parse::<isize>();
-            if check_isize.is_ok() {
-                XffValue::Number(Number::from(check_isize.unwrap()))
-            } else {
-                let check_float = c.parse::<f64>();
-                if check_float.is_ok() {
-                    XffValue::Number(Number::from(check_float.unwrap()))
-                } else {
-                    XffValue::String(c.to_string())
-                }
-            }
-        }
+        XffValue::String(c.to_string())
     }
 }
 
@@ -188,6 +187,12 @@ impl From<usize> for Number {
     }
 }
 
+impl From<&usize> for Number {
+    fn from(c: &usize) -> Self {
+        Number::Unsigned(c.clone())
+    }
+}
+
 impl From<u64> for Number {
     fn from(c: u64) -> Self {
         Number::Unsigned(c as usize)
@@ -218,6 +223,12 @@ impl From<isize> for Number {
     }
 }
 
+impl From<&isize> for Number {
+    fn from(c: &isize) -> Self {
+        Number::Integer(c.clone())
+    }
+}
+
 impl From<i64> for Number {
     fn from(c: i64) -> Self {
         Number::Integer(c as isize)
@@ -245,6 +256,12 @@ impl From<i8> for Number {
 impl From<f64> for Number {
     fn from(c: f64) -> Self {
         Number::Float(c)
+    }
+}
+
+impl From<&f64> for Number {
+    fn from(c: &f64) -> Self {
+        Number::from(c.clone())
     }
 }
 
