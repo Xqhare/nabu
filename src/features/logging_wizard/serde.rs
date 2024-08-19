@@ -192,7 +192,7 @@ fn decode_log_data(
     value_pos: &mut usize,
 ) -> Result<LogData, NabuError> {
     // I was paniking with remove(0) implicitly anyway
-    let name = data.pop_front().unwrap().as_string();
+    let name = data.pop_front().unwrap().into_string();
     //println!("name: {:?}", name);
     *value_pos += 1;
     let value = data.pop_front().unwrap();
@@ -285,10 +285,10 @@ fn decode_metadata_entry(
     data: &mut VecDeque<XffValue>,
     value_pos: &mut usize,
 ) -> Result<(String, String), NabuError> {
-    let name = data.pop_front().unwrap().as_string();
+    let name = data.pop_front().unwrap().into_string();
     //println!("name: {:?}", name);
     *value_pos += 1;
-    let value = data.pop_front().unwrap().as_string();
+    let value = data.pop_front().unwrap().into_string();
     //println!("value: {:?}", value);
     *value_pos += 1;
     if data[0] == XffValue::CommandCharacter(CommandCharacter::UnitSeparator) {
