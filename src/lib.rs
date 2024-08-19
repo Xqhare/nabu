@@ -758,7 +758,21 @@ pub mod serde {
 ))]
 pub mod features;
 
+#[cfg(any(feature = "logging_wizard", doc))]
+/// Module to create and manage a logging wizard
+pub mod logging_wizard {
+    pub use crate::features::logging_wizard::{Log, LogData, LoggingWizard};
+}
+
+// -------------------------------------------------
+//           DEPRECATED FEATURES BELOW
+//             FOR LEGACY USE ONLY
+// -------------------------------------------------
+
 #[cfg(any(doc, feature = "key_value_core"))]
+/// DEPRECATED - FOR LEGACY USE ONLY (v0)
+/// v1: Please consider using the inbuilt `OBJECT` type instead
+///
 /// Module to read and write a basic key-value store in the form of a `BTreeMap`
 ///
 /// # Example
@@ -780,6 +794,9 @@ pub mod key_value_core {
         xff::value::XffValue,
     };
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    /// v1: Please consider using the inbuilt `OBJECT` type instead
+    ///
     /// Reads the content of a XFF file and returns a BTreeMap
     /// Please note that only XFF files written by the `write` function of this module are supported
     ///
@@ -805,6 +822,9 @@ pub mod key_value_core {
         read_core(&path_with_xff_extension)
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    /// v1: Please consider using the inbuilt `OBJECT` type instead
+    ///
     /// Writes a BTreeMap to a XFF file
     ///
     /// # Arguments
@@ -831,6 +851,9 @@ pub mod key_value_core {
         write_core(&path_with_xff_extension, data)
     }
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    /// v1: Please consider using the inbuilt `OBJECT` type instead
+    ///
     /// Creates a new BTreeMap
     ///
     /// # Example
@@ -847,10 +870,16 @@ pub mod key_value_core {
 }
 
 #[cfg(any(feature = "key_value_store", doc))]
+/// DEPRECATED - FOR LEGACY USE ONLY (v0)
+/// v1: Please consider using the inbuilt `OBJECT` type instead
+///
 /// Module to create a basic key-value database
 pub mod key_value_store {
     use crate::{error::NabuError, features::key_value::store::NabuDB};
 
+    /// DEPRECATED - FOR LEGACY USE ONLY (v0)
+    /// v1: Please consider using the inbuilt `OBJECT` type instead
+    ///
     /// Creates a new key-value database for in place operations
     ///
     /// Reads the content of a XFF file at the specified path and returns a `NabuDB` struct, which can be used for in place data manipulation and querying
@@ -886,8 +915,3 @@ pub mod key_value_store {
     }
 }
 
-#[cfg(any(feature = "logging_wizard", doc))]
-/// Module to create and manage a logging wizard
-pub mod logging_wizard {
-    pub use crate::features::logging_wizard::{Log, LogData, LoggingWizard};
-}
