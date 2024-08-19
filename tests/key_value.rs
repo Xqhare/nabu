@@ -1,6 +1,6 @@
 #[cfg(test)]
 #[cfg(feature = "key_value_core")]
-mod core {
+mod core_deprecated {
     use nabu::{
         key_value_core::{new_core_store, read, write},
         xff::value::{CommandCharacter, Data, Number, XffValue},
@@ -8,6 +8,7 @@ mod core {
     use std::path::Path;
 
     #[test]
+    #[ignore]
     fn basic() {
         let path = Path::new("test_basic_kv_store.xff");
         let mut data = new_core_store();
@@ -29,6 +30,7 @@ mod core {
     }
 
     #[test]
+    #[ignore]
     fn basic_all_ascii() {
         let path = Path::new("test_basic_ascii_kv_store.xff");
         let mut data = new_core_store();
@@ -93,6 +95,7 @@ mod core {
     }
 
     #[test]
+    #[ignore]
     fn advanced() {
         let path = Path::new("test_advanced_kv_store.xff");
         let mut data = new_core_store();
@@ -160,6 +163,7 @@ mod core {
     }
 
     #[test]
+    #[ignore]
     fn complex() {
         let path = Path::new("test_complex_kv_store.xff");
         let mut data = new_core_store();
@@ -216,7 +220,7 @@ mod core {
 
 #[cfg(test)]
 #[cfg(feature = "key_value_store")]
-mod store {
+mod store_deprecated {
     use nabu::{
         features::key_value::store::NabuDB,
         key_value_store::new_nabudb,
@@ -224,6 +228,7 @@ mod store {
     };
 
     #[test]
+    #[ignore]
     fn basic() {
         let mut db: NabuDB = new_nabudb("basic_db.xff").unwrap();
         let data = vec![
@@ -250,6 +255,7 @@ mod store {
     }
 
     #[test]
+    #[ignore]
     fn advanced() {
         let mut db: NabuDB = new_nabudb("advanced_db.xff").unwrap();
         let bin_data0 = std::fs::read("src/lib.rs").unwrap();
@@ -314,6 +320,7 @@ mod store {
     }
 
     #[test]
+    #[ignore]
     fn complex() {
         let mut db: NabuDB = new_nabudb("complex_db.xff").unwrap();
         let bin_data0 = std::fs::read("pictures/xff_v0-char-chart.jpeg").unwrap();

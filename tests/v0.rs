@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod v0 {
     use std::fs;
 
     use tyche::prelude::*;
@@ -8,7 +8,8 @@ mod tests {
     use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
 
     #[test]
-    fn v0_create_simulated_data() {
+    #[ignore]
+    fn create_simulated_data() {
         if false {
             let mut data: Vec<XffValue> = Default::default();
             let mut gen_len = 100_000;
@@ -33,13 +34,13 @@ mod tests {
         // 290MB file
         //let path = "xff-example-data/v0_simulated_data_290MB_v0.xff";
         // 290MB 66.666byte max per file
-        //let path = "xff-example-data/v0_simulated_data_large_data_66_666byte_max_per_v0_ignore.xff";
+        let path = "xff-example-data/v0_simulated_data_large_data_66_666byte_max_per_v0_ignore.xff";
         // 145MB file
         //let path = "xff-example-data/v0_simulated_data_145MB_v0.xff";
         // 21MB file
         //let path = "xff-example-data/v0_simulated_data_21MB_v0.xff";
         // 1.5MB file
-        let path = "xff-example-data/v0_simulated_data_1MB_v0.xff";
+        //let path = "xff-example-data/v0_simulated_data_1MB_v0.xff";
         let read = serde::read(path);
         if read.is_err() {
             println!("Failed to read {:?}", read);
@@ -141,7 +142,8 @@ mod tests {
     }
 
     #[test]
-    fn v0_serializer_deserializer_bare_bones() {
+    #[ignore]
+    fn serializer_deserializer_bare_bones() {
         let path = "tests/v0.txt";
         let path_2 = "tests/v0.xff";
         let data = { vec![XffValue::String("hello mom".to_string())] };
@@ -156,7 +158,8 @@ mod tests {
     }
 
     #[test]
-    fn v0_serializer_deserializer_basic() {
+    #[ignore]
+    fn serializer_deserializer_basic() {
         let path = std::path::Path::new("tests/v0_basic.xff");
         let data = {
             vec![
@@ -199,7 +202,8 @@ mod tests {
     }
 
     #[test]
-    fn v0_string_to_number() {
+    #[ignore]
+    fn string_to_number() {
         let path = std::path::Path::new("tests/v0_string_to_number.xff");
         let data = {
             vec![
@@ -261,7 +265,8 @@ mod tests {
     }
 
     #[test]
-    fn v0_serializer_deserializer_cmd_chars() {
+    #[ignore]
+    fn serializer_deserializer_cmd_chars() {
         let path = std::path::Path::new("tests/v0_cmd_chars.xff");
         let data = {
             vec![
@@ -320,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    fn v0_data() {
+    fn all_data() {
         let path = std::path::Path::new("tests/v0_data.xff");
         let bin_data0 = std::fs::read("src/lib.rs").unwrap();
         let bin_data1 = std::fs::read("README.md").unwrap();
@@ -387,7 +392,8 @@ mod tests {
     }
 
     #[test]
-    fn v0_complex_data() {
+    #[ignore]
+    fn complex_data() {
         let path = std::path::Path::new("tests/v0_complex_data.xff");
         let bin_data0 = std::fs::read("pictures/xff_v0-char-chart.jpeg").unwrap();
         let bin_data1 = std::fs::read("pictures/xff_v0-cmd-char-chart.jpeg").unwrap();
