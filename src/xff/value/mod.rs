@@ -1,31 +1,384 @@
+use std::collections::{BTreeMap, HashMap};
+
+pub use cmd_char::CommandCharacter;
+pub use data::Data;
+pub use num::Number;
+
+pub mod cmd_char;
+pub mod data;
+pub mod num;
+
 #[derive(Debug, Clone, PartialEq)]
-/// An enum for the different types of XFF values
-/// All variants except `ArrayCmdChar` are represented in the XFF format
+/// An enum for the different types of XFF values.
+///
+/// Many From traits are implemented for convenience on `XffValue` directly.
+/// 
+/// Directly stored data, like `String`, `Array`, `Object`, `Booleans` and `Null` have convenience
+/// functions implemented on `XffValue`.
+///
+/// `Data` and `Number` have convenience functions implemented on their respective types
+///
+/// All variants of `XffValue` are `Clone`able and have `is_` functions implemented.
+/// E.g. `is_string()`, `is_number()`, etc.
+///
+/// All variants have also `into_` functions implemented to retrieve the wrapped data inside.
+/// E.g. `into_string()`, `into_array()`, etc.
+///
+/// For more information please refer to the readme, or the documentation of the functiuon or type.
+///
+/// Deprecated and kept for compatibility with v0:
+///
+/// `CommandCharacter` is an enum representing a single ASCII command or control character
 /// `ArrayCmdChar` is a list of `CommandCharacter`s and seldom used in writing XFF files, but never in reading them
 pub enum XffValue {
     /// A string value
     String(String),
     /// A numeric value
     Number(Number),
-    /// A data value, holding a `Data` struct
+    /// An array of XFF values of arbitrary length
+    Array(Vec<XffValue>),
+    /// An object of string keys and XffValue values
+    Object(BTreeMap<String, XffValue>),
+    /// A data value, holding arbitrary bytes
     Data(Data),
-    /// Only used in v0, deprecated
+    /// A boolean value, true or false
+    Boolean(bool),
+    /// A null value, a.k.a. `None`, `Nill` or `nothing`
+    Null,
+    /// Deprecated
+    /// Only used in v0, needed for legacy usage
     /// A command character is represented by the `CommandCharacter` enum
     CommandCharacter(CommandCharacter),
-    /// Only used in v0, deprecated
+    /// Deprecated
+    /// Only used in v0, needed for legacy usage
     /// An array of `CommandCharacter`s
     ArrayCmdChar(Vec<CommandCharacter>),
 }
 
+// -----------------------------------------------------------
+//                     General implementations
+// -----------------------------------------------------------
+
 impl XffValue {
-    pub fn as_string(&self) -> Option<String> {
+    /// Returns the value as a string
+    ///
+    /// Only works on `XffValue::String` and `XffValue::Number`.
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::{XffValue, Number, CommandCharacter};
+    ///
+    /// let string_value = XffValue::from("hello mom!");
+    /// let num_value = XffValue::from(42.69);
+    /// let cmd_char_value = XffValue::from(CommandCharacter::Null);
+    ///
+    /// assert_eq!(string_value.into_string(), Some("hello mom!".to_string()));
+    /// assert_eq!(num_value.into_string(), Some("42.69".to_string()));
+    /// assert_eq!(cmd_char_value.into_string(), None);
+    /// ```
+    pub fn into_string(&self) -> Option<String> {
         match self {
             XffValue::String(s) => Some(s.clone()),
             XffValue::Number(n) => Some(n.as_string()),
             _ => None,
         }
     }
+
+    /// Returns the value as a number if it is a `XffValue::Number`
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::{XffValue, Number};
+    ///
+    /// let num_value = XffValue::from(42.69);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert_eq!(string_value.into_number(), None);
+    /// assert_eq!(num_value.into_number(), Some(Number::from(42.69)));
+    /// ```
+    pub fn into_number(&self) -> Option<Number> {
+        match self {
+            XffValue::Number(n) => Some(n.clone()),
+            _ => None,
+        }
+    }
+
+    /// Returns the value as an array if it is a `XffValue::Array`
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let vec_value = XffValue::from([XffValue::from("hello mom!"), XffValue::from(42.69)]);
+    /// let num_value = XffValue::from(42.69);
+    ///
+    /// assert_eq!(num_value.into_array(), None);
+    /// assert_eq!(vec_value.into_array(), Some(XffValue::from([XffValue::from("hello mom!"), XffValue::from(42.69)]));
+    /// ```
+    pub fn into_array(&self) -> Option<Vec<XffValue>> {
+        match self {
+            XffValue::Array(a) => Some(a.clone()),
+            _ => None,
+        }
+    }
+
+    /// Returns the value as an object if it is a `XffValue::Object`
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use std::collections::BTreeMap;
+    /// use nabu::xff::value::{XffValue, Number};
+    ///
+    /// let map = BTreeMap::from([
+    ///     ("key0".to_string(), XffValue::from("value0")),
+    ///     ("key1".to_string(), XffValue::from(42.69)),
+    /// ]);
+    ///
+    /// let map_value = XffValue::from(map.clone());
+    /// let num_value = XffValue::from(42.69);
+    ///
+    /// assert_eq!(num_value.into_object(), None);
+    /// assert_eq!(map_value.into_object(), Some(XffValue::from(map)));
+    ///
+    /// ```
+    pub fn into_object(&self) -> Option<BTreeMap<String, XffValue>> {
+        match self {
+            XffValue::Object(o) => Some(o.clone()),
+            _ => None,
+        }
+    }
+
+    /// Returns the value as a data value if it is a `XffValue::Data`
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::{XffValue, Data};
+    ///
+    /// let data_value = XffValue::from(vec![1, 2, 3]);
+    /// let num_value = XffValue::from(42.69);
+    ///
+    /// assert_eq!(num_value.into_data(), None);
+    /// assert_eq!(data_value.into_data(), Some(XffValue::from(vec![1, 2, 3])));
+    /// ```
+    pub fn into_data(&self) -> Option<Data> {
+        match self {
+            XffValue::Data(d) => Some(d.clone()),
+            _ => None,
+        }
+    }
+
+    /// Returns the value as a boolean if it is a `XffValue::Boolean`
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let bool_value_true = XffValue::from(true);
+    /// let bool_value_false = XffValue::from(false);
+    /// let num_value = XffValue::from(42.69);
+    ///
+    /// assert_eq!(num_value.into_boolean(), None);
+    /// assert_eq!(bool_value.into_boolean(), Some(true));
+    /// assert_eq!(bool_value_false.into_boolean(), Some(false));
+    /// ```
+    pub fn into_boolean(&self) -> Option<bool> {
+        match self {
+            XffValue::Boolean(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    /// Returns null if it is a `XffValue::Null`
+    /// Returns `None` for all other variants
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let null_value = XffValue::Null;
+    /// let num_value = XffValue::from(42.69);
+    ///
+    /// assert_eq!(num_value.into_null(), Some(()));
+    /// assert_eq!(null_value.into_null(), None);
+    /// ```
+    pub fn into_null(&self) -> Option<()> {
+        match self {
+            XffValue::Null => None,
+            _ => Some(()),
+        }
+    }
+
+    /// Checks if the value is a string, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let string_value = XffValue::from("hello mom!");
+    /// let num_value = XffValue::from(42.69);
+    ///
+    /// assert!(!num_value.is_string());
+    /// assert!(string_value.is_string());
+    /// ```
+    pub fn is_string(&self) -> bool {
+        matches!(self, XffValue::String(_))
+    }
+
+    /// Checks if the value is a number, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let number_value = XffValue::from(42.69);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_number());
+    /// assert!(number_value.is_number());
+    /// ```
+    pub fn is_number(&self) -> bool {
+        matches!(self, XffValue::Number(_))
+    }
+
+    /// Checks if the value is an array, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let array_value = XffValue::from(vec![XffValue::from("hello mom!"), XffValue::from(42.69)]);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_array());
+    /// assert!(array_value.is_array());
+    /// ```
+    pub fn is_array(&self) -> bool {
+        matches!(self, XffValue::Array(_))
+    }
+
+    /// Checks if the value is an object, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use std::collections::BTreeMap;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let map = BTreeMap::from([XffValue::from("hello mom!"), XffValue::from(vec![1, 2, 3])]);
+    ///
+    /// let object_value = XffValue::from(map);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_object());
+    /// assert!(object_value.is_object());
+    /// ```
+    pub fn is_object(&self) -> bool {
+        matches!(self, XffValue::Object(_))
+    }
+
+    /// Checks if the value is data, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let data_value = XffValue::from(vec![1, 2, 3]);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_data());
+    /// assert!(data_value.is_data());
+    /// ```
+    pub fn is_data(&self) -> bool {
+        matches!(self, XffValue::Data(_))
+    }
+
+    /// Checks if the value is a boolean, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let boolean_value = XffValue::from(true);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_boolean());
+    /// assert!(boolean_value.is_boolean());
+    /// ```
+    pub fn is_boolean(&self) -> bool {
+        matches!(self, XffValue::Boolean(_))
+    }
+
+    /// Checks if the value is both a boolean and true, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let boolean_value_true = XffValue::from(true);
+    /// let boolean_value_false = XffValue::from(false);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_true());
+    /// assert!(!boolean_value_false.is_true());
+    /// assert!(boolean_value_true.is_true());
+    /// ```
+    pub fn is_true(&self) -> bool {
+        matches!(self, XffValue::Boolean(true))
+    }
+
+    /// Checks if the value is both a boolean and false, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let boolean_value_true = XffValue::from(true);
+    /// let boolean_value_false = XffValue::from(false);
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_false());
+    /// assert!(!boolean_value_true.is_false());
+    /// assert!(boolean_value_false.is_false());
+    /// ```
+    pub fn is_false(&self) -> bool {
+        matches!(self, XffValue::Boolean(false))
+    }
+
+    /// Checks if the value is null, returns `true` if it is.
+    /// Returns `false` for all other variants.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let null_value = XffValue::Null;
+    /// let string_value = XffValue::from("hello mom!");
+    ///
+    /// assert!(!string_value.is_null());
+    /// assert!(null_value.is_null());
+    /// ```
+    pub fn is_null(&self) -> bool {
+        matches!(self, XffValue::Null)
+    }
+    
 }
+
+// -----------------------------------------------------------
+//                     From implementations
+// -----------------------------------------------------------
 
 impl From<CommandCharacter> for XffValue {
     fn from(c: CommandCharacter) -> Self {
@@ -42,6 +395,30 @@ impl From<Data> for XffValue {
 impl Default for XffValue {
     fn default() -> Self {
         XffValue::String(String::new())
+    }
+}
+
+impl From<bool> for XffValue {
+    fn from(c: bool) -> Self {
+        XffValue::Boolean(c)
+    }
+}
+
+impl From<BTreeMap<String, XffValue>> for XffValue {
+    fn from(c: BTreeMap<String, XffValue>) -> Self {
+        XffValue::Object(c)
+    }
+}
+
+impl From<HashMap<String, XffValue>> for XffValue {
+    fn from(c: HashMap<String, XffValue>) -> Self {
+        XffValue::Object(c.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+    }
+}
+
+impl From<Vec<XffValue>> for XffValue {
+    fn from(c: Vec<XffValue>) -> Self {
+        XffValue::Array(c)
     }
 }
 
@@ -169,408 +546,3 @@ impl From<i8> for XffValue {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-/// A numeric value
-/// `Number::form()` is implemented for all numeric types
-pub enum Number {
-    /// An unsigned integer
-    Unsigned(usize),
-    /// An integer
-    Integer(isize),
-    /// A float
-    Float(f64),
-}
-
-impl From<usize> for Number {
-    fn from(c: usize) -> Self {
-        Number::Unsigned(c)
-    }
-}
-
-impl From<&usize> for Number {
-    fn from(c: &usize) -> Self {
-        Number::Unsigned(c.clone())
-    }
-}
-
-impl From<u64> for Number {
-    fn from(c: u64) -> Self {
-        Number::Unsigned(c as usize)
-    }
-}
-
-impl From<u32> for Number {
-    fn from(c: u32) -> Self {
-        Number::Unsigned(c as usize)
-    }
-}
-
-impl From<u16> for Number {
-    fn from(c: u16) -> Self {
-        Number::Unsigned(c as usize)
-    }
-}
-
-impl From<u8> for Number {
-    fn from(c: u8) -> Self {
-        Number::Unsigned(c as usize)
-    }
-}
-
-impl From<isize> for Number {
-    fn from(c: isize) -> Self {
-        Number::Integer(c)
-    }
-}
-
-impl From<&isize> for Number {
-    fn from(c: &isize) -> Self {
-        Number::Integer(c.clone())
-    }
-}
-
-impl From<i64> for Number {
-    fn from(c: i64) -> Self {
-        Number::Integer(c as isize)
-    }
-}
-
-impl From<i32> for Number {
-    fn from(c: i32) -> Self {
-        Number::Integer(c as isize)
-    }
-}
-
-impl From<i16> for Number {
-    fn from(c: i16) -> Self {
-        Number::Integer(c as isize)
-    }
-}
-
-impl From<i8> for Number {
-    fn from(c: i8) -> Self {
-        Number::Integer(c as isize)
-    }
-}
-
-impl From<f64> for Number {
-    fn from(c: f64) -> Self {
-        Number::Float(c)
-    }
-}
-
-impl From<&f64> for Number {
-    fn from(c: &f64) -> Self {
-        Number::from(c.clone())
-    }
-}
-
-impl From<f32> for Number {
-    fn from(c: f32) -> Self {
-        Number::Float(c as f64)
-    }
-}
-
-impl Number {
-    /// Returns the number as bytes in string (ASCII) form
-    pub fn as_u8(&self) -> Vec<u8> {
-        match self {
-            Number::Unsigned(u) => {
-                let tmp = format!("{}", u);
-                tmp.into_bytes()
-            }
-            Number::Integer(i) => {
-                let tmp = format!("{}", i);
-                tmp.into_bytes()
-            }
-            Number::Float(f) => {
-                let tmp = format!("{}", f);
-                tmp.into_bytes()
-            }
-        }
-    }
-
-    pub fn as_string(&self) -> String {
-        match self {
-            Number::Unsigned(u) => format!("{}", u),
-            Number::Integer(i) => format!("{}", i),
-            Number::Float(f) => format!("{}", f),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-/// A data value
-/// contains `data` and `len`
-///
-/// Can be converted from `Vec<u8>` using the `From` trait
-pub struct Data {
-    /// The actual data
-    pub data: Vec<u8>,
-    /// The length of the data
-    pub len: usize,
-}
-
-impl From<Vec<u8>> for Data {
-    fn from(data: Vec<u8>) -> Self {
-        Data {
-            data: data.clone(),
-            len: data.len(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-/// Represents all command characters
-///
-/// Can be converted from `u8` using the `From` trait
-pub enum CommandCharacter {
-    /// Also known as NULL or NONE
-    Null,
-    /// Start of Heading
-    StartOfHeading,
-    /// Start of Text
-    StartOfText,
-    /// End of Text
-    EndOfText,
-    /// End of Transmission
-    EndOfTransmission,
-    /// Enquiry
-    Enquiry,
-    /// Acknowledge
-    Acknowledge,
-    /// Bell or Alert
-    Bell,
-    /// Backspace
-    Backspace,
-    /// Horizontal Tab or Tab
-    HorizontalTab,
-    /// Line Feed or New Line
-    LineFeed,
-    /// Vertical Tab
-    VerticalTab,
-    /// Form Feed
-    FormFeed,
-    /// Carriage Return
-    CarriageReturn,
-    /// Shift Out
-    ShiftOut,
-    /// Shift In
-    ShiftIn,
-    /// Data Link Escape
-    DataLinkEscape,
-    /// Device Control 1
-    DeviceControl1,
-    /// Device Control 2
-    DeviceControl2,
-    /// Device Control 3
-    DeviceControl3,
-    /// Device Control 4
-    DeviceControl4,
-    /// Negative Acknowledge
-    NegativeAcknowledge,
-    /// Synchronous Idle
-    SynchronousIdle,
-    /// End of Transmission Block
-    EndOfTransmitBlock,
-    /// Cancel
-    Cancel,
-    /// End of Medium
-    EndOfMedium,
-    /// Substitute
-    Substitute,
-    /// Escape
-    Escape,
-    /// File Separator
-    FileSeparator,
-    /// Group Separator
-    GroupSeparator,
-    /// Record Separator
-    RecordSeparator,
-    /// Unit Separator
-    UnitSeparator,
-    /// Space
-    Space,
-    /// Delete
-    Delete,
-    /// Non-Breaking Space or NBSP, no new lines allowed
-    NonBreakingSpace,
-    /// Soft Hyphen, no new lines allowed
-    SoftHyphen,
-}
-
-impl CommandCharacter {
-    /// Takes in a u8 and returns the corresponding command character
-    /// If no valid command character is found, returns `CommandCharacter::Null`
-    pub fn from_u8(c: u8) -> Self {
-        match c {
-            0 => CommandCharacter::Null,
-            1 => CommandCharacter::StartOfHeading,
-            2 => CommandCharacter::StartOfText,
-            3 => CommandCharacter::EndOfText,
-            4 => CommandCharacter::EndOfTransmission,
-            5 => CommandCharacter::Enquiry,
-            6 => CommandCharacter::Acknowledge,
-            7 => CommandCharacter::Bell,
-            8 => CommandCharacter::Backspace,
-            9 => CommandCharacter::HorizontalTab,
-            10 => CommandCharacter::LineFeed,
-            11 => CommandCharacter::VerticalTab,
-            12 => CommandCharacter::FormFeed,
-            13 => CommandCharacter::CarriageReturn,
-            14 => CommandCharacter::ShiftOut,
-            15 => CommandCharacter::ShiftIn,
-            16 => CommandCharacter::DataLinkEscape,
-            17 => CommandCharacter::DeviceControl1,
-            18 => CommandCharacter::DeviceControl2,
-            19 => CommandCharacter::DeviceControl3,
-            20 => CommandCharacter::DeviceControl4,
-            21 => CommandCharacter::NegativeAcknowledge,
-            22 => CommandCharacter::SynchronousIdle,
-            23 => CommandCharacter::EndOfTransmitBlock,
-            24 => CommandCharacter::Cancel,
-            25 => CommandCharacter::EndOfMedium,
-            26 => CommandCharacter::Substitute,
-            27 => CommandCharacter::Escape,
-            28 => CommandCharacter::FileSeparator,
-            29 => CommandCharacter::GroupSeparator,
-            30 => CommandCharacter::RecordSeparator,
-            31 => CommandCharacter::UnitSeparator,
-            32 => CommandCharacter::Space,
-            127 => CommandCharacter::Delete,
-            160 => CommandCharacter::NonBreakingSpace,
-            173 => CommandCharacter::SoftHyphen,
-            // Any invalid bytes will be treated as null
-            _ => CommandCharacter::Null,
-        }
-    }
-    /// Takes in a u8 and returns the corresponding command character
-    /// If no valid command character is found, returns `none`
-    pub fn from_u8_checked(c: u8) -> Option<Self> {
-        match c {
-            0 => Some(CommandCharacter::Null),
-            1 => Some(CommandCharacter::StartOfHeading),
-            2 => Some(CommandCharacter::StartOfText),
-            3 => Some(CommandCharacter::EndOfText),
-            4 => Some(CommandCharacter::EndOfTransmission),
-            5 => Some(CommandCharacter::Enquiry),
-            6 => Some(CommandCharacter::Acknowledge),
-            7 => Some(CommandCharacter::Bell),
-            8 => Some(CommandCharacter::Backspace),
-            9 => Some(CommandCharacter::HorizontalTab),
-            10 => Some(CommandCharacter::LineFeed),
-            11 => Some(CommandCharacter::VerticalTab),
-            12 => Some(CommandCharacter::FormFeed),
-            13 => Some(CommandCharacter::CarriageReturn),
-            14 => Some(CommandCharacter::ShiftOut),
-            15 => Some(CommandCharacter::ShiftIn),
-            16 => Some(CommandCharacter::DataLinkEscape),
-            17 => Some(CommandCharacter::DeviceControl1),
-            18 => Some(CommandCharacter::DeviceControl2),
-            19 => Some(CommandCharacter::DeviceControl3),
-            20 => Some(CommandCharacter::DeviceControl4),
-            21 => Some(CommandCharacter::NegativeAcknowledge),
-            22 => Some(CommandCharacter::SynchronousIdle),
-            23 => Some(CommandCharacter::EndOfTransmitBlock),
-            24 => Some(CommandCharacter::Cancel),
-            25 => Some(CommandCharacter::EndOfMedium),
-            26 => Some(CommandCharacter::Substitute),
-            27 => Some(CommandCharacter::Escape),
-            28 => Some(CommandCharacter::FileSeparator),
-            29 => Some(CommandCharacter::GroupSeparator),
-            30 => Some(CommandCharacter::RecordSeparator),
-            31 => Some(CommandCharacter::UnitSeparator),
-            32 => Some(CommandCharacter::Space),
-            127 => Some(CommandCharacter::Delete),
-            160 => Some(CommandCharacter::NonBreakingSpace),
-            173 => Some(CommandCharacter::SoftHyphen),
-            _ => None,
-        }
-    }
-    /// Returns the command character as bytes in ASCII form
-    pub fn as_u8(&self) -> u8 {
-        match self {
-            CommandCharacter::Null => 0,
-            CommandCharacter::StartOfHeading => 1,
-            CommandCharacter::StartOfText => 2,
-            CommandCharacter::EndOfText => 3,
-            CommandCharacter::EndOfTransmission => 4,
-            CommandCharacter::Enquiry => 5,
-            CommandCharacter::Acknowledge => 6,
-            CommandCharacter::Bell => 7,
-            CommandCharacter::Backspace => 8,
-            CommandCharacter::HorizontalTab => 9,
-            CommandCharacter::LineFeed => 10,
-            CommandCharacter::VerticalTab => 11,
-            CommandCharacter::FormFeed => 12,
-            CommandCharacter::CarriageReturn => 13,
-            CommandCharacter::ShiftOut => 14,
-            CommandCharacter::ShiftIn => 15,
-            CommandCharacter::DataLinkEscape => 16,
-            CommandCharacter::DeviceControl1 => 17,
-            CommandCharacter::DeviceControl2 => 18,
-            CommandCharacter::DeviceControl3 => 19,
-            CommandCharacter::DeviceControl4 => 20,
-            CommandCharacter::NegativeAcknowledge => 21,
-            CommandCharacter::SynchronousIdle => 22,
-            CommandCharacter::EndOfTransmitBlock => 23,
-            CommandCharacter::Cancel => 24,
-            CommandCharacter::EndOfMedium => 25,
-            CommandCharacter::Substitute => 26,
-            CommandCharacter::Escape => 27,
-            CommandCharacter::FileSeparator => 28,
-            CommandCharacter::GroupSeparator => 29,
-            CommandCharacter::RecordSeparator => 30,
-            CommandCharacter::UnitSeparator => 31,
-            CommandCharacter::Space => 32,
-            CommandCharacter::Delete => 127,
-            CommandCharacter::NonBreakingSpace => 160,
-            CommandCharacter::SoftHyphen => 173,
-        }
-    }
-}
-
-impl From<u8> for CommandCharacter {
-    fn from(c: u8) -> Self {
-        match c {
-            0 => CommandCharacter::Null,
-            1 => CommandCharacter::StartOfHeading,
-            2 => CommandCharacter::StartOfText,
-            3 => CommandCharacter::EndOfText,
-            4 => CommandCharacter::EndOfTransmission,
-            5 => CommandCharacter::Enquiry,
-            6 => CommandCharacter::Acknowledge,
-            7 => CommandCharacter::Bell,
-            8 => CommandCharacter::Backspace,
-            9 => CommandCharacter::HorizontalTab,
-            10 => CommandCharacter::LineFeed,
-            11 => CommandCharacter::VerticalTab,
-            12 => CommandCharacter::FormFeed,
-            13 => CommandCharacter::CarriageReturn,
-            14 => CommandCharacter::ShiftOut,
-            15 => CommandCharacter::ShiftIn,
-            16 => CommandCharacter::DataLinkEscape,
-            17 => CommandCharacter::DeviceControl1,
-            18 => CommandCharacter::DeviceControl2,
-            19 => CommandCharacter::DeviceControl3,
-            20 => CommandCharacter::DeviceControl4,
-            21 => CommandCharacter::NegativeAcknowledge,
-            22 => CommandCharacter::SynchronousIdle,
-            23 => CommandCharacter::EndOfTransmitBlock,
-            24 => CommandCharacter::Cancel,
-            25 => CommandCharacter::EndOfMedium,
-            26 => CommandCharacter::Substitute,
-            27 => CommandCharacter::Escape,
-            28 => CommandCharacter::FileSeparator,
-            29 => CommandCharacter::GroupSeparator,
-            30 => CommandCharacter::RecordSeparator,
-            31 => CommandCharacter::UnitSeparator,
-            32 => CommandCharacter::Space,
-            127 => CommandCharacter::Delete,
-            160 => CommandCharacter::NonBreakingSpace,
-            173 => CommandCharacter::SoftHyphen,
-            // Any invalid bytes will be treated as null
-            _ => CommandCharacter::Null,
-        }
-    }
-}

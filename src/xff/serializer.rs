@@ -111,6 +111,9 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError> {
                 out.push(27);
                 escape_open = true;
             }
+            _ => {
+                return Err(NabuError::InvalidXFFValueForVersion(value, 0));
+            }
         }
     }
     // EM

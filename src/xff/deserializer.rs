@@ -130,7 +130,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                     {
                         tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
                     } else {
-                        return Err(NabuError::InvalidASCIIString(current_char, byte_pos));
+                        return Err(NabuError::InvalidASCIIString(current_char, byte_pos, 0));
                     }
                 }
                 if content[0] == 3 {
@@ -276,7 +276,7 @@ fn deserialize_xff_v0(contents: &mut Vec<u8>) -> Result<Vec<XffValue>, NabuError
                 }
             }
             _ => {
-                return Err(NabuError::InvalidXFFByte(current_byte, byte_pos));
+                return Err(NabuError::InvalidXFFByte(current_byte, byte_pos, 0));
             }
         }
         if debug {
