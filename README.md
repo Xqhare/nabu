@@ -58,6 +58,9 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
 
 ## Roadmap
 
+- Split up into v0 and v1
+    - maybe modules / features too?
+
 - Configuration wizard
     - For writing and reading `.xff` files containing all data needed for a project to configure itself
     - Wait for v1 maybe?
