@@ -44,7 +44,8 @@ fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>, NabuError> {
                 escape_open = false;
                 // STX
                 out.push(2);
-                for entry in n.as_u8() {
+                let tmp = n.as_string();
+                for entry in tmp.into_bytes() {
                     out.push(entry);
                 }
                 // ETX
