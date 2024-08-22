@@ -3,22 +3,26 @@ use std::collections::{BTreeMap, HashMap};
 pub use cmd_char::CommandCharacter;
 pub use data::Data;
 pub use num::Number;
+pub use object::Object;
+pub use array::Array;
 
 pub mod cmd_char;
 pub mod data;
 pub mod num;
+pub mod array;
+pub mod object;
 
 #[derive(Debug, Clone, PartialEq)]
 /// An enum for the different types of XFF values.
 ///
 /// Many From traits are implemented for convenience on `XffValue` directly.
 /// 
-/// Directly stored data, like `String`, `Array`, `Object`, `Booleans` and `Null` have convenience
-/// functions implemented on `XffValue`.
+/// Directly stored data, `String`, `Booleans` and `Null` have convenience
+/// functions implemented on `XffValue` directly.
 ///
-/// `Data` and `Number` have convenience functions implemented on their respective types
+/// `Data`, `Array`, `Object`, and `Number` have convenience functions implemented on their respective types
 ///
-/// All variants of `XffValue` are `Clone`able and have `is_` functions implemented.
+/// All variants of `XffValue` are clone-able and have `is_` functions implemented.
 /// E.g. `is_string()`, `is_number()`, etc.
 ///
 /// All variants have also `into_` functions implemented to retrieve the wrapped data inside.
@@ -29,16 +33,55 @@ pub mod num;
 /// Deprecated and kept for compatibility with v0:
 ///
 /// `CommandCharacter` is an enum representing a single ASCII command or control character
-/// `ArrayCmdChar` is a list of `CommandCharacter`s and seldom used in writing XFF files, but never in reading them
+/// `ArrayCmdChar` is a list of `CommandCharacter`s and seldom used in writing XFF files, but never in reading them.
+///
+/// # Example
+/// ```rust
+/// use nabu::xff::value::{XffValue, Number, Array, Object, Data};
+///
+/// let string_val = XffValue::from("hello mom!");
+/// let num_val = XffValue::from(42.69);
+/// let array_val = XffValue::from(
+///     vec![
+///         XffValue::from("hi mom!"),
+///         XffValue::from(42.69)
+///     ]
+/// );
+/// let object_val = XffValue::from(
+///     vec![
+///         ("keyA".to_string(), XffValue::from("hi mom!")),
+///         ("keyB".to_string(), XffValue::from(42.69))
+///     ]
+/// );
+/// let data_val = XffValue::from(vec![1, 2, 3]);
+/// let boolean_val = XffValue::from(true);
+/// let null_val = XffValue::Null;
+///
+/// assert!(string_val.is_string());
+/// assert!(num_val.is_number());
+/// assert!(array_val.is_array());
+/// assert!(object_val.is_object());
+/// assert!(data_val.is_data());
+/// assert!(boolean_val.is_boolean());
+/// assert!(null_val.is_null());
+///
+/// let string: String = string_val.into_string().unwrap();
+/// let num: Number = num_val.into_number().unwrap();
+/// let array: Array = array_val.into_array().unwrap();
+/// let object: Object = object_val.into_object().unwrap();
+/// let data: Data = data_val.into_data().unwrap();
+/// let boolean: bool = boolean_val.into_boolean().unwrap();
+/// let null: Option<()> = null_val.into_null();
+/// ```
 pub enum XffValue {
     /// A string value
     String(String),
     /// A numeric value
     Number(Number),
     /// An array of XFF values of arbitrary length
-    Array(Vec<XffValue>),
+    Array(Array),
     /// An object of string keys and XffValue values
-    Object(BTreeMap<String, XffValue>),
+    Object(Object),
     /// A data value, holding arbitrary bytes
     Data(Data),
     /// A boolean value, true or false
@@ -67,15 +110,15 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Number, CommandCharacter};
+    /// use nabu::xff::value::{XffValue, Number, Data};
     ///
     /// let string_value = XffValue::from("hello mom!");
     /// let num_value = XffValue::from(42.69);
-    /// let cmd_char_value = XffValue::from(CommandCharacter::Null);
+    /// let data_value = XffValue::from(Data::from(vec![1, 2]));
     ///
     /// assert_eq!(string_value.into_string(), Some("hello mom!".to_string()));
     /// assert_eq!(num_value.into_string(), Some("42.69".to_string()));
-    /// assert_eq!(cmd_char_value.into_string(), None);
+    /// assert_eq!(data_value.into_string(), None);
     /// ```
     pub fn into_string(&self) -> Option<String> {
         match self {
@@ -112,13 +155,13 @@ impl XffValue {
     /// ```rust
     /// use nabu::xff::value::XffValue;
     ///
-    /// let vec_value = XffValue::from([XffValue::from("hello mom!"), XffValue::from(42.69)]);
+    /// let vec_value = XffValue::from(vec![XffValue::from("hello mom!"), XffValue::from(42.69)]);
     /// let num_value = XffValue::from(42.69);
     ///
     /// assert_eq!(num_value.into_array(), None);
-    /// assert_eq!(vec_value.into_array(), Some(XffValue::from([XffValue::from("hello mom!"), XffValue::from(42.69)]));
+    /// assert_eq!(vec_value.into_array(), XffValue::from(vec![XffValue::from("hello mom!"), XffValue::from(42.69)]).into_array());
     /// ```
-    pub fn into_array(&self) -> Option<Vec<XffValue>> {
+    pub fn into_array(&self) -> Option<Array> {
         match self {
             XffValue::Array(a) => Some(a.clone()),
             _ => None,
@@ -142,10 +185,10 @@ impl XffValue {
     /// let num_value = XffValue::from(42.69);
     ///
     /// assert_eq!(num_value.into_object(), None);
-    /// assert_eq!(map_value.into_object(), Some(XffValue::from(map)));
+    /// assert_eq!(map_value.into_object(), XffValue::from(map).into_object());
     ///
     /// ```
-    pub fn into_object(&self) -> Option<BTreeMap<String, XffValue>> {
+    pub fn into_object(&self) -> Option<Object> {
         match self {
             XffValue::Object(o) => Some(o.clone()),
             _ => None,
@@ -163,7 +206,7 @@ impl XffValue {
     /// let num_value = XffValue::from(42.69);
     ///
     /// assert_eq!(num_value.into_data(), None);
-    /// assert_eq!(data_value.into_data(), Some(XffValue::from(vec![1, 2, 3])));
+    /// assert_eq!(data_value.into_data(), XffValue::from(vec![1, 2, 3]).into_data());
     /// ```
     pub fn into_data(&self) -> Option<Data> {
         match self {
@@ -184,7 +227,7 @@ impl XffValue {
     /// let num_value = XffValue::from(42.69);
     ///
     /// assert_eq!(num_value.into_boolean(), None);
-    /// assert_eq!(bool_value.into_boolean(), Some(true));
+    /// assert_eq!(bool_value_true.into_boolean(), Some(true));
     /// assert_eq!(bool_value_false.into_boolean(), Some(false));
     /// ```
     pub fn into_boolean(&self) -> Option<bool> {
@@ -270,12 +313,9 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use std::collections::BTreeMap;
     /// use nabu::xff::value::XffValue;
     ///
-    /// let map = BTreeMap::from([XffValue::from("hello mom!"), XffValue::from(vec![1, 2, 3])]);
-    ///
-    /// let object_value = XffValue::from(map);
+    /// let object_value = XffValue::from(vec![("key0".to_string(), XffValue::from("hello mom!")), ("key1".to_string(), XffValue::from(vec![1, 2, 3]))]);
     /// let string_value = XffValue::from("hello mom!");
     ///
     /// assert!(!string_value.is_object());
@@ -380,6 +420,18 @@ impl XffValue {
 //                     From implementations
 // -----------------------------------------------------------
 
+impl From<Object> for XffValue {
+    fn from(c: Object) -> Self {
+        XffValue::Object(c)
+    }
+}
+
+impl From<Vec<(String, XffValue)> > for XffValue {
+    fn from(c: Vec<(String, XffValue)> ) -> Self {
+        XffValue::Object(Object::from(c))
+    }
+}
+
 impl From<CommandCharacter> for XffValue {
     fn from(c: CommandCharacter) -> Self {
         XffValue::CommandCharacter(c)
@@ -406,19 +458,19 @@ impl From<bool> for XffValue {
 
 impl From<BTreeMap<String, XffValue>> for XffValue {
     fn from(c: BTreeMap<String, XffValue>) -> Self {
-        XffValue::Object(c)
+        XffValue::Object(c.into())
     }
 }
 
 impl From<HashMap<String, XffValue>> for XffValue {
     fn from(c: HashMap<String, XffValue>) -> Self {
-        XffValue::Object(c.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+        XffValue::Object(c.into())
     }
 }
 
 impl From<Vec<XffValue>> for XffValue {
     fn from(c: Vec<XffValue>) -> Self {
-        XffValue::Array(c)
+        XffValue::Array(Array::from(c))
     }
 }
 
@@ -546,3 +598,24 @@ impl From<i8> for XffValue {
     }
 }
 
+// -----------------------------------------------------------
+//                     Display implementation 
+// -----------------------------------------------------------
+
+impl std::fmt::Display for XffValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            XffValue::String(s) => write!(f, "{}", s),
+            XffValue::Number(n) => write!(f, "{}", n),
+            XffValue::Array(a) => write!(f, "{}", a),
+            XffValue::Object(o) => write!(f, "{}", o),
+            XffValue::Data(d) => write!(f, "{}", d),
+            XffValue::Boolean(b) => write!(f, "{}", b),
+            XffValue::Null => write!(f, "null"),
+
+            // Legacy - v0 only - debug will suffice
+            XffValue::CommandCharacter(cmd) => write!(f, "{:?}", cmd),
+            XffValue::ArrayCmdChar(acmd) => write!(f, "{:?}", acmd),
+        }
+    }
+}
