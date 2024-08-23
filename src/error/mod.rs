@@ -68,8 +68,8 @@ pub enum NabuError {
     ///
     /// # Parameters
     /// * `pos` - The position in the file where the invalid number was found
-    /// * `byte` - The invalid byte
-    InvalidNumber(usize, u8),
+    /// * `String` - The invalid number
+    InvalidNumber(usize, String),
     /// The wrapped byte is not a valid array separator, making the array invalid
     ///
     /// # Parameters
@@ -166,8 +166,6 @@ pub enum NabuError {
     InvalidXFFVersion(XffValue, u8),
 }
 
-// I wonder if I ever end up using this
-#[allow(dead_code)]
 pub type Result<T> = std::result::Result<T, NabuError>;
 
 impl From<std::io::Error> for NabuError {
@@ -194,9 +192,9 @@ impl fmt::Display for NabuError {
             NabuError::MissingARY(u) => write!(f, "Missing ARY at byte position {}", u),
             NabuError::MissingOBJ(u) => write!(f, "Missing OBJ at byte position {}", u),
             NabuError::MissingDAT(u) => write!(f, "Missing DAT at byte position {}", u),
-            NabuError::InvalidNumber(n, i) => write!(f, "Invalid number: {} at byte position {}", n, i),
-            NabuError::InvalidArray(a, i) => write!(f, "Invalid array: {} at byte position {}. Expected an array separator", a, i),
-            NabuError::InvalidObject(o, i) => write!(f, "Invalid object: {} at byte position {}. Expected an object separator", o, i),
+            NabuError::InvalidNumber(i, n) => write!(f, "Invalid number: {} at byte position {}", n, i),
+            NabuError::InvalidArray(a, i) => write!(f, "Invalid array structure byte: {} at byte position {}. Expected an array separator", a, i),
+            NabuError::InvalidObject(o, i) => write!(f, "Invalid object structure byte: {} at byte position {}. Expected an object separator", o, i),
             NabuError::InvalidXFFValueLength(len) => write!(f, "Invalid XFF value length: {} (max: 8 bytes / 18.446.744.073.709.551.615)", len),
 
             // Xff general serde errors
