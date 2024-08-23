@@ -64,7 +64,7 @@ pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuErro
 fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
     let tokens = logs_tokenizer(data)?;
     // returns a vec of bytes
-    serialize_xff(tokens, XFF_VERSION)
+    serialize_xff(tokens, 0)
 }
 
 /// Takes a Vec of logs and returns a Vec of XffValues
