@@ -593,7 +593,8 @@ mod error;
 
 pub mod xff;
 
-const XFF_VERSION: u8 = 0;
+/// Most recent finalised version of XFF specification
+const XFF_VERSION: u8 = 1;
 
 /// Module to serialize and deserialize XFF files
 ///
@@ -626,6 +627,8 @@ pub mod serde {
     use crate::XFF_VERSION;
 
     /// Reads the content of a XFF file and returns a Vec of XffValues
+    ///
+    /// Because of the way v0 is implemented, it always returns a vector, for v1 it only has one element
     ///
     /// # Arguments
     /// * `path` - The path to the file to read
