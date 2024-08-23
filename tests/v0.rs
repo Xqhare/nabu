@@ -147,7 +147,7 @@ mod v0 {
         let path = "tests/v0.txt";
         let path_2 = "tests/v0.xff";
         let data = { vec![XffValue::String("hello mom".to_string())] };
-        let tmp = serde::write(path, data.clone());
+        let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path_2);
         assert!(tmp_2.is_ok());
@@ -186,7 +186,7 @@ mod v0 {
                 XffValue::Number(Number::from(-42.22222E+2)),
             ]
         };
-        let tmp = serde::write(path, data.clone());
+        let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
@@ -249,7 +249,7 @@ mod v0 {
                 XffValue::Number(Number::from(-42.22222E+222)),
             ]
         };
-        let tmp = serde::write(path, data.clone());
+        let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
@@ -309,7 +309,7 @@ mod v0 {
                 XffValue::CommandCharacter(CommandCharacter::SoftHyphen),
             ]
         };
-        let tmp = serde::write(path, data.clone());
+        let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
@@ -376,7 +376,7 @@ mod v0 {
                 XffValue::CommandCharacter(CommandCharacter::Escape),
             ]
         };
-        let tmp = serde::write(path, data.clone());
+        let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
@@ -433,7 +433,7 @@ mod v0 {
                 XffValue::Data(Data::from(bin_data5)),
             ]
         };
-        let tmp = serde::write(path, data.clone());
+        let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
