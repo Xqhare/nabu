@@ -83,6 +83,12 @@ pub enum NabuError {
     /// * `byte` - The invalid byte
     InvalidObject(usize, u8),
 
+    /// Nabu only supports Values up to a size of 1 petabyte
+    ///
+    /// # Parameters
+    /// * `len` - The length of the value
+    InvalidXFFValueLength(usize),
+
     // -----------------------------------------------
     //             Xff general serde errors
     // -----------------------------------------------
@@ -151,6 +157,13 @@ pub enum NabuError {
     /// # Parameters
     /// * `version` - The unknown version
     UnknownXFFVersion(u8),
+
+    /// Invalid XFF version, the value is not for the correct version
+    /// 
+    /// # Parameters
+    /// * `value` - The invalid value
+    /// * `version` - The invalid version
+    InvalidXFFVersion(XffValue, u8),
 }
 
 // I wonder if I ever end up using this
@@ -184,6 +197,7 @@ impl fmt::Display for NabuError {
             NabuError::InvalidNumber(n, i) => write!(f, "Invalid number: {} at byte position {}", n, i),
             NabuError::InvalidArray(a, i) => write!(f, "Invalid array: {} at byte position {}. Expected an array separator", a, i),
             NabuError::InvalidObject(o, i) => write!(f, "Invalid object: {} at byte position {}. Expected an object separator", o, i),
+            NabuError::InvalidXFFValueLength(len) => write!(f, "Invalid XFF value length: {} (max: 8 bytes / 18.446.744.073.709.551.615)", len),
 
             // Xff general serde errors
             NabuError::InvalidASCIIString(b, i, v) => write!(f, "Invalid ASCII character (according to xff specification version: {}): {} at byte position {}", b, v, i),
@@ -199,6 +213,7 @@ impl fmt::Display for NabuError {
             NabuError::EmpthyXFF => write!(f, "Empthy XFF"),
             NabuError::TruncatedXFF(u) => write!(f, "Truncated XFF at byte position {}", u),
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {}", ver),
+            NabuError::InvalidXFFVersion(val, ver) => write!(f, "Invalid XffValue for XFF version. Value {}; Version {}", val, ver),
         }
     }
 }
