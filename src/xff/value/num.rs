@@ -1,3 +1,5 @@
+use crate::error::NabuError;
+
 #[derive(Debug, Clone, PartialEq)]
 /// A numeric value.
 ///
