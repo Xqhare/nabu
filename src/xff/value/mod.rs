@@ -20,7 +20,7 @@ pub mod object;
 /// Directly stored data, `String`, `Booleans` and `Null` have convenience
 /// functions implemented on `XffValue` directly.
 ///
-/// `Data`, `Array`, `Object`, and `Number` have convenience functions implemented on their respective types
+/// `Data`, `Array`, `Object`, and `Number` have convenience functions implemented on their respective types.
 ///
 /// All variants of `XffValue` are clone-able and have `is_` functions implemented.
 /// E.g. `is_string()`, `is_number()`, etc.
