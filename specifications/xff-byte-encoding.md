@@ -14,8 +14,8 @@ All differences can be found in the first 32 elements of the table below.
 | 2 | 02 | 00000010 | NUM | Number |
 | 3 | 03 | 00000011 | ARY | Array |
 | 4 | 04 | 00000100 | OBJ | Object |
-| 5 | 05 | 00000101 | CMD | Command |
-| 6 | 06 | 00000110 | DAT | Data |
+| 5 | 05 | 00000101 | DAT | Data |
+| 6 | 06 | 00000110 | -- | Unused |
 | 7 | 07 | 00000111 | -- | Unused |
 | 8 | 08 | 00001000 | BS | Backspace
 | 9 | 09 | 00001001 | HT | Horizontal Tab |
