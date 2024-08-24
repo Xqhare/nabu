@@ -54,8 +54,8 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
             let mut str_bytes = content.drain(0..len).collect::<VecDeque<u8>>();
             byte_pos.set(byte_pos.get() + len);
             // check
-            if content[0] != 1 {
-                return Err(NabuError::MissingTXT(byte_pos.get()));
+            if content[0] != 24 {
+                return Err(NabuError::MissingEV(byte_pos.get()));
             } else {
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
@@ -116,8 +116,8 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
             let num_bytes = content.drain(0..len).collect::<Vec<u8>>();
             byte_pos.set(byte_pos.get() + len);
             // check
-            if content[0] != 2 {
-                return Err(NabuError::MissingNUM(byte_pos.get()));
+            if content[0] != 24 {
+                return Err(NabuError::MissingEV(byte_pos.get()));
             } else {
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
@@ -157,7 +157,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
 
             while content[0] != 3 && content.front().is_some() {
                 if content[0] == 30 {
-                    if content[1] == 3 {
+                    if content[1] == 24 {
                         // closing ARY
                         let _ = content.pop_front();
                         let _ = content.pop_front();
@@ -173,12 +173,12 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
             }
 
             // no trailing RS
-            if content[0] == 3 {
+            if content[0] == 24 {
                 // closing ARY
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
                 if byte_pos.get() - start_pos != len {
-                    return Err(NabuError::MissingARY(byte_pos.get()));
+                    return Err(NabuError::MissingEV(byte_pos.get()));
                 }
                 return Ok(XffValue::from(ary_bind));
             } else {
@@ -199,7 +199,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                 let (key, value) = deserialize_xff_v1_key_value(content, byte_pos)?;
                 obj_bind.insert(key, value);
                 if content[0] == 30 {
-                    if content[1] == 4 {
+                    if content[1] == 24 {
                         // closing OBJ
                         let _ = content.pop_front();
                         let _ = content.pop_front();
@@ -215,12 +215,12 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
             }
 
             // no trailing RS
-            if content[0] == 4 {
+            if content[0] == 24 {
                 // closing ARY
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
                 if byte_pos.get() - start_pos != len {
-                    return Err(NabuError::MissingOBJ(byte_pos.get()));
+                    return Err(NabuError::MissingEV(byte_pos.get()));
                 }
                 return Ok(XffValue::from(obj_bind));
             } else {
@@ -234,8 +234,8 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
             let len = deserialize_xff_v1_value_length(content, byte_pos)?;
             let data = content.drain(0..len).collect::<Vec<u8>>();
             byte_pos.set(byte_pos.get() + len);
-            if content[0] != 5 {
-                return Err(NabuError::MissingDAT(byte_pos.get()));
+            if content[0] != 24 {
+                return Err(NabuError::MissingEV(byte_pos.get()));
             } else {
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);

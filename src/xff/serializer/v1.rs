@@ -21,7 +21,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
             out.push(1);
             out.extend(encode_length(tmp_str.len()));
             out.extend(tmp_str);
-            out.push(1);
+            out.push(24);
         }
         XffValue::Number(n) => {
             // first create the string from the number
@@ -30,7 +30,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
             out.push(2);
             out.extend(encode_length(tmp_str.len()));
             out.extend(tmp_str);
-            out.push(2);
+            out.push(24);
         }
         XffValue::Array(a) => {
             // create the array
@@ -44,7 +44,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
             out.push(3);
             out.extend(encode_length(array_bytes.len()));
             out.extend(array_bytes);
-            out.push(3);
+            out.push(24);
         }
         XffValue::Object(o) => {
             // create the object
@@ -67,13 +67,13 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
             out.push(4);
             out.extend(encode_length(object_bytes.len()));
             out.extend(object_bytes);
-            out.push(4);
+            out.push(24);
         }
         XffValue::Data(d) => {
             out.push(5);
             out.extend(encode_length(d.len));
             out.extend(d.data.clone());
-            out.push(5);
+            out.push(24);
         }
         XffValue::Boolean(b) => {
             if *b {

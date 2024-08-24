@@ -63,6 +63,11 @@ pub enum NabuError {
     /// # Parameters
     /// * `pos` - The position in the file where the missing DAT was found
     MissingDAT(usize),
+    /// The file is missing the End of Value marker at the wrapped position
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the missing EV was found
+    MissingEV(usize),
 
     /// The wrapped byte is not a valid number
     ///
@@ -192,6 +197,7 @@ impl fmt::Display for NabuError {
             NabuError::MissingARY(u) => write!(f, "Missing ARY at byte position {}", u),
             NabuError::MissingOBJ(u) => write!(f, "Missing OBJ at byte position {}", u),
             NabuError::MissingDAT(u) => write!(f, "Missing DAT at byte position {}", u),
+            NabuError::MissingEV(u) => write!(f, "Missing EV at byte position {}", u),
             NabuError::InvalidNumber(i, n) => write!(f, "Invalid number: {} at byte position {}", n, i),
             NabuError::InvalidArray(a, i) => write!(f, "Invalid array structure byte: {} at byte position {}. Expected an array separator", a, i),
             NabuError::InvalidObject(o, i) => write!(f, "Invalid object structure byte: {} at byte position {}. Expected an object separator", o, i),
