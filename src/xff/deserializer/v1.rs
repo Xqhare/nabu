@@ -12,6 +12,7 @@ pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuE
         if contents[0] == 25 {
             Ok(out)
         } else {
+            println!("FOUND YA");
             Err(NabuError::TruncatedXFF(byte_pos.get()))
         }
     } else {
@@ -99,7 +100,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                 || current_char >= 130 && current_char <= 140
                 || current_char == 142
                 || current_char >= 145 && current_char <= 156
-                || current_char >= 158 && current_char <= 255 {
+                || current_char >= 158 {
                     str_out.push(char::from_u32(current_char as u32).unwrap());
                 }else {
                     return Err(NabuError::InvalidASCIIString(current_char, byte_pos.get(), 1));
