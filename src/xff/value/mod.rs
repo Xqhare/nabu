@@ -426,6 +426,12 @@ impl From<Object> for XffValue {
     }
 }
 
+impl From<Array> for XffValue {
+    fn from(c: Array) -> Self {
+        XffValue::Array(c)
+    }
+}
+
 impl From<Vec<(String, XffValue)> > for XffValue {
     fn from(c: Vec<(String, XffValue)> ) -> Self {
         XffValue::Object(Object::from(c))
