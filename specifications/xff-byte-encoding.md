@@ -33,7 +33,7 @@ All differences can be found in the first 32 elements of the table below.
 | 21 | 15 | 00010101 | -- | Unused |
 | 22 | 16 | 00010110 | -- | Unused |
 | 23 | 17 | 00010111 | -- | Unused |
-| 24 | 18 | 00011000 | -- | Unused |
+| 24 | 18 | 00011000 | EV | End of Value |
 | 25 | 19 | 00011001 | EM | End of medium |
 | 26 | 1A | 00011010 | SUB | Substitute |
 | 27 | 1B | 00011011 | ESC | Escape |
