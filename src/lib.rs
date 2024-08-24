@@ -617,7 +617,7 @@ const XFF_VERSION: u8 = 1;
 /// let ok = read.unwrap();
 /// assert_eq!(ok[0], data[0]);
 /// // delete file with the inbuilt remove_file function
-/// //remove_file(path_2).unwrap();
+/// remove_file(path_2).unwrap();
 /// ```
 pub mod serde {
     use crate::error::NabuError;
