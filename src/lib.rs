@@ -603,21 +603,21 @@ const XFF_VERSION: u8 = 1;
 /// use nabu::serde::{read, write, remove_file};
 /// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
 /// // No matter what the extension of the path you provide, it will be converted to .xff
-/// let path = "xff-example-data/serde-example.txt";
-/// let path_2 = "xff-example-data/serde-example.xff";
+/// let path = "xff-example-data/serde-main-example.txt";
+/// let path_2 = "xff-example-data/serde-main-example.xff";
 /// let data = {
 ///     vec![
 ///         XffValue::String("hello mom".to_string()),
 ///     ]
 /// };
-/// let tmp = write(path, data.clone());
-/// assert!(tmp.is_ok());
-/// let tmp_2 = read(path_2);
-/// assert!(tmp_2.is_ok());
-/// let ok = tmp_2.unwrap();
+/// let write = write(path, data.clone());
+/// assert!(write.is_ok());
+/// let read = read(path_2);
+/// assert!(read.is_ok());
+/// let ok = read.unwrap();
 /// assert_eq!(ok[0], data[0]);
 /// // delete file with the inbuilt remove_file function
-/// remove_file(path_2).unwrap();
+/// //remove_file(path_2).unwrap();
 /// ```
 pub mod serde {
     use crate::error::NabuError;
