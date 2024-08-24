@@ -93,31 +93,31 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
 fn encode_length(len: usize) -> Vec<u8> {
     if len <= 255 {
         let mut out: Vec<u8> = u8::from(1).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.push(len.to_le_bytes().to_vec()[0]);
         return out;
     } if len <= 65_535 {
         let mut out: Vec<u8> = u8::from(2).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.extend(len.to_le_bytes().to_vec()[0..2].to_vec());
         return out;
     } if len <= 16_777_215 {
         let mut out: Vec<u8> = u8::from(3).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.extend(len.to_le_bytes().to_vec()[0..3].to_vec());
         return out;
     } if len <= 4_294_967_295 {
         let mut out: Vec<u8> = u8::from(4).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.extend(len.to_le_bytes().to_vec()[0..4].to_vec());
         return out;
     } if len <= 1_099_511_627_775 {
         let mut out: Vec<u8> = u8::from(5).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.extend(len.to_le_bytes().to_vec()[0..5].to_vec());
         return out;
     } if len <= 281_474_976_710_655 {
         let mut out: Vec<u8> = u8::from(6).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.extend(len.to_le_bytes().to_vec()[0..6].to_vec());
         return out;
     } else if len <= 72_057_594_037_927_35 {
         let mut out: Vec<u8> = u8::from(7).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        out.extend(len.to_le_bytes().to_vec()[0..7].to_vec());
         return out;
     } else {
         let mut out: Vec<u8> = u8::from(8).to_le_bytes().to_vec();
