@@ -657,10 +657,16 @@ pub mod serde {
         deserialize_xff(&path_with_xff_extension)
     }
 
-    /// Writes a Vec of XffValues to a XFF file
+    /// Writes XffValues to a XFF file
+    ///
+    /// Supports the most up to date version of the XFF specification.
+    /// To write v1, please supply only one element.
+    ///
+    /// To write legacy versions, please refer to `write_legacy`.
     ///
     /// # Arguments
     /// * `path` - The path to the file to write
+    /// * `data` - The XffValue to write
     ///
     /// # Error
     /// Only errors if an IO error occurs
@@ -678,12 +684,13 @@ pub mod serde {
     /// let tmp = write("xff-example-data/v0.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write<P>(path: P, data: Vec<XffValue>) -> Result<(), NabuError>
+    pub fn write<P, D>(path: P, data: D) -> Result<(), NabuError>
     where
         P: AsRef<std::path::Path>,
+        D: Into<Vec<XffValue>>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        let byte_data = serialize_xff(data, XFF_VERSION)?;
+        let byte_data = serialize_xff(data.into(), XFF_VERSION)?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
     }
 
