@@ -10,30 +10,31 @@ mod v1 {
 
     #[test]
     fn create_simulated_data() {
-        if false {
+        if true {
             let mut data: Array = Array::new();
-            let mut gen_len = 1000;
+            let mut gen_len = 9;
             while gen_len > 0 {
                 println!("gen_len: {}", gen_len);
                 data.push(make_random_value(7));
-                println!("value made!");
                 gen_len -= 1;
             }
-            let write = serde::write("tests/v1_simulated_data_12-ignore.xff", vec![XffValue::from(data)]);
+            let write = serde::write("tests/v1_simulated_data_31-ignore.xff", XffValue::from(data));
             assert!(write.is_ok());
         }
 
-        // 88MB file
-        //let path = "xff-example-data/v1_simulated_data_88MB_ignore.xff";
-        // 11MB file
-        //let path = "xff-example-data/v1_simulated_data_11MB_ignore.xff";
+        // 15MB file
+        //let path = "xff-example-data/v1_simulated_data_15MB_ignore.xff";
         // 1MB file
-        let path = "xff-example-data/v1_simulated_data_1MB.xff";
+        //let path = "xff-example-data/v1_simulated_data_1MB.xff";
+        // 90KB file
+        //let path = "xff-example-data/v1_simulated_data_90KB.xff";
+        let path = "tests/v1_simulated_data_31-ignore.xff";
         let read = serde::read(path);
         if read.is_err() {
             println!("Failed to read {:?}", read);
         }
         assert!(read.is_ok());
+        println!("read len: {:?}", read.unwrap().len());
     }
 
     fn make_random_value(end: usize) -> XffValue {
@@ -57,7 +58,7 @@ mod v1 {
             //println!("object k-v pair: {}", n);
             out.insert(random_string().unwrap(), make_random_value(5));
         }
-        println!("obj made");
+        //println!("obj made");
         XffValue::from(out)
     }
 
@@ -72,7 +73,7 @@ mod v1 {
             //println!("array element: {}", n);
             out.push(make_random_value(5));
         }
-        println!("arr made");
+        //println!("arr made");
         XffValue::from(out)
     }
 
@@ -83,7 +84,7 @@ mod v1 {
             //println!("data element: {}", n);
             out.push(random_u8().unwrap());
         }
-        println!("data made");
+        //println!("data made");
         XffValue::from(out)
     }
 
@@ -93,7 +94,7 @@ mod v1 {
                 // negative
                 let seed = random_from_range(1, 3524654654).unwrap();
                 let bind = format!("-{}", seed);
-                XffValue::from(bind)
+                XffValue::from(bind.parse::<i64>().unwrap())
             }
             1 => {
                 // positive

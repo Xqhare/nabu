@@ -12,7 +12,6 @@ pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuE
         if contents[0] == 25 {
             Ok(out)
         } else {
-            println!("FOUND YA");
             Err(NabuError::TruncatedXFF(byte_pos.get()))
         }
     } else {
@@ -155,7 +154,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
 
             ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
 
-            while content[0] != 3 && content.front().is_some() {
+            while content[0] != 24 && content.front().is_some() {
                 if content[0] == 30 {
                     if content[1] == 24 {
                         // closing ARY
@@ -169,6 +168,8 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                         // another value
                         ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
                     }
+                } else {
+                    break;
                 }
             }
 
@@ -180,6 +181,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                 if byte_pos.get() - start_pos != len {
                     return Err(NabuError::MissingEV(byte_pos.get()));
                 }
+
                 return Ok(XffValue::from(ary_bind));
             } else {
                 return Err(NabuError::InvalidArray(byte_pos.get(), content[0]));
@@ -195,7 +197,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
 
             let mut obj_bind: BTreeMap<String, XffValue> = Default::default();
 
-            while content[0] != 4 && content.front().is_some() {
+            while content[0] != 24 && content.front().is_some() {
                 let (key, value) = deserialize_xff_v1_key_value(content, byte_pos)?;
                 obj_bind.insert(key, value);
                 if content[0] == 30 {
@@ -211,6 +213,8 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                         // another key value pair
                         continue;
                     }
+                } else {
+                    break;
                 }
             }
 

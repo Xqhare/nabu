@@ -25,31 +25,35 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Number(n) => {
             // first create the string from the number
-            let tmp_str: Vec<u8> = n.as_string().chars().map(|c| c as u8).collect();
+            let tmp_num: Vec<u8> = n.as_string().chars().map(|c| c as u8).collect();
             // now byte structure and push
             out.push(2);
-            out.extend(encode_length(tmp_str.len()));
-            out.extend(tmp_str);
+            out.extend(encode_length(tmp_num.len()));
+            out.extend(tmp_num);
             out.push(24);
         }
         XffValue::Array(a) => {
             // create the array
             let mut array_bytes: Vec<u8> = Default::default();
-            for value in a.iter() {
-                array_bytes.extend(serialize_xff_v1_value(value)?);
+            println!("{:?}", a.values);
+            for value in &a.values {
+                let mut val = serialize_xff_v1_value(value)?;
+                val.push(30);
+                array_bytes.extend(val);
                 // RS separator
-                array_bytes.push(30)
+                //array_bytes.push(30);
             }
             // byte structure and push
             out.push(3);
             out.extend(encode_length(array_bytes.len()));
             out.extend(array_bytes);
             out.push(24);
+            println!("{:?}", out);
         }
         XffValue::Object(o) => {
             // create the object
             let mut object_bytes: Vec<u8> = Default::default();
-            for (key, value) in o.iter() {
+            for (key, value) in o.map.iter() {
                 // GS
                 object_bytes.push(29);
                 // key
@@ -61,7 +65,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                 // Trailing GS
                 object_bytes.push(29);
                 // RS separator
-                object_bytes.push(30)
+                object_bytes.push(30);
             }
             // byte structure and push
             out.push(4);
