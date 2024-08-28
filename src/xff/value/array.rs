@@ -29,7 +29,7 @@ use super::XffValue;
 ///
 /// let vector = array1.into_vec();
 /// assert!(vector.is_empty());
-/// 
+///
 /// let mut array2 = Array::new();
 /// array2.push(XffValue::from("hello mom!"));
 /// array2.push(XffValue::from(420.69));
@@ -46,7 +46,7 @@ use super::XffValue;
 /// let value_2 = array2.pop().unwrap();
 /// assert_eq!(value_2, XffValue::from(420.69));
 /// assert_eq!(array2.len(), 1);
-/// 
+///
 /// array2.insert(0, XffValue::from("hello dad!"));
 /// assert_eq!(array2.len(), 2);
 ///
@@ -297,14 +297,19 @@ impl Array {
 //                     From implementations
 // -----------------------------------------------------------
 
-impl<T> From<Vec<T>> for Array where T: Into<XffValue> {
+impl<T> From<Vec<T>> for Array
+where
+    T: Into<XffValue>,
+{
     fn from(values: Vec<T>) -> Self {
-        Array { values: values.into_iter().map(|v| v.into()).collect() }
+        Array {
+            values: values.into_iter().map(|v| v.into()).collect(),
+        }
     }
 }
 
 // -----------------------------------------------------------
-//                     Display implementation 
+//                     Display implementation
 // -----------------------------------------------------------
 
 impl std::fmt::Display for Array {
@@ -319,4 +324,3 @@ impl std::fmt::Display for Array {
         write!(f, "]")
     }
 }
-

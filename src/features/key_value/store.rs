@@ -101,7 +101,6 @@ pub struct NabuDB {
 }
 
 impl NabuDB {
-
     /// DEPRECATED - FOR LEGACY USE ONLY (v0)
     ///
     /// Creates a new `NabuDB` from a path

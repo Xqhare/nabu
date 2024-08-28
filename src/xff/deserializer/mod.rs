@@ -36,4 +36,3 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
         _ => Err(NabuError::UnknownXFFVersion(content[0])),
     }
 }
-

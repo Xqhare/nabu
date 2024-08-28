@@ -1,7 +1,14 @@
+use std::{
+    borrow::Borrow,
+    cell::Cell,
+    collections::{BTreeMap, VecDeque},
+    usize,
+};
 
-use std::{borrow::Borrow, cell::Cell, collections::{BTreeMap, VecDeque}, usize};
-
-use crate::{error::NabuError, xff::value::{Number, XffValue}};
+use crate::{
+    error::NabuError,
+    xff::value::{Number, XffValue},
+};
 
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
     // version is byte 0; already match against and used but not removed, for performance, until now
@@ -19,8 +26,13 @@ pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuE
     }
 }
 
-fn deserialize_xff_v1_value_length(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<usize, NabuError> {
-    let len_of_len_bytes = content.pop_front().ok_or(NabuError::TruncatedXFF(byte_pos.get()))?;
+fn deserialize_xff_v1_value_length(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+) -> Result<usize, NabuError> {
+    let len_of_len_bytes = content
+        .pop_front()
+        .ok_or(NabuError::TruncatedXFF(byte_pos.get()))?;
     byte_pos.set(byte_pos.get() + 1);
     let len_of_len = u8::from_le_bytes([len_of_len_bytes]);
     if len_of_len > 8 {
@@ -31,17 +43,29 @@ fn deserialize_xff_v1_value_length(content: &mut VecDeque<u8>, byte_pos: &Cell<u
     if len_bytes.len() < 8 {
         len_bytes.resize(8, 0);
     }
-    Ok(usize::from_le_bytes([len_bytes[0], len_bytes[1], len_bytes[2], len_bytes[3], len_bytes[4], len_bytes[5], len_bytes[6], len_bytes[7]]))
+    Ok(usize::from_le_bytes([
+        len_bytes[0],
+        len_bytes[1],
+        len_bytes[2],
+        len_bytes[3],
+        len_bytes[4],
+        len_bytes[5],
+        len_bytes[6],
+        len_bytes[7],
+    ]))
 }
 
-fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<XffValue, NabuError> {
+fn deserialize_xff_v1_value(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+) -> Result<XffValue, NabuError> {
     match content[0] {
         0 => {
             let _ = content.pop_front();
             byte_pos.set(byte_pos.get() + 1);
 
             Ok(XffValue::Null)
-        },
+        }
         1 => {
             let _ = content.pop_front();
             byte_pos.set(byte_pos.get() + 1);
@@ -94,15 +118,20 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                             unreachable!()
                         }
                     }
-                } else if current_char >= 32 && current_char <= 126 
-                || current_char == 128
-                || current_char >= 130 && current_char <= 140
-                || current_char == 142
-                || current_char >= 145 && current_char <= 156
-                || current_char >= 158 {
+                } else if current_char >= 32 && current_char <= 126
+                    || current_char == 128
+                    || current_char >= 130 && current_char <= 140
+                    || current_char == 142
+                    || current_char >= 145 && current_char <= 156
+                    || current_char >= 158
+                {
                     str_out.push(char::from_u32(current_char as u32).unwrap());
-                }else {
-                    return Err(NabuError::InvalidASCIIString(current_char, byte_pos.get(), 1));
+                } else {
+                    return Err(NabuError::InvalidASCIIString(
+                        current_char,
+                        byte_pos.get(),
+                        1,
+                    ));
                 }
             }
             Ok(XffValue::from(str_out))
@@ -122,25 +151,33 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
                 byte_pos.set(byte_pos.get() + 1);
             }
 
-            let num_as_str = num_bytes.iter().map(|x| char::from_u32(*x as u32).unwrap()).collect::<String>();
+            let num_as_str = num_bytes
+                .iter()
+                .map(|x| char::from_u32(*x as u32).unwrap())
+                .collect::<String>();
 
             let check_usize = &num_as_str.parse::<usize>();
             if check_usize.is_ok() {
-                Ok(XffValue::Number(Number::from(check_usize.as_ref().unwrap())))
+                Ok(XffValue::Number(Number::from(
+                    check_usize.as_ref().unwrap(),
+                )))
             } else {
                 let check_isize = &num_as_str.parse::<isize>();
                 if check_isize.is_ok() {
-                    Ok(XffValue::Number(Number::from(check_isize.as_ref().unwrap())))
+                    Ok(XffValue::Number(Number::from(
+                        check_isize.as_ref().unwrap(),
+                    )))
                 } else {
                     let check_float = &num_as_str.parse::<f64>();
                     if check_float.is_ok() {
-                        Ok(XffValue::Number(Number::from(check_float.as_ref().unwrap())))
+                        Ok(XffValue::Number(Number::from(
+                            check_float.as_ref().unwrap(),
+                        )))
                     } else {
                         Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str))
                     }
                 }
             }
-
         }
         3 => {
             let _ = content.pop_front();
@@ -191,7 +228,7 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
             let _ = content.pop_front();
             byte_pos.set(byte_pos.get() + 1);
             //OBJ
-            
+
             let start_pos = byte_pos.get();
             let len = deserialize_xff_v1_value_length(content, byte_pos)?;
 
@@ -265,7 +302,10 @@ fn deserialize_xff_v1_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) 
     }
 }
 
-fn deserialize_xff_v1_key_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<(String, XffValue), NabuError> {
+fn deserialize_xff_v1_key_value(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+) -> Result<(String, XffValue), NabuError> {
     // GS
     if content[0] != 29 {
         return Err(NabuError::InvalidObject(byte_pos.get(), content[0]));

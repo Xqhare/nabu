@@ -1,4 +1,7 @@
-use crate::{error::{NabuError, Result}, xff::value::{XffValue, CommandCharacter}};
+use crate::{
+    error::{NabuError, Result},
+    xff::value::{CommandCharacter, XffValue},
+};
 
 pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
     let mut out: Vec<u8> = Default::default();
@@ -99,4 +102,3 @@ pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
     out.push(25);
     Ok(out)
 }
-

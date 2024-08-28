@@ -1,5 +1,5 @@
-use std::collections::{BTreeMap, HashMap};
 use super::XffValue;
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone, PartialEq)]
 /// An object made up of key-value pairs of XFF values with string key with string keys.
@@ -29,7 +29,7 @@ use super::XffValue;
 /// assert_eq!(object1.len(), 3);
 /// object1.clear();
 /// assert!(object1.is_empty());
-/// 
+///
 /// let mut object2 = Object::new();
 /// object2.insert("keyA".to_string(), XffValue::from("hello mom!"));
 /// object2.insert("keyB".to_string(), XffValue::from(420.69));
@@ -291,7 +291,7 @@ impl Object {
     ///     ("keyA".to_string(), XffValue::from("hi mom!")),
     ///     ("keyB".to_string(), XffValue::from(42.69)),
     /// ]);
-    /// 
+    ///
     /// for (key, value) in xff_obj_value.iter() {
     ///     println!("{}: {}", key, value);
     /// }
@@ -299,7 +299,6 @@ impl Object {
     pub fn iter(&self) -> std::collections::btree_map::Iter<'_, String, XffValue> {
         self.map.iter()
     }
-
 }
 
 // -----------------------------------------------------------
@@ -316,7 +315,9 @@ impl From<Vec<(String, XffValue)>> for Object {
 
 impl From<HashMap<String, XffValue>> for Object {
     fn from(map: HashMap<String, XffValue>) -> Self {
-        Object { map: map.iter().map(|(k, v)| (k.clone(), v.clone())).collect() }
+        Object {
+            map: map.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+        }
     }
 }
 
@@ -327,7 +328,7 @@ impl From<BTreeMap<String, XffValue>> for Object {
 }
 
 // -----------------------------------------------------------
-//                     Display implementation 
+//                     Display implementation
 // -----------------------------------------------------------
 
 impl std::fmt::Display for Object {
@@ -342,4 +343,3 @@ impl std::fmt::Display for Object {
         write!(f, "}}")
     }
 }
-

@@ -8,7 +8,7 @@
 /// use nabu::xff::value::Data;
 ///
 /// let mut data = Data::from(vec![1, 2, 3, 4, 5]);
-/// 
+///
 /// assert_eq!(data.len(), 5);
 ///
 /// let vector = data.clone().into_vec();
@@ -101,7 +101,7 @@ impl From<Vec<u8>> for Data {
 }
 
 // -----------------------------------------------------------
-//                     Display implementation 
+//                     Display implementation
 // -----------------------------------------------------------
 
 impl std::fmt::Display for Data {

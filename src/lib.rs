@@ -210,7 +210,7 @@ let command_character_array_1 = XffValue::ArrayCmdChar(vec![CommandCharacter::Es
 ```
 
 This list contains all types that can be converted to `XffValue` by using `XffValue::from()`.
-- `XffValue` 
+- `XffValue`
     - `&str`, `String`
     - `usize`, `u8`, `u16`, `u32`, `u64`
     - `isize`, `i8`, `i16`, `i32`, `i64`
@@ -251,7 +251,7 @@ nabu = { git = "https://github.com/Xqhare/nabu", features = ["logging_wizard", "
 ```
 
 > [!note]
-> Most features rely on their own `.xff` extension, meaning that `.xff` files created using the Key Value Store would error if loaded as a config Wizard. 
+> Most features rely on their own `.xff` extension, meaning that `.xff` files created using the Key Value Store would error if loaded as a config Wizard.
 
 #### Logging Wizard
 Nabu provides a logging feature that can be enabled by the `logging_wizard` feature flag.
@@ -272,7 +272,7 @@ To optimise the usage of `LoggingWizard`, think of a `.xff` file not as a store 
 The `LoggingWizard` struct holds all the logs that have been added to it. The logs it holds are of type `Log`, these hold the data points of the logs as `LogData`.
 
 Put another way, the `LoggingWizard` struct holds a `Vec<Log>` that contains all the logs that have been added to it, and it also serves as the way to save the state of the `LoggingWizard` to disk.
-A `Log` represents a single log. The contained `Vec<LogData>` contains all the data points of the log. This could be a failure of some kind, with several `LogData` entries for the error message, time and CPU usage, for example. 
+A `Log` represents a single log. The contained `Vec<LogData>` contains all the data points of the log. This could be a failure of some kind, with several `LogData` entries for the error message, time and CPU usage, for example.
 A `LogData` is used to represent a single data point inside a log, like the current CPU temperature or the current time for example. It contains the name of the data point, the value of the data point, and any metadata that is associated with it. The metadata is stored as string key-value pairs with no limit on the number of pairs. The value can also be a number, it will be treated like a string by the `LoggingWizard`.
 
 The structure, as well as all functions are listed here:
@@ -304,7 +304,7 @@ For more information and examples on a specific function, please refer to the cr
 Should the state of the `LoggingWizard` be already saved to disk, the memory holding the `Log` to be removed has already been freed, and no log can be dropped.
 To remove a `Log` that has been saved to disk, read the file into memory using `from_file()` and then use the `remove_log` function.
 
-```rust 
+```rust
 use nabu::logging_wizard::{LoggingWizard, Log};
 use nabu::xff::value::XffValue;
 
@@ -319,7 +319,7 @@ assert!(wizard.logs_len == 0);
 The information provided in this chapter is not necessary to understand the `LoggingWizard` struct, but it is useful to understand the byte structure of a `.xff` file, should you feel the need to implement something on or with it.
 
 <details>
-    <summary> 
+    <summary>
     Show more
     </summary>
 
@@ -375,8 +375,8 @@ This chapter discusses how to log any data and save it in a `.xff` file.
 To learn how to read the created logs, see the [next chapter.](#how-to-read-logs)
 
 <details open>
-    <summary> 
-    Simple example 
+    <summary>
+    Simple example
     </summary>
 
 ```rust
@@ -403,7 +403,7 @@ Finally, we add a `Log` to the `LoggingWizard` and immediately save it, by using
 
 <details>
     <summary>
-    Complex example 
+    Complex example
     </summary>
 
 ```rust
@@ -924,4 +924,3 @@ pub mod key_value_store {
         NabuDB::new(path.as_ref().with_extension("xff"))
     }
 }
-

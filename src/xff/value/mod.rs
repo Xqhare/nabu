@@ -1,22 +1,22 @@
 use std::collections::{BTreeMap, HashMap};
 
+pub use array::Array;
 pub use cmd_char::CommandCharacter;
 pub use data::Data;
 pub use num::Number;
 pub use object::Object;
-pub use array::Array;
 
+pub mod array;
 pub mod cmd_char;
 pub mod data;
 pub mod num;
-pub mod array;
 pub mod object;
 
 #[derive(Debug, Clone, PartialEq)]
 /// An enum for the different types of XFF values.
 ///
 /// Many From traits are implemented for convenience on `XffValue` directly.
-/// 
+///
 /// Directly stored data, `String`, `Booleans` and `Null` have convenience
 /// functions implemented on `XffValue` directly.
 ///
@@ -413,7 +413,6 @@ impl XffValue {
     pub fn is_null(&self) -> bool {
         matches!(self, XffValue::Null)
     }
-    
 }
 
 // -----------------------------------------------------------
@@ -442,8 +441,8 @@ impl From<Array> for XffValue {
     }
 }
 
-impl From<Vec<(String, XffValue)> > for XffValue {
-    fn from(c: Vec<(String, XffValue)> ) -> Self {
+impl From<Vec<(String, XffValue)>> for XffValue {
+    fn from(c: Vec<(String, XffValue)>) -> Self {
         XffValue::Object(Object::from(c))
     }
 }
@@ -502,7 +501,10 @@ impl From<Vec<CommandCharacter>> for XffValue {
     }
 }
 
-impl<S> From<(S, u8)> for XffValue where S: Into<String> {
+impl<S> From<(S, u8)> for XffValue
+where
+    S: Into<String>,
+{
     fn from(c: (S, u8)) -> Self {
         match c.1 {
             0 => {
@@ -523,7 +525,7 @@ impl<S> From<(S, u8)> for XffValue where S: Into<String> {
                         }
                     }
                 }
-            },
+            }
             1 => XffValue::String(c.0.into()),
             _ => unreachable!(),
         }
@@ -615,7 +617,7 @@ impl From<i8> for XffValue {
 }
 
 // -----------------------------------------------------------
-//                     Display implementation 
+//                     Display implementation
 // -----------------------------------------------------------
 
 impl std::fmt::Display for XffValue {

@@ -1,6 +1,9 @@
 use std::collections::VecDeque;
 
-use crate::{error::NabuError, xff::value::{CommandCharacter, Data, XffValue}};
+use crate::{
+    error::NabuError,
+    xff::value::{CommandCharacter, Data, XffValue},
+};
 
 // ---------------------------------------------------
 //                      LEGACY CODE
@@ -220,7 +223,10 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<Vec<XffValue>, N
                         if current_cmd_char != 27 {
                             let val = CommandCharacter::from_u8_checked(current_cmd_char);
                             if val.is_none() {
-                                return Err(NabuError::InvalidASCIICommandCharacter(current_cmd_char, byte_pos));
+                                return Err(NabuError::InvalidASCIICommandCharacter(
+                                    current_cmd_char,
+                                    byte_pos,
+                                ));
                             }
                             out.push(XffValue::CommandCharacter(val.unwrap()));
                             continue;
@@ -261,4 +267,3 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<Vec<XffValue>, N
     // Premature EoF
     Err(NabuError::TruncatedXFF(byte_pos))
 }
-

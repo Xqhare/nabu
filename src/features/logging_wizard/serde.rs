@@ -131,10 +131,13 @@ where
                     }
                 }
             }
-            _ => Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-                "expected FileSeparator at value position {} got {:?}",
-                value_pos, data[0]
-            )))?
+            _ => Err(NabuError::InvalidXFFExtension(
+                "Logging Wizard".to_string(),
+                format!(
+                    "expected FileSeparator at value position {} got {:?}",
+                    value_pos, data[0]
+                ),
+            ))?,
         }
     }
     Ok(LoggingWizard {
@@ -174,17 +177,23 @@ fn decode_log(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<Lo
                     }
                 }
             }
-            _ => Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-                "expected GroupSeparator at value position {} got {:?}",
-                value_pos, data[0]
-            )))?,
+            _ => Err(NabuError::InvalidXFFExtension(
+                "Logging Wizard".to_string(),
+                format!(
+                    "expected GroupSeparator at value position {} got {:?}",
+                    value_pos, data[0]
+                ),
+            ))?,
         }
     }
     // should never get here, so error
-    Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-        "expected GroupSeparator at value position {} got End of file!",
-        value_pos
-    )))
+    Err(NabuError::InvalidXFFExtension(
+        "Logging Wizard".to_string(),
+        format!(
+            "expected GroupSeparator at value position {} got End of file!",
+            value_pos
+        ),
+    ))
 }
 
 fn decode_log_data(
@@ -218,16 +227,22 @@ fn decode_log_data(
                     optional_metadata,
                 });
             } else {
-                Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-                    "expected RecordSeparator at value position {} got {:?}",
-                    value_pos, data[0]
-                )))?
+                Err(NabuError::InvalidXFFExtension(
+                    "Logging Wizard".to_string(),
+                    format!(
+                        "expected RecordSeparator at value position {} got {:?}",
+                        value_pos, data[0]
+                    ),
+                ))?
             }
         }
-        _ => Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-            "expected RecordSeparator at value position {} got {:?}",
-            value_pos, data[0]
-        )))?,
+        _ => Err(NabuError::InvalidXFFExtension(
+            "Logging Wizard".to_string(),
+            format!(
+                "expected RecordSeparator at value position {} got {:?}",
+                value_pos, data[0]
+            ),
+        ))?,
     }
 }
 
@@ -268,16 +283,22 @@ fn decode_metadata(
                     }
                 }
             }
-            Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-                "expected RecordSeparator at value position {} got End of file!",
-                value_pos
-            )))
+            Err(NabuError::InvalidXFFExtension(
+                "Logging Wizard".to_string(),
+                format!(
+                    "expected RecordSeparator at value position {} got End of file!",
+                    value_pos
+                ),
+            ))
         }
         // This should never ever happen, decode_metadata is only ever called with data that is a UnitSeparator
-        _ => Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-            "expected UnitSeparator at value position {} got {:?}",
-            value_pos, data[0]
-        )))?,
+        _ => Err(NabuError::InvalidXFFExtension(
+            "Logging Wizard".to_string(),
+            format!(
+                "expected UnitSeparator at value position {} got {:?}",
+                value_pos, data[0]
+            ),
+        ))?,
     }
 }
 
@@ -297,9 +318,12 @@ fn decode_metadata_entry(
         *value_pos += 1;
         Ok((name.unwrap(), value.unwrap()))
     } else {
-        Err(NabuError::InvalidXFFExtension("Logging Wizard".to_string(), format!(
-            "expected UnitSeparator at value position {} got {:?}",
-            value_pos, data[0]
-        )))
+        Err(NabuError::InvalidXFFExtension(
+            "Logging Wizard".to_string(),
+            format!(
+                "expected UnitSeparator at value position {} got {:?}",
+                value_pos, data[0]
+            ),
+        ))
     }
 }

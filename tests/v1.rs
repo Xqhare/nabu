@@ -18,7 +18,10 @@ mod v1 {
                 data.push(make_random_value(7));
                 gen_len -= 1;
             }
-            let write = serde::write("tests/v1_simulated_data_31-ignore.xff", XffValue::from(data));
+            let write = serde::write(
+                "tests/v1_simulated_data_31-ignore.xff",
+                XffValue::from(data),
+            );
             assert!(write.is_ok());
         }
 
@@ -113,12 +116,8 @@ mod v1 {
                     XffValue::from(seed1 as f64 / seed2 as f64)
                 }
             }
-            3 => {
-                XffValue::from(0)
-            }
-            4 => {
-                XffValue::from(0.0)
-            }
+            3 => XffValue::from(0),
+            4 => XffValue::from(0.0),
             _ => unreachable!(),
         }
     }
@@ -136,4 +135,3 @@ mod v1 {
         XffValue::String(out)
     }
 }
-

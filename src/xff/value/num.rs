@@ -10,7 +10,7 @@
 /// let num_float = Number::from(42.69);
 /// let num_unsigned = Number::from(u8::from(42));
 /// let num_integer = Number::from(-42);
-/// 
+///
 /// assert!(num_float.is_float());
 /// assert!(num_unsigned.is_unsigned());
 /// assert!(num_integer.is_integer());
@@ -51,7 +51,7 @@ impl Number {
     pub fn into_usize(self) -> Option<usize> {
         match self {
             Number::Unsigned(u) => Some(u),
-            _ => None
+            _ => None,
         }
     }
 
@@ -71,7 +71,7 @@ impl Number {
     pub fn into_isize(self) -> Option<isize> {
         match self {
             Number::Integer(i) => Some(i),
-            _ => None
+            _ => None,
         }
     }
 
@@ -91,7 +91,7 @@ impl Number {
     pub fn into_float(self) -> Option<f64> {
         match self {
             Number::Float(f) => Some(f),
-            _ => None
+            _ => None,
         }
     }
 
@@ -256,7 +256,7 @@ impl From<f32> for Number {
 }
 
 // -----------------------------------------------------------
-//                     Display implementation 
+//                     Display implementation
 // -----------------------------------------------------------
 
 impl std::fmt::Display for Number {
@@ -268,4 +268,3 @@ impl std::fmt::Display for Number {
         }
     }
 }
-

@@ -1,4 +1,7 @@
-use crate::{error::{NabuError, Result}, xff::value::XffValue};
+use crate::{
+    error::{NabuError, Result},
+    xff::value::XffValue,
+};
 
 pub fn serialize_xff_v1(data: Vec<XffValue>) -> Result<Vec<u8>> {
     let mut out: Vec<u8> = Default::default();
@@ -89,7 +92,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         XffValue::Null => {
             out.push(0);
         }
-        _ => Err(NabuError::InvalidXFFVersion(data.clone(), 1))?
+        _ => Err(NabuError::InvalidXFFVersion(data.clone(), 1))?,
     }
     Ok(out)
 }
@@ -99,23 +102,28 @@ fn encode_length(len: usize) -> Vec<u8> {
         let mut out: Vec<u8> = u8::from(1).to_le_bytes().to_vec();
         out.push(len.to_le_bytes().to_vec()[0]);
         return out;
-    } if len <= 65_535 {
+    }
+    if len <= 65_535 {
         let mut out: Vec<u8> = u8::from(2).to_le_bytes().to_vec();
         out.extend(len.to_le_bytes().to_vec()[0..2].to_vec());
         return out;
-    } if len <= 16_777_215 {
+    }
+    if len <= 16_777_215 {
         let mut out: Vec<u8> = u8::from(3).to_le_bytes().to_vec();
         out.extend(len.to_le_bytes().to_vec()[0..3].to_vec());
         return out;
-    } if len <= 4_294_967_295 {
+    }
+    if len <= 4_294_967_295 {
         let mut out: Vec<u8> = u8::from(4).to_le_bytes().to_vec();
         out.extend(len.to_le_bytes().to_vec()[0..4].to_vec());
         return out;
-    } if len <= 1_099_511_627_775 {
+    }
+    if len <= 1_099_511_627_775 {
         let mut out: Vec<u8> = u8::from(5).to_le_bytes().to_vec();
         out.extend(len.to_le_bytes().to_vec()[0..5].to_vec());
         return out;
-    } if len <= 281_474_976_710_655 {
+    }
+    if len <= 281_474_976_710_655 {
         let mut out: Vec<u8> = u8::from(6).to_le_bytes().to_vec();
         out.extend(len.to_le_bytes().to_vec()[0..6].to_vec());
         return out;
@@ -129,4 +137,3 @@ fn encode_length(len: usize) -> Vec<u8> {
         return out;
     }
 }
-

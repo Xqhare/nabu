@@ -36,7 +36,8 @@ mod logging_wizard {
 
     #[test]
     fn read_log() {
-        let read = LoggingWizard::from_file("xff-example-data/read_and_write_logging_wizard_v0.xff");
+        let read =
+            LoggingWizard::from_file("xff-example-data/read_and_write_logging_wizard_v0.xff");
         assert!(read.is_ok());
         let mut wizard = read.unwrap();
         assert!(wizard.logs_len == 1);

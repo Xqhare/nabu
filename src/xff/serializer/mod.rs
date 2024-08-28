@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use crate::{error::{NabuError, Result}, xff::value::XffValue};
+use crate::{
+    error::{NabuError, Result},
+    xff::value::XffValue,
+};
 
 pub mod v0;
 use crate::xff::serializer::v0::serialize_xff_v0;
@@ -30,7 +33,7 @@ pub fn serialize_xff(data: Vec<XffValue>, ver: u8) -> Result<Vec<u8>> {
                 return Err(NabuError::InvalidXFFVersion(data.into(), 1));
             }
             serialize_xff_v1(data)
-        },
+        }
         _ => Err(NabuError::UnknownXFFVersion(ver)),
     }
 }

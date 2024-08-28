@@ -4,18 +4,15 @@ use crate::xff::value::XffValue;
 
 #[derive(Debug)]
 pub enum NabuError {
-
     // -----------------------------------------------
     //                   external errors
     // -----------------------------------------------
-    
     /// Wrapper for any and all std::io::Errors
     IoError(std::io::Error),
 
     // -----------------------------------------------
     //                   Xff v0 errors
     // -----------------------------------------------
-    
     /// The file is missing the End of Text marker at the wrapped position
     ///
     /// # Parameters
@@ -37,7 +34,6 @@ pub enum NabuError {
     // -----------------------------------------------
     //                   Xff v1 errors
     // -----------------------------------------------
-
     /// The file is missing the Text marker at the wrapped position
     ///
     /// # Parameters
@@ -97,7 +93,6 @@ pub enum NabuError {
     // -----------------------------------------------
     //             Xff general serde errors
     // -----------------------------------------------
-
     /// Invalid, wrapped, ASCII character encountered at the wrapped position
     /// Has to be a valid String character
     ///
@@ -121,7 +116,7 @@ pub enum NabuError {
     /// * `version` - The XFF version
     InvalidXFFByte(u8, usize, u8),
     /// Invalid XFF value for the current XFF version
-    /// 
+    ///
     /// # Parameters
     /// * `value` - The invalid value
     /// * `version` - The XFF version
@@ -130,7 +125,6 @@ pub enum NabuError {
     // -----------------------------------------------
     //                Xff v0 serde errors
     // -----------------------------------------------
-
     /// Invalid, wrapped, ASCII command character encountered at the wrapped position
     ///
     /// # Parameters
@@ -141,7 +135,6 @@ pub enum NabuError {
     // -----------------------------------------------
     //                   Xff file errors
     // -----------------------------------------------
-    
     /// The file is missing the End of File marker
     ///
     /// # Parameters
@@ -152,19 +145,19 @@ pub enum NabuError {
     EmpthyXFF,
 
     /// Truncated file, missing end of file byte
-    /// 
+    ///
     /// # Parameters
     /// * `pos` - The position in the file where the missing EM was found
     TruncatedXFF(usize),
 
     /// Unknown XFF version
-    /// 
+    ///
     /// # Parameters
     /// * `version` - The unknown version
     UnknownXFFVersion(u8),
 
     /// Invalid XFF version, the value is not for the correct version
-    /// 
+    ///
     /// # Parameters
     /// * `value` - The invalid value
     /// * `version` - The invalid version
@@ -221,4 +214,3 @@ impl fmt::Display for NabuError {
         }
     }
 }
-
