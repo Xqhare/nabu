@@ -38,20 +38,17 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         XffValue::Array(a) => {
             // create the array
             let mut array_bytes: Vec<u8> = Default::default();
-            println!("{:?}", a.values);
             for value in &a.values {
-                let mut val = serialize_xff_v1_value(value)?;
-                val.push(30);
-                array_bytes.extend(val);
+                array_bytes.extend(serialize_xff_v1_value(value)?);
                 // RS separator
-                //array_bytes.push(30);
+                array_bytes.push(30);
+                
             }
             // byte structure and push
             out.push(3);
             out.extend(encode_length(array_bytes.len()));
             out.extend(array_bytes);
             out.push(24);
-            println!("{:?}", out);
         }
         XffValue::Object(o) => {
             // create the object
@@ -60,11 +57,11 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                 // GS
                 object_bytes.push(29);
                 // key
-                object_bytes.extend(serialize_xff_v1_value(&XffValue::String(key.clone()))?);
+                object_bytes.extend(serialize_xff_v1_value(&XffValue::from(key.as_str()))?);
                 // US
                 object_bytes.push(31);
                 // value
-                out.extend(serialize_xff_v1_value(value)?);
+                object_bytes.extend(serialize_xff_v1_value(value)?);
                 // Trailing GS
                 object_bytes.push(29);
                 // RS separator
