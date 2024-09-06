@@ -471,15 +471,23 @@ impl From<bool> for XffValue {
     }
 }
 
-impl From<BTreeMap<String, XffValue>> for XffValue {
-    fn from(c: BTreeMap<String, XffValue>) -> Self {
-        XffValue::Object(c.into())
+impl<S> From<BTreeMap<S, XffValue>> for XffValue where S: Into<String> {
+    fn from(c: BTreeMap<S, XffValue>) -> Self {
+        let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
+        for (k, v) in c {
+            out.insert(k.into(), v);
+        }
+        XffValue::Object(out.into())
     }
 }
 
-impl From<HashMap<String, XffValue>> for XffValue {
-    fn from(c: HashMap<String, XffValue>) -> Self {
-        XffValue::Object(c.into())
+impl<S> From<HashMap<S, XffValue>> for XffValue where S: Into<String> {
+    fn from(c: HashMap<S, XffValue>) -> Self {
+        let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
+        for (k, v) in c {
+            out.insert(k.into(), v);
+        }
+        XffValue::Object(out.into())
     }
 }
 
