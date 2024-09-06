@@ -1,4 +1,5 @@
 use core::fmt;
+use std::usize;
 
 use crate::xff::value::XffValue;
 
@@ -83,6 +84,13 @@ pub enum NabuError {
     /// * `pos` - The position in the file where the invalid object was found
     /// * `byte` - The invalid byte
     InvalidObject(usize, u8),
+
+    /// The wrapped value is not a valid string. The invalid string ends at the wrapped position.
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the invalid key was found
+    /// * `key` - The invalid key
+    InvalidKey(usize, XffValue),
 
     /// Nabu only supports Values up to a size of 1 petabyte
     ///
@@ -194,6 +202,7 @@ impl fmt::Display for NabuError {
             NabuError::InvalidNumber(i, n) => write!(f, "Invalid number: {} at byte position {}", n, i),
             NabuError::InvalidArray(a, i) => write!(f, "Invalid array structure byte: {} at byte position {}. Expected an array separator", a, i),
             NabuError::InvalidObject(o, i) => write!(f, "Invalid object structure byte: {} at byte position {}. Expected an object separator", o, i),
+            NabuError::InvalidKey(p, v) => write!(f, "Invalid non string key: {} at byte position {}", v, p),
             NabuError::InvalidXFFValueLength(len) => write!(f, "Invalid XFF value length: {} (max: 8 bytes / 18.446.744.073.709.551.615)", len),
 
             // Xff general serde errors
