@@ -313,10 +313,15 @@ fn deserialize_xff_v1_key_value(
         let _ = content.pop_front();
         byte_pos.set(byte_pos.get() + 1);
 
-        let mut key: String = Default::default();
+        let mut key_bytes: VecDeque<u8> = Default::default();
         while content[0] != 31 && content.front().is_some() {
-            key.push(content.pop_front().unwrap() as char);
+            println!("{:?}", content[0]);
+            key_bytes.push_back(content.pop_front().unwrap());
             byte_pos.set(byte_pos.get() + 1);
+        }
+        let key_bind = deserialize_xff_v1_value(&mut key_bytes, byte_pos)?;
+        if !key_bind.is_string() {
+            return Err(NabuError::InvalidKey(byte_pos.get(), key_bind));
         }
 
         // US
@@ -334,7 +339,7 @@ fn deserialize_xff_v1_key_value(
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
 
-                return Ok((key, value));
+                return Ok((key_bind.into_string().expect("Checked for String above!"), value));
             }
         }
     }
