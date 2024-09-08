@@ -11,7 +11,7 @@ The overarching goal of this project is to create a rust library that can be use
 As with all my projects, this documentation contains everything you never wanted to know about `.xff` files, Nabu and how to work with them.
 
 This README documents the usage of the most recent version of `.xff`: Version 1.
-The documentation for the previous version 0 is [here](LEGACY_V0_README.md).
+The documentation for the previous version 0 can be found [here](LEGACY_V0_README.md).
 
 All features present in the codebase are used in version 0 only.
 
@@ -20,7 +20,6 @@ After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper 
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation of v0.
 After a few weeks of work and running into several issues and design oversights (as expected), I started working on v1.
 V1 has morphed the `.xff` specification from a simple, to a more complex format akin to a JSON variation capable of storing arbitrary data in a binary format.
-This library is also going to be a major part of my own tech stack.
 As `xff` is meant to be a jack of all trades, it is important that it can be used in a wide range of use-cases.
 
 ## Naming
@@ -42,25 +41,19 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
     
 ## Roadmap
 
-- Configuration wizard
-    - For writing and reading `.xff` files containing all data needed for a project to configure itself
-    - Wait for v1 maybe?
-
-- Change from reading the entire file to using `BufReader` to read files larger than the actual memory available.
-
 - Finish README
-    - Stabilise all code examples
-        - Only v0 doc was removed, v1 needs to be added
-- Finish doc
-    - Finish lib doc
 
+## Features
 
-## Implemented Features
-
-- Performance
-
-- Error rework
-    - actual casting of unique and meaningful errors
+- Storage of a variety of data types
+    - Basic data types
+        - Strings, Numbers, Boolean's, Null
+    - Arrays, Objects
+    - Arbitrary Data
+- Performant
+- Meaningful Errors
+- Fully documented
+- Testable
 
 ## `.xff` specification
 All specifications are in the `specifications` directory.
@@ -93,17 +86,15 @@ use nabu::serde::{read, write};
 use nabu::xff::value::XffValue;
 let path = "xff-example-data/serde-example.txt";
 let path_2 = "xff-example-data/serde-example.xff";
-let data = {
-    vec![
-        XffValue::from("hello mom"),
-    ]
-};
-let tmp = write(path, data.clone());
-assert!(tmp.is_ok());
-let tmp_2 = read(path_2);
-assert!(tmp_2.is_ok());
-let ok = tmp_2.unwrap();
-assert_eq!(ok[0], data[0]);
+
+let data = XffValue::String("hello mom".to_string());
+
+let write = write(path, data.clone());
+assert!(write.is_ok());
+let read = read(path_2);
+assert!(read.is_ok());
+let ok = read.unwrap();
+assert_eq!(ok, data);
 # remove_file(path_2).unwrap();
 ```
 
