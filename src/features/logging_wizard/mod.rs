@@ -8,6 +8,8 @@ use crate::{
 
 use std::collections::BTreeMap;
 
+
+/// LEGACY (v0) - Useable, but not recommended.
 /// Module to create, read and write XFF-Logging files
 ///
 /// # Creating a LoggingWizard
@@ -18,7 +20,7 @@ use std::collections::BTreeMap;
 /// This function will decode the file and return a LoggingWizard.
 /// Should no file exist, a new LoggingWizard will be created.
 /// ## Example
-/// ```rust
+/// ```ignore
 /// use nabu::logging_wizard::LoggingWizard;
 /// use nabu::xff::value::XffValue;
 ///
@@ -33,7 +35,7 @@ use std::collections::BTreeMap;
 /// If the supplied file does not exist, it would be created.
 ///
 /// ## Example
-/// ```rust
+/// ```ignore
 /// use nabu::logging_wizard::LoggingWizard;
 /// use nabu::xff::value::XffValue;
 ///
@@ -59,13 +61,14 @@ pub struct LoggingWizard {
 }
 
 impl LoggingWizard {
+    /// LEGACY (v0)
     /// Removes the log at the specified index and returns it
     ///
     /// # Arguments
     /// * `index` - The index of the log to remove
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
@@ -86,13 +89,14 @@ impl LoggingWizard {
         Some(out)
     }
 
+    /// LEGACY (v0)
     /// Creates a new LoggingWizard from disk
     ///
     /// # Arguments
     /// * `path` - The path to the file to read
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::LoggingWizard;
     ///
     /// let wizard = LoggingWizard::from_file("xff-example-data/logging_wizard.xff");
@@ -115,6 +119,7 @@ impl LoggingWizard {
         }
     }
 
+    /// LEGACY (v0)
     /// Creates a new LoggingWizard without reading the file from disk to memory, appends all
     /// new logs to the end
     ///
@@ -122,7 +127,7 @@ impl LoggingWizard {
     /// * `path` - The path to the file to write
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::LoggingWizard;
     ///
     /// let wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
@@ -140,10 +145,11 @@ impl LoggingWizard {
         }
     }
 
+    /// LEGACY (v0)
     /// Saves the LoggingWizard to disk
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::LoggingWizard;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
@@ -168,13 +174,14 @@ impl LoggingWizard {
         }
     }
 
+    /// LEGACY (v0)
     /// Adds a new log to the LoggingWizard
     ///
     /// # Arguments
     /// * `log` - The log to add
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
@@ -188,6 +195,7 @@ impl LoggingWizard {
         self.logs_len = self.logs_len.saturating_add(1);
     }
 
+    /// LEGACY (v0)
     /// Adds a new log to the LoggingWizard and saves it to disk
     ///
     /// This is a convenience function that calls `add_log` and `save` in succession, and can
@@ -198,7 +206,7 @@ impl LoggingWizard {
     /// * `log` - The log to add
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
@@ -216,13 +224,14 @@ impl LoggingWizard {
         self.save()
     }
 
+    /// LEGACY (v0)
     /// Removes a log from the LoggingWizard
     ///
     /// # Arguments
     /// * `index` - The index of the log to remove
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
     /// use nabu::xff::value::XffValue;
     ///
@@ -242,6 +251,7 @@ impl LoggingWizard {
     }
 }
 
+/// LEGACY (v0)
 /// Stores all data of a single log. This can be as much data as you want.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Log {
@@ -270,6 +280,7 @@ impl Default for Log {
 }
 
 impl Log {
+    /// LEGACY (v0)
     /// Adds a new data point to the log
     ///
     /// To create a new data point, use the `LogData` struct
@@ -278,7 +289,7 @@ impl Log {
     /// * `log_data` - The data point to add
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::{Log, LogData};
     /// use nabu::xff::value::{XffValue, Number};
     ///
@@ -293,13 +304,14 @@ impl Log {
         self.log_data_len = self.log_data_len.saturating_add(1);
     }
 
+    /// LEGACY (v0)
     /// Removes a data point from the log
     ///
     /// # Arguments
     /// * `index` - The index of the data point to remove
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::{Log, LogData};
     /// use nabu::xff::value::{XffValue, Number};
     ///
@@ -314,13 +326,14 @@ impl Log {
         self.log_data_len = self.log_data_len.saturating_sub(1);
     }
 
+    /// LEGACY (v0)
     /// Creates a new Log
     /// Alternatively use the `default` function
     ///
     /// Used to populate a LoggingWizard
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::Log;
     /// use nabu::xff::value::XffValue;
     ///
@@ -335,6 +348,7 @@ impl Log {
     }
 }
 
+/// LEGACY (v0)
 /// Stores a single data point of the log
 #[derive(Clone, Debug, PartialEq)]
 pub struct LogData {
@@ -353,6 +367,7 @@ pub struct LogData {
 }
 
 impl LogData {
+    /// LEGACY (v0)
     /// Creates a new LogData from name, value and optional metadata
     /// Alternatively use the `new` function
     ///
@@ -364,7 +379,7 @@ impl LogData {
     /// * `optional_metadata` - The optional metadata of the data point
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::LogData;
     /// use nabu::xff::value::{XffValue, Number};
     ///
@@ -392,6 +407,7 @@ impl LogData {
         }
     }
 
+    /// LEGACY (v0)
     /// Creates a new LogData from name, value and optional metadata
     /// Alternatively use the `create` function
     ///
@@ -403,7 +419,7 @@ impl LogData {
     /// * `optional_metadata` - The optional metadata of the data point
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use nabu::logging_wizard::LogData;
     /// use nabu::xff::value::{XffValue, Number};
     ///
@@ -420,6 +436,7 @@ impl LogData {
         Self::create(name, value, optional_metadata)
     }
 
+    /// LEGACY (v0)
     /// Adds a new metadata entry
     ///
     /// # Arguments
@@ -429,7 +446,7 @@ impl LogData {
     /// Both key and value have to be ASCII strings
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use std::collections::BTreeMap;
     /// use nabu::logging_wizard::LogData;
     /// use nabu::xff::value::{XffValue, Number};
@@ -444,13 +461,14 @@ impl LogData {
         self.optional_metadata.insert(key.into(), value.into());
     }
 
+    /// LEGACY (v0)
     /// Removes a metadata entry
     ///
     /// # Arguments
     /// * `key` - The key of the metadata entry
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// use std::collections::BTreeMap;
     /// use nabu::logging_wizard::LogData;
     /// use nabu::xff::value::{XffValue, Number};
