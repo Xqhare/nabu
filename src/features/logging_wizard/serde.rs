@@ -13,6 +13,7 @@ use std::{
     path::Path,
 };
 
+/// LEGACY (v0)
 /// Encodes a Vec of logs into bytes
 /// Writes an entirely new xff file to the given path
 ///
@@ -24,6 +25,7 @@ pub fn write_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuError> {
     write_bytes_to_file(path, byte_data)
 }
 
+/// LEGACY (v0)
 /// Appends a Vec of logs to an existing xff file
 /// Drops the last byte of the file
 ///
@@ -55,6 +57,7 @@ pub fn append_to_log_wizard(path: &Path, data: &Vec<Log>) -> Result<(), NabuErro
     }
 }
 
+/// LEGACY (v0)
 /// Takes a Vec of logs and returns an xff encoded byte vector
 ///
 /// The xff version used is always the latest version
@@ -67,6 +70,7 @@ fn logs_to_bytes(data: &Vec<Log>) -> Result<Vec<u8>, NabuError> {
     serialize_xff(tokens, 0)
 }
 
+/// LEGACY (v0)
 /// Takes a Vec of logs and returns a Vec of XffValues
 ///
 /// # Arguments
@@ -103,13 +107,14 @@ fn logs_tokenizer(data: &Vec<Log>) -> Result<Vec<XffValue>, NabuError> {
     Ok(out)
 }
 
+/// LEGACY (v0)
 pub fn read_log_wizard<P>(path: P, append: bool) -> Result<LoggingWizard, NabuError>
 where
     P: AsRef<std::path::Path>,
 {
     let mut value_pos: usize = 1;
     // creating the Token array
-    let mut data: VecDeque<XffValue> = read(path.as_ref())?.into_iter().collect();
+    let mut data: VecDeque<XffValue> = read(path.as_ref())?.into_array().unwrap().into_iter().collect();
     let mut logs: Vec<Log> = Vec::new();
     while data.len() > 0 {
         match data[0] {
@@ -148,6 +153,7 @@ where
     })
 }
 
+/// LEGACY (v0)
 fn decode_log(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<Log, NabuError> {
     let mut log_data: Vec<LogData> = Vec::new();
     while data.len() > 0 {
@@ -196,6 +202,7 @@ fn decode_log(data: &mut VecDeque<XffValue>, value_pos: &mut usize) -> Result<Lo
     ))
 }
 
+/// LEGACY (v0)
 fn decode_log_data(
     data: &mut VecDeque<XffValue>,
     value_pos: &mut usize,
@@ -246,6 +253,7 @@ fn decode_log_data(
     }
 }
 
+/// LEGACY (v0)
 fn decode_metadata(
     data: &mut VecDeque<XffValue>,
     value_pos: &mut usize,
@@ -302,6 +310,7 @@ fn decode_metadata(
     }
 }
 
+/// LEGACY (v0)
 fn decode_metadata_entry(
     data: &mut VecDeque<XffValue>,
     value_pos: &mut usize,
