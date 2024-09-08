@@ -309,6 +309,33 @@ where
 }
 
 // -----------------------------------------------------------
+//                     Iterator implementations
+// -----------------------------------------------------------
+
+impl<T> FromIterator<T> for Array
+where
+    T: Into<XffValue>,
+{
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        Array {
+            values: iter.into_iter().map(|v| v.into()).collect(),
+        }
+    }
+}
+
+impl IntoIterator for Array {
+    type Item = XffValue;
+    type IntoIter = std::vec::IntoIter<XffValue>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.values.into_iter()
+    }
+}
+
+// -----------------------------------------------------------
 //                     Display implementation
 // -----------------------------------------------------------
 
