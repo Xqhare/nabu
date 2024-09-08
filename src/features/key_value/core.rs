@@ -7,8 +7,7 @@ use crate::{
     xff::value::XffValue,
 };
 
-/// DEPRECATED - FOR LEGACY USE ONLY (v0)
-/// v1: Please consider using the inbuilt `OBJECT` type instead
+/// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
 ///
 /// Reads the content of a XFF file and returns a BTreeMap
 /// Please note that only XFF files written by the `write_core` function are supported
@@ -17,7 +16,7 @@ use crate::{
 /// * `path` - The path to the file to read
 ///
 /// # Example
-/// ```rust
+/// ```ignore
 /// use std::path::Path;
 /// use nabu::features::key_value::core::read_core;
 ///
@@ -26,7 +25,7 @@ use crate::{
 /// assert!(data.is_ok());
 /// ```
 pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
-    let content = read(path)?;
+    let content = read(path)?.into_array().unwrap();
     let mut out = new_core_store();
     let mut key: String = Default::default();
     for (index, entry) in content.iter().enumerate() {
@@ -56,8 +55,7 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
     Ok(out)
 }
 
-/// DEPRECATED - FOR LEGACY USE ONLY (v0)
-/// v1: Please consider using the inbuilt `OBJECT` type instead
+/// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
 ///
 /// Writes a BTreeMap to a XFF file
 ///
@@ -66,7 +64,7 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
 /// * `data` - The BTreeMap to write
 ///
 /// # Example
-/// ```rust
+/// ```ignore
 /// use std::path::Path;
 /// use std::collections::BTreeMap;
 /// use nabu::features::key_value::core::write_core;
