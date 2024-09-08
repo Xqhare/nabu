@@ -1,6 +1,6 @@
 #[cfg(test)]
 #[cfg(feature = "key_value_core")]
-mod core_deprecated {
+mod legacy_core {
     use nabu::{
         key_value_core::{new_core_store, read, write},
         xff::value::{CommandCharacter, Data, Number, XffValue},
@@ -220,7 +220,7 @@ mod core_deprecated {
 
 #[cfg(test)]
 #[cfg(feature = "key_value_store")]
-mod store_deprecated {
+mod legacy_store {
     use nabu::{
         features::key_value::store::NabuDB,
         key_value_store::new_nabudb,

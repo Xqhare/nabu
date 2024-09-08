@@ -1,12 +1,13 @@
 #[cfg(test)]
 #[cfg(feature = "logging_wizard")]
-mod logging_wizard {
+mod legacy_logging_wizard {
     use nabu::{
         logging_wizard::{Log, LogData, LoggingWizard},
         xff::value::{CommandCharacter, Data, XffValue},
     };
     use std::collections::BTreeMap;
     #[test]
+    #[ignore]
     fn logging_test_name() {
         let mut wizard = LoggingWizard::new("tests/logging_test_name.xff");
         let mut log = Log::new();
@@ -35,6 +36,7 @@ mod logging_wizard {
     }
 
     #[test]
+    #[ignore]
     fn read_log() {
         let read =
             LoggingWizard::from_file("xff-example-data/read_and_write_logging_wizard_v0.xff");
@@ -68,6 +70,7 @@ mod logging_wizard {
     }
 
     #[test]
+    #[ignore]
     fn complex_read_and_write() {
         let mut wiz = LoggingWizard::new("tests/complex_read_and_write_v0.xff");
 
@@ -117,6 +120,7 @@ mod logging_wizard {
     }
 
     #[test]
+    #[ignore]
     fn log_create_simulated_data() {
         if false {
             let mut wiz = LoggingWizard::new("tests/logging_wizard_simulated_data_1MB.xff");

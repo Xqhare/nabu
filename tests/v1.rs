@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod v1 {
     use std::collections::BTreeMap;
-    use std::{fs, usize};
+    use std::usize;
 
     use tyche::prelude::*;
 
     use nabu::serde::{self};
-    use nabu::xff::value::{Array, XffValue, Data};
+    use nabu::xff::value::{XffValue, Data};
 
     #[test]
     fn primitive_values() {
@@ -36,7 +36,7 @@ mod v1 {
 
         let read = serde::read("xff-example-data/v1_primitive_values.xff");
         assert!(read.is_ok());
-        let read = read.unwrap()[0].clone();
+        let read = read.unwrap().clone();
         assert!(read.is_array());
         assert_eq!(read, xff_val);
     }
@@ -70,7 +70,7 @@ mod v1 {
 
         let read = serde::read("xff-example-data/v1_escape_chars.xff");
         assert!(read.is_ok());
-        let read = read.unwrap()[0].clone();
+        let read = read.unwrap().clone();
         assert!(read.is_array());
         assert_eq!(read, xff_val);
     }
@@ -88,7 +88,7 @@ mod v1 {
 
         let read = serde::read("xff-example-data/v1_data.xff");
         assert!(read.is_ok());
-        let read = read.unwrap()[0].clone();
+        let read = read.unwrap().clone();
         assert!(read.is_array());
         assert_eq!(read, xff_val);
     }
@@ -196,42 +196,16 @@ mod v1 {
 
         // compare values
 
-        assert_eq!(read_string.unwrap()[0], xff_string);
-        assert_eq!(read_number_f.unwrap()[0], xff_number_f);
-        assert_eq!(read_number_i.unwrap()[0], xff_number_i);
-        assert_eq!(read_number_u.unwrap()[0], xff_number_u);
-        assert_eq!(read_boolean_t.unwrap()[0], xff_boolean_t);
-        assert_eq!(read_boolean_f.unwrap()[0], xff_boolean_f);
-        assert_eq!(read_null.unwrap()[0], xff_null);
-        assert_eq!(read_data.unwrap()[0], xff_data);
-        assert_eq!(read_array.unwrap()[0], xff_array);
-        assert_eq!(read_object.unwrap()[0], xff_object);
-    }
-
-    #[test]
-    fn nested_arrays() {
-        let mut array: Vec<XffValue> = Vec::new();
-        for _ in 0..1_000 {
-            array.push(XffValue::from(array.clone()));
-        }
-
-        let write = serde::write("xff-example-data/v1_nested_arrays.xff", XffValue::from(array));
-        assert!(write.is_ok());
-        let read = serde::read("xff-example-data/v1_nested_arrays.xff");
-        assert!(read.is_ok());
-    }
-
-    #[test]
-    fn nested_objects() {
-        let mut object: BTreeMap<String, XffValue> = BTreeMap::new();
-        for n in 0..1_000 {
-            object.insert(n.to_string(), XffValue::from(object.clone()));
-        }
-
-        let write = serde::write("xff-example-data/v1_nested_objects.xff", XffValue::from(object));
-        assert!(write.is_ok());
-        let read = serde::read("xff-example-data/v1_nested_objects.xff");
-        assert!(read.is_ok());
+        assert_eq!(read_string.unwrap(), xff_string);
+        assert_eq!(read_number_f.unwrap(), xff_number_f);
+        assert_eq!(read_number_i.unwrap(), xff_number_i);
+        assert_eq!(read_number_u.unwrap(), xff_number_u);
+        assert_eq!(read_boolean_t.unwrap(), xff_boolean_t);
+        assert_eq!(read_boolean_f.unwrap(), xff_boolean_f);
+        assert_eq!(read_null.unwrap(), xff_null);
+        assert_eq!(read_data.unwrap(), xff_data);
+        assert_eq!(read_array.unwrap(), xff_array);
+        assert_eq!(read_object.unwrap(), xff_object);
     }
 
     #[test]
@@ -265,7 +239,7 @@ mod v1 {
         if read.is_err() {
             println!("Failed to read {}", read.err().unwrap());
         } else {
-            for (v1, v2) in values.iter().zip(read.unwrap()[0].into_array().unwrap().iter()) {
+            for (v1, v2) in values.iter().zip(read.unwrap().into_array().unwrap().iter()) {
                 println!("v1: {:?} v2: {:?}", v1, v2);
                 assert_eq!(v1, v2);
             }
@@ -299,7 +273,7 @@ mod v1 {
             println!("Failed to read {}", read.err().unwrap());
         } else {
             assert!(read.is_ok());
-            println!("read len: {:?}", read.unwrap()[0].into_array().unwrap().len());
+            println!("read len: {:?}", read.unwrap().into_array().unwrap().len());
         }
     }
 

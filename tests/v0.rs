@@ -152,7 +152,7 @@ mod v0 {
         let tmp_2 = serde::read(path_2);
         assert!(tmp_2.is_ok());
         let ok = tmp_2.unwrap();
-        assert_eq!(ok[0], data[0]);
+        assert_eq!(ok.into_array().unwrap().into_vec()[0], data[0]);
         // delete file
         fs::remove_file(path_2).unwrap();
     }
@@ -190,7 +190,7 @@ mod v0 {
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
-        let ok = tmp_2.unwrap();
+        let ok = tmp_2.unwrap().into_array().unwrap().into_vec();
         for n in 0..ok.len() {
             //println!("loop: {}", n);
             //println!("ok: {:?}", ok[n]);
@@ -253,7 +253,7 @@ mod v0 {
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
-        let ok = tmp_2.unwrap();
+        let ok = tmp_2.unwrap().into_array().unwrap().into_vec();
         for n in 0..ok.len() {
             //println!("loop: {}", n);
             //println!("ok: {:?}", ok[n]);
@@ -313,7 +313,7 @@ mod v0 {
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
-        let ok = tmp_2.unwrap();
+        let ok = tmp_2.unwrap().into_array().unwrap().into_vec();
         for n in 0..ok.len() {
             //println!("loop: {}", n);
             //println!("ok: {:?}", ok[n]);
@@ -380,7 +380,7 @@ mod v0 {
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
-        let ok = tmp_2.unwrap();
+        let ok = tmp_2.unwrap().into_array().unwrap().into_vec();
         for n in 0..ok.len() {
             //println!("loop: {}", n);
             //println!("ok: {:?}", ok[n]);
@@ -437,7 +437,7 @@ mod v0 {
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
         assert!(tmp_2.is_ok());
-        let ok = tmp_2.unwrap();
+        let ok = tmp_2.unwrap().into_array().unwrap().into_vec();
         for n in 0..ok.len() {
             //println!("loop: {}", n);
             //println!("ok: {:?}", ok[n]);
