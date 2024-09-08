@@ -9,7 +9,7 @@ use crate::{
 //                      LEGACY CODE
 // ---------------------------------------------------
 
-pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<Vec<XffValue>, NabuError> {
+pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
     let xff_ver = 0;
     let mut out: Vec<XffValue> = Default::default();
     // version is byte 0; already match against and used but not removed, for performance, until now
@@ -211,7 +211,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<Vec<XffValue>, N
                     println!("Total Time over Values: {:.2?}", t_time_o_val);
                     println!("------------------------------------");
                 }
-                return Ok(out);
+                return Ok(out.into());
             }
             27 => {
                 let now = std::time::Instant::now();

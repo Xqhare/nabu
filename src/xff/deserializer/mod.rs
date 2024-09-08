@@ -21,7 +21,7 @@ use crate::xff::deserializer::v1::deserialize_xff_v1;
 /// # Errors
 /// Returns IO errors when issues with reading the file from disk occur
 /// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
-pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
+pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
     //takes about 200ms for 300mb
     let mut content: VecDeque<u8> = std::fs::read(path)?.into();
     if content.len() == 1 {
@@ -32,7 +32,7 @@ pub fn deserialize_xff(path: &Path) -> Result<Vec<XffValue>, NabuError> {
     // check for 2 bytes is done
     match content[0] {
         0 => deserialize_xff_v0(&mut content),
-        1 => Ok(vec![deserialize_xff_v1(&mut content)?]),
+        1 => Ok(deserialize_xff_v1(&mut content)?),
         _ => Err(NabuError::UnknownXFFVersion(content[0])),
     }
 }
