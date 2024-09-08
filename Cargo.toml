@@ -11,5 +11,7 @@ tyche = { git = "https://github.com/Xqhare/tyche" }
 [features]
 key_value_core = []
 key_value_store = ["key_value_core"]
-config_wizard = []
 logging_wizard = []
+
+[package.metadata.docs.rs]
+all-features = true
