@@ -1,0 +1,538 @@
+TG"+/*!
+*/
+
+mod error;
+
+pub mod xff;
+
+/// Most recent finalised version of XFF specification
+const XFF_VERSION: u8 = 1;
+
+/// Module to serialize and deserialize XFF files
+///
+/// # Example
+/// ```rust
+/// use nabu::serde::{read, write, remove_file};
+/// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+/// // No matter what the extension of the path you provide, it will be converted to .xff
+/// let path = "xff-example-data/serde-main-example.txt";
+/// let path_2 = "xff-example-data/serde-main-example.xff";
+///
+/// let data = XffValue::String("hello mom".to_string());
+///
+/// let write = write(path, data.clone());
+/// assert!(write.is_ok());
+/// let read = read(path_2);
+/// assert!(read.is_ok());
+/// let ok = read.unwrap();
+/// assert_eq!(ok, data);
+/// // delete file with the inbuilt remove_file function
+/// remove_file(path_2).unwrap();
+/// ```
+pub mod serde {
+    use crate::error::NabuError;
+    use crate::xff::deserializer::deserialize_xff;
+    use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
+    use crate::xff::value::XffValue;
+    use crate::XFF_VERSION;
+
+    /// Reads the content of a XFF file and returns a Vec of XffValues
+    ///
+    /// Because of the way v0 is implemented, it always returns a vector, for v1 it only has one element
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to read
+    ///
+    /// # Error
+    /// Errors if the file is not a valid XFF file or if an IO error occurs
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::serde::read;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let tmp = read("xff-example-data/v0.xff");
+    /// assert!(tmp.is_ok());
+    /// let data: XffValue = tmp.unwrap();
+    ///     println!("{}", data);
+    /// ```
+    pub fn read<P>(path: P) -> Result<XffValue, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let path_with_xff_extension = path.as_ref().with_extension("xff");
+        deserialize_xff(&path_with_xff_extension)
+    }
+
+    /// Writes XffValues to a XFF file
+    ///
+    /// Supports the most up to date version of the XFF specification.
+    /// To write v1, please supply only one element.
+    ///
+    /// To write legacy versions, please refer to `write_legacy`.
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to write
+    /// * `data` - The XffValue to write
+    ///
+    /// # Error
+    /// Only errors if an IO error occurs
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::serde::write;
+    /// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+    ///
+    /// let data = {
+    ///     vec![
+    ///         XffValue::String("hello mom".to_string()),
+    ///     ]
+    /// };
+    /// let tmp = write("xff-example-data/v0.xff", data.clone());
+    /// assert!(tmp.is_ok());
+    /// ```
+    pub fn write<P, D>(path: P, data: D) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+        D: Into<Vec<XffValue>>,
+    {
+        let path_with_xff_extension = path.as_ref().with_extension("xff");
+        let byte_data = serialize_xff(data.into(), XFF_VERSION)?;
+        write_bytes_to_file(&path_with_xff_extension, byte_data)
+    }
+
+    /// Writes a Vec of XffValues to a XFF file with a specific XFF version
+    /// Provided for backwards compatibility and convenience
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to write
+    /// * `data` - The data to write
+    /// * `xff_version` - The XFF version to use
+    ///
+    /// # Error
+    /// Only errors if an IO error occurs
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::serde::write_legacy;
+    /// use nabu::xff::value::XffValue;
+    ///
+    /// let data = {
+    ///     vec![
+    ///         XffValue::String("hello mom".to_string()),
+    ///     ]
+    /// };
+    /// let tmp = write_legacy("xff-example-data/v0.xff", data.clone(), 0);
+    /// assert!(tmp.is_ok());
+    /// ```
+    pub fn write_legacy<P>(path: P, data: Vec<XffValue>, xff_version: u8) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let path_with_xff_extension = path.as_ref().with_extension("xff");
+        let byte_data = serialize_xff(data, xff_version)?;
+        write_bytes_to_file(&path_with_xff_extension, byte_data)
+    }
+
+    /// A convenience function to delete any XFF file from disk
+    /// The file will be gone, take care!
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to remove
+    ///
+    /// # Error
+    /// Only errors if an IO error occurs
+    ///
+    /// # Example
+    /// ```rust
+    /// # use nabu::serde::write;
+    /// # use nabu::xff::value::XffValue;
+    ///
+    /// # let data = {vec![XffValue::String("hello mom".to_string())]};
+    /// # let _ = write("xff-example-data/remove.xff", data.clone());
+    /// use nabu::serde::remove_file;
+    ///
+    /// let tmp = remove_file("xff-example-data/remove.xff");
+    /// assert!(tmp.is_ok());
+    /// ```
+    pub fn remove_file<P>(path: P) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let path_with_xff_extension = path.as_ref().with_extension("xff");
+        Ok(std::fs::remove_file(path_with_xff_extension)?)
+    }
+}
+
+// -------------------------------------------------
+//                      LEGACY 
+// -------------------------------------------------
+
+// Remember to add any and all new features to this!
+// It's literally a feature-gate for all features - leads to cleaner and leaner code I hope
+#[cfg(any(
+    doc,
+    feature = "key_value_core",
+    feature = "key_value_store",
+    feature = "logging_wizard"
+))]
+pub mod features;
+
+#[cfg(any(feature = "logging_wizard", doc))]
+/// Module to create and manage a logging wizard
+pub mod logging_wizard {
+    pub use crate::features::logging_wizard::{Log, LogData, LoggingWizard};
+}
+
+
+#[cfg(any(doc, feature = "key_value_core"))]
+/// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
+///
+/// Module to read and write a basic key-value store in the form of a `BTreeMap`
+///
+/// # Example
+/// ```ignore
+/// use std::{collections::BTreeMap, path::Path};
+/// use nabu::features::key_value::core::read_core;
+/// use nabu::xff::value::XffValue;
+///
+/// let data = read_core(&Path::new("xff-example-data/key_value_core.xff"));
+/// assert!(data.is_ok());
+/// let map: BTreeMap<String, XffValue> = data.unwrap();
+/// ```
+pub mod key_value_core {
+    use std::collections::BTreeMap;
+
+    use crate::{
+        error::NabuError,
+        features::key_value::core::{read_core, write_core},
+        xff::value::XffValue,
+    };
+
+    /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
+    ///
+    /// Reads the content of a XFF file and returns a BTreeMap
+    /// Please note that only XFF files written by the `write` function of this module are supported
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to read
+    ///
+    /// # Example
+    /// ```ignore
+    /// use nabu::features::key_value::core::read_core;
+    /// use nabu::xff::value::XffValue;
+    /// use std::collections::BTreeMap;
+    /// use std::path::Path;
+    ///
+    /// let data = read_core(&Path::new("xff-example-data/key_value_core.xff"));
+    /// assert!(data.is_ok());
+    /// let map: BTreeMap<String, XffValue> = data.unwrap();
+    /// ```
+    pub fn read<P>(path: P) -> Result<BTreeMap<String, XffValue>, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let path_with_xff_extension = path.as_ref().with_extension("xff");
+        read_core(&path_with_xff_extension)
+    }
+
+    /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
+    ///
+    /// Writes a BTreeMap to a XFF file
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to write
+    /// * `data` - The BTreeMap to write
+    ///
+    /// # Example
+    /// ```ignore
+    /// use nabu::key_value_core::{write, new_core_store};
+    /// use nabu::xff::value::{XffValue, Number};
+    ///
+    /// let mut data = new_core_store();
+    /// data.insert("key0".to_string(), XffValue::String("value0".to_string()));
+    /// data.insert("key1".to_string(), XffValue::Number(Number::from(42)));
+    ///
+    /// let tmp = write("xff-example-data/key_value_core.xff", data.clone());
+    /// assert!(tmp.is_ok());
+    /// ```
+    pub fn write<P>(path: P, data: BTreeMap<String, XffValue>) -> Result<(), NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let path_with_xff_extension = path.as_ref().with_extension("xff");
+        write_core(&path_with_xff_extension, data)
+    }
+
+    /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
+    ///
+    /// Creates a new BTreeMap
+    ///
+    /// # Example
+    /// ```ignore
+    /// use std::collections::BTreeMap;
+    /// use nabu::{key_value_core::new_core_store, xff::value::XffValue};
+    ///
+    /// let data: BTreeMap<String, XffValue> = new_core_store();
+    /// assert!(data.is_empty());
+    /// ```
+    pub fn new_core_store() -> BTreeMap<String, XffValue> {
+        BTreeMap::new()
+    }
+}
+
+#[cfg(any(feature = "key_value_store", doc))]
+/// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
+///
+/// Module to create a basic key-value database
+pub mod key_value_store {
+    use crate::{error::NabuError, features::key_value::store::NabuDB};
+
+    /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
+    ///
+    /// Creates a new key-value database for in place operations
+    ///
+    /// Reads the content of a XFF file at the specified path and returns a `NabuDB` struct, which can be used for in place data manipulation and querying
+    /// Please note that only XFF files written by the `save` function of `NabuDB` are supported
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file to write
+    ///     
+    /// # Example
+    /// ```ignore
+    /// use nabu::key_value_store::new_nabudb;
+    /// use nabu::features::key_value::store::NabuDB;
+    /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
+    ///
+    /// let path = "xff-example-data/nabuDB_main_example.xff";
+    /// let mut db: NabuDB = new_nabudb(path).unwrap();
+    /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
+    /// db.insert("key1".to_string(), XffValue::Number(Number::from(-42)));
+    /// db.insert("key2".to_string(), XffValue::CommandCharacter(CommandCharacter::LineFeed));
+    /// db.insert("key3".to_string(), XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+    /// db.save();
+    /// let read = new_nabudb(path).unwrap();
+    /// assert_eq!(read.get("key0").unwrap(), db.get("key0").unwrap());
+    /// assert_eq!(read.get("key1").unwrap(), db.get("key1").unwrap());
+    /// assert_eq!(read.get("key2").unwrap(), db.get("key2").unwrap());
+    /// assert_eq!(read.get("key3").unwrap(), db.get("key3").unwrap());
+    /// ```
+    pub fn new_nabudb<P>(path: P) -> Result<NabuDB, NabuError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        NabuDB::new(path.as_ref().with_extension("xff"))
+    }
+}
+[package]
+name = "nabu"
+version = "1.2.2"
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
+tyche = { git = "https://github.com/Xqhare/tyche" }
+
+[features]
+key_value_core = []
+key_value_store = ["key_value_core"]
+logging_wizard = []
+
+[package.metadata.docs.rs]
+all-features = true
+# Nabu
+
+> [!note]
+> This is a hobby project. It is not intended nor ready to be used in production.
+
+Nabu is a rust library for reading and writing `.xff` files.
+
+The overarching goal of this project is to create a rust library that can be used to build, read and write `.xff` files.
+`.xff` is a general purpose file format, with Nabu as the translation layer.
+
+As with all my projects, this documentation contains everything you never wanted to know about `.xff` files, Nabu and how to work with them.
+
+This README documents the usage of the most recent version of `.xff`: Version 1.
+The documentation for the previous version 0 can be found [here](LEGACY_V0_README.md).
+
+All features present in the codebase are used in version 0 only.
+
+## Motivation
+After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
+I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation of v0.
+After a few weeks of work and running into several issues and design oversights (as expected), I started working on v1.
+V1 has morphed the `.xff` specification from a simple, to a more complex format akin to a JSON variation capable of storing arbitrary data in a binary format.
+As `xff` is meant to be a jack of all trades, it is important that it can be used in a wide range of use-cases.
+
+## Naming
+This library's namesake is the ancient Babylonian god Nabu, the god of literacy, rational arts and scribes.
+As the inventor of writing, Nabu is a fitting namesake for a tool designed to create and interpret a new form of written data.
+
+## Contents
+- [Motivation](#motivation)
+- [Naming](#naming)
+- [Contents](#contents)
+- [Roadmap](#roadmap)
+- [Implemented Features](#implemented-features)
+- [`.xff` specifications](#xff-specifications)
+- [Usage](#usage)
+    - [Importing](#importing)
+    - [Usage of serde](#usage-of-serde)
+    - [XffValue](#xffvalue)
+- [Testing](#testing)
+    
+## Roadmap
+
+- Finish README
+
+## Features
+
+- Storage of a variety of data types
+    - Basic data types
+        - Strings, Numbers, Boolean's, Null
+    - Arrays, Objects
+    - Arbitrary Data
+- Performant
+- Meaningful Errors
+- Fully documented
+- Testable
+
+## `.xff` specification
+All specifications are in the `specifications` directory.
+
+- [V0](specifications/v0.md).
+- [V1](specifications/v1.md).
+
+V2 is not yet finalized, but my musings about it can be found [here](specifications/v2.md).
+
+## Usage
+
+### Importing
+Nabu can be imported from GitHub directly:
+```toml
+[dependencies]
+nabu = { git = "https://github.com/Xqhare/nabu" }
+```
+
+### Serde
+Serde is a shorthand for serializing and deserializing. 
+This module contains all the functions needed for serializing and deserializing `.xff` files.
+
+#### Usage of serde
+No matter what the extension of the path you provide, it will be converted to ".xff".
+For example, if you provide "example.txt", it will be converted to "example.xff".
+
+```rust
+# use nabu::serde::remove_file;
+use nabu::serde::{read, write};
+use nabu::xff::value::XffValue;
+let path = "xff-example-data/serde-example.txt";
+let path_2 = "xff-example-data/serde-example.xff";
+
+let data = XffValue::String("hello mom".to_string());
+
+let write = write(path, data.clone());
+assert!(write.is_ok());
+let read = read(path_2);
+assert!(read.is_ok());
+let ok = read.unwrap();
+assert_eq!(ok, data);
+# remove_file(path_2).unwrap();
+```
+
+### XffValue
+A XffValue is the type used by Nabu to store and manipulate data.
+There are basic types such as `String`, `Number`, `Boolean`, `Null` and `Data`, along with the `Array` and `Object` types.
+
+An `Array` is a list of `XffValue`s, and an `Object` is a list of key-value pairs of `String`s and `XffValue`s.
+
+```rust
+use nabu::xff::value::{Data, Number, XffValue};
+let data = XffValue::String("hello mom".to_string());
+let data_2 = XffValue::Number(Number::from(-42));
+let data_4 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+```
+
+There are many implementations of the `From` trait for the `XffValue` enum.
+This example contains all types that can be converted to `XffValue`.
+Starting off with converting to a `XffValue` directly.
+```rust
+use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
+
+let string_0 = XffValue::from("hello mom");
+let string_1 = XffValue::from("hello mom".to_string());
+
+let number_0 = XffValue::from(42);
+let number_1 = XffValue::from(-42);
+let number_2 = XffValue::from(42.2);
+let number_3 = XffValue::from(-42.2);
+let number_4 = XffValue::from(f64::MAX);
+let number_5 = XffValue::from(usize::MAX);
+let number_6 = XffValue::from(isize::MAX);
+let number_7 = XffValue::from(u8::MAX);
+let number_8 = XffValue::from(i8::MAX);
+
+let data_0 = XffValue::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+let data_1 = XffValue::from(vec![152, 142, 202, 33, 54, 5, 86, 197, 38, 209]);
+
+
+let number_9 = XffValue::Number(Number::from(-42));
+let number_10 = XffValue::Number(Number::from(42));
+let number_11 = XffValue::Number(Number::from(42.2));
+let number_12 = XffValue::Number(Number::from(-42.2));
+let number_13 = XffValue::Number(Number::from(f64::MAX));
+let number_14 = XffValue::Number(Number::from(usize::MAX));
+let number_15 = XffValue::Number(Number::from(isize::MAX));
+let number_16 = XffValue::Number(Number::from(u8::MAX));
+let number_17 = XffValue::Number(Number::from(i8::MAX));
+
+let data_2 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+let data_3 = XffValue::Data(Data::from(vec![152, 142, 202, 33, 54, 5, 86, 197, 38, 209]));
+
+
+let string_2 = XffValue::String("hello mom".to_string());
+
+let number_18 = XffValue::Number(Number::Unsigned(42));
+let number_19 = XffValue::Number(Number::Integer(-42));
+let number_20 = XffValue::Number(Number::Float(42.2));
+
+```
+
+This list contains all types that can be converted to `XffValue` by using `XffValue::from()`.
+- `XffValue` 
+    - `&str`, `String`
+    - `usize`, `u8`, `u16`, `u32`, `u64`
+    - `isize`, `i8`, `i16`, `i32`, `i64`
+    - `f32`, `f64`
+    - `Vec<u8>`, `Vec<CommandCharacter>`
+
+- `XffValue::String`
+    - `XffValue::String("hello mom".to_string())`
+- `XffValue::Number`
+    - `usize`, `u8`, `u16`, `u32`, `u64`
+    - `isize`, `i8`, `i16`, `i32`, `i64`
+    - `f32`, `f64`
+- `XffValue::Data`
+    - `Vec<u8>` the byte-array of the data to be stored
+
+The `XffValue` also has several associated functions.
+- `XffValue::String`
+- `XffValue::Number`
+    - `as_u8()` converts the number into an ASCII encoded byte-stream
+- `XffValue::Data`
+
+### Testing
+Nabu can be tested with the following commands:
+```bash
+cargo test
+```
+
+Or:
+```bash
+cargo test --all-features -- --include-ignored
+```
+
+> [!note]
+> Ignored tests require the `--all-features` flag as they are feature dependent.
+
