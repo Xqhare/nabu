@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use super::XffValue;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -297,11 +299,11 @@ impl Array {
 //                     From implementations
 // -----------------------------------------------------------
 
-impl<T> From<Vec<T>> for Array
+impl<V> From<Vec<V>> for Array
 where
-    T: Into<XffValue>,
+    V: Into<XffValue>,
 {
-    fn from(values: Vec<T>) -> Self {
+    fn from(values: Vec<V>) -> Self {
         Array {
             values: values.into_iter().map(|v| v.into()).collect(),
         }
@@ -332,6 +334,18 @@ impl IntoIterator for Array {
 
     fn into_iter(self) -> Self::IntoIter {
         self.values.into_iter()
+    }
+}
+
+// -----------------------------------------------------------
+//                     Index implementations
+// -----------------------------------------------------------
+
+impl Index<usize> for Array {
+    type Output = XffValue;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.values[index]
     }
 }
 
