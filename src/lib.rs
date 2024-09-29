@@ -54,7 +54,7 @@ pub mod serde {
     /// let tmp = read("xff-example-data/v0.xff");
     /// assert!(tmp.is_ok());
     /// let data: XffValue = tmp.unwrap();
-///     println!("{}", data);
+    ///     println!("{}", data);
     /// ```
     pub fn read<P>(path: P) -> Result<XffValue, NabuError>
     where
@@ -165,7 +165,7 @@ pub mod serde {
 }
 
 // -------------------------------------------------
-//             FOR LEGACY USE ONLY
+//                      LEGACY 
 // -------------------------------------------------
 
 // Remember to add any and all new features to this!
