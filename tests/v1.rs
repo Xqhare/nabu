@@ -6,7 +6,81 @@ mod v1 {
     use tyche::prelude::*;
 
     use nabu::serde::{self};
-    use nabu::xff::value::{XffValue, Data};
+    use nabu::xff::value::{Array, Data, XffValue};
+
+    #[test]
+    fn read_write_loop_object() {
+        let path = "xff-example-data/v1_loop_complex.xff";
+        for n in 0..100 {
+            if n == 0 {
+                // create a new file
+                let data = XffValue::from(BTreeMap::from([
+                    ("array".to_string(), XffValue::from(Array::from(vec![XffValue::from(n)]))),
+                    ("key0".to_string(), XffValue::from(42.69)),
+                ]));
+                let write = serde::write(path, data);
+                assert!(write.is_ok());
+            } else {
+                // read the file and append
+                let read = serde::read(path);
+                assert!(read.is_ok());
+                let mut data = read.unwrap().into_object().unwrap();
+                let mut ary = data.remove("array").unwrap().into_array().unwrap();
+                ary.push(XffValue::from(n));
+                data.insert("array".to_string(), XffValue::from(ary));
+                data.insert(format!("key{}", n), XffValue::from(42.69));
+                let write = serde::write(path, XffValue::from(data));
+                assert!(write.is_ok());
+            }
+        }
+
+        // read the file and assert the result
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap().into_object().unwrap();
+        assert_eq!(read.len(), 101);
+        assert_eq!(read["array"].into_array().unwrap().len(), 100);
+        assert_eq!(read["key0"], XffValue::from(42.69));
+        assert_eq!(read["key42"], XffValue::from(42.69));
+        assert_eq!(read["key69"], XffValue::from(42.69));
+        assert_eq!(read["key99"], XffValue::from(42.69));
+
+        // remove the file
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn read_write_loop_array() {
+        let path = "xff-example-data/v1_loop.xff";
+        for n in 0..100 {
+            if n == 0 {
+                // create a new file
+                let data = XffValue::from(vec![XffValue::from(format!("Value {}", n))]);
+                let write = serde::write(path, data);
+                assert!(write.is_ok());
+            } else {
+                // read the file and append
+                let read = serde::read(path);
+                assert!(read.is_ok());
+                let mut data = read.unwrap().into_array().unwrap();
+                data.push(XffValue::from(format!("Value {}", n)));
+                let write = serde::write(path, XffValue::from(data));
+                assert!(write.is_ok());
+            }
+        }
+        // read the file and assert the result
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap().into_array().unwrap();
+        assert_eq!(read.len(), 100);
+        assert_eq!(read[0], XffValue::from("Value 0"));
+        assert_eq!(read[42], XffValue::from("Value 42"));
+        assert_eq!(read[69], XffValue::from("Value 69"));
+        assert_eq!(read[99], XffValue::from("Value 99"));
+
+        // clear the file
+        std::fs::remove_file(path).unwrap();
+    }
 
     #[test]
     fn primitive_values() {
@@ -294,7 +368,7 @@ mod v1 {
     fn make_random_object() -> XffValue {
         let mut out = BTreeMap::new();
         let seed = random_from_range(1, 1_000).unwrap();
-        for n in 0..seed {
+        for _n in 0..seed {
             //println!("object k-v pair: {}", n);
             out.insert(random_string().unwrap(), make_random_value(5));
         }
@@ -309,7 +383,7 @@ mod v1 {
     fn make_random_array() -> XffValue {
         let seed = random_from_range(1, 1_000).unwrap();
         let mut out: Vec<XffValue> = Default::default();
-        for n in 0..seed {
+        for _n in 0..seed {
             //println!("array element: {}", n);
             out.push(make_random_value(5));
         }
@@ -328,7 +402,7 @@ mod v1 {
     fn make_random_data() -> XffValue {
         let seed = random_from_range(1, 1_000).unwrap();
         let mut out: Vec<u8> = Default::default();
-        for n in 0..seed {
+        for _n in 0..seed {
             //println!("data element: {}", n);
             out.push(random_u8().unwrap());
         }
