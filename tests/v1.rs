@@ -1,12 +1,32 @@
 #[cfg(test)]
 mod v1 {
     use std::collections::BTreeMap;
-    use std::usize;
+    use std::{fs, usize};
 
     use tyche::prelude::*;
 
     use nabu::serde::{self};
     use nabu::xff::value::{Array, Data, XffValue};
+
+    #[test]
+    fn actual_data() {
+        let path = "xff-example-data/v1_actual_data.xff";
+        let real_data = XffValue::from(fs::read("src/lib.rs").unwrap());
+        let real_data2 = XffValue::from(fs::read("Cargo.toml").unwrap());
+        let real_data3 = XffValue::from(fs::read("README.md").unwrap());
+        let data = XffValue::from(vec![real_data.clone(), real_data2.clone(), real_data3.clone()]);
+        let write = serde::write(path, data);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_array());
+        let array = read.into_array().unwrap();
+        assert_eq!(array.len(), 3);
+        assert_eq!(array[0], real_data);
+        assert_eq!(array[1], real_data2);
+        assert_eq!(array[2], real_data3);
+    }
 
     #[test]
     fn read_write_loop_object() {
