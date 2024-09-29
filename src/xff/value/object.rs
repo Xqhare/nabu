@@ -1,5 +1,5 @@
 use super::XffValue;
-use std::collections::{BTreeMap, HashMap};
+use std::{collections::{BTreeMap, HashMap}, ops::Index};
 
 #[derive(Debug, Clone, PartialEq)]
 /// An object made up of key-value pairs of XFF values with string key with string keys.
@@ -305,25 +305,43 @@ impl Object {
 //                     From implementations
 // -----------------------------------------------------------
 
-impl From<Vec<(String, XffValue)>> for Object {
-    fn from(vec: Vec<(String, XffValue)>) -> Self {
+impl<S, V> From<Vec<(S, V)>> for Object where S: Into<String>, V: Into<XffValue> {
+    fn from(vec: Vec<(S, V)>) -> Self {
         Object {
-            map: vec.into_iter().collect(),
+            map: vec.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
         }
     }
 }
 
-impl From<HashMap<String, XffValue>> for Object {
-    fn from(map: HashMap<String, XffValue>) -> Self {
-        Object {
-            map: map.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+impl<S, V> From<HashMap<S, V>> for Object where S: Into<String>, V: Into<XffValue> {
+    fn from(map: HashMap<S, V>) -> Self {
+        let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
+        for (k, v) in map {
+            out.insert(k.into(), v.into());
         }
+        Object { map: out }
     }
 }
 
-impl From<BTreeMap<String, XffValue>> for Object {
-    fn from(map: BTreeMap<String, XffValue>) -> Self {
-        Object { map }
+impl<S, V> From<BTreeMap<S, V>> for Object where S: Into<String>, V: Into<XffValue> {
+    fn from(map: BTreeMap<S, V>) -> Self {
+        let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
+        for (k, v) in map {
+            out.insert(k.into(), v.into());
+        }
+        Object { map: out }
+    }
+}
+
+// -----------------------------------------------------------
+//                     Index implementations
+// -----------------------------------------------------------
+
+impl<S> Index<S> for Object where S: AsRef<str> {
+    type Output = XffValue;
+
+    fn index(&self, index: S) -> &Self::Output {
+        self.get(index.as_ref()).unwrap()
     }
 }
 
