@@ -315,7 +315,6 @@ fn deserialize_xff_v1_key_value(
 
         let mut key_bytes: VecDeque<u8> = Default::default();
         while content[0] != 31 && content.front().is_some() {
-            println!("{:?}", content[0]);
             key_bytes.push_back(content.pop_front().unwrap());
             byte_pos.set(byte_pos.get() + 1);
         }
