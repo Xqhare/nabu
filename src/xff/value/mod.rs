@@ -416,6 +416,16 @@ impl XffValue {
 }
 
 // -----------------------------------------------------------
+//                     Default implementation
+// -----------------------------------------------------------
+
+impl Default for XffValue {
+    fn default() -> Self {
+        XffValue::Null
+    }
+}
+
+// -----------------------------------------------------------
 //                     Into implementations
 // -----------------------------------------------------------
 
@@ -441,8 +451,8 @@ impl From<Array> for XffValue {
     }
 }
 
-impl From<Vec<(String, XffValue)>> for XffValue {
-    fn from(c: Vec<(String, XffValue)>) -> Self {
+impl<S, V> From<Vec<(S, V)>> for XffValue where S: Into<String>, V: Into<XffValue> {
+    fn from(c: Vec<(S, V)>) -> Self {
         XffValue::Object(Object::from(c))
     }
 }
@@ -459,35 +469,21 @@ impl From<Data> for XffValue {
     }
 }
 
-impl Default for XffValue {
-    fn default() -> Self {
-        XffValue::String(String::new())
-    }
-}
-
 impl From<bool> for XffValue {
     fn from(c: bool) -> Self {
         XffValue::Boolean(c)
     }
 }
 
-impl<S> From<BTreeMap<S, XffValue>> for XffValue where S: Into<String> {
-    fn from(c: BTreeMap<S, XffValue>) -> Self {
-        let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
-        for (k, v) in c {
-            out.insert(k.into(), v);
-        }
-        XffValue::Object(out.into())
+impl<S, V> From<BTreeMap<S, V>> for XffValue where S: Into<String>, V: Into<XffValue> {
+    fn from(c: BTreeMap<S, V>) -> Self {
+        XffValue::Object(Object::from(c))
     }
 }
 
-impl<S> From<HashMap<S, XffValue>> for XffValue where S: Into<String> {
-    fn from(c: HashMap<S, XffValue>) -> Self {
-        let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
-        for (k, v) in c {
-            out.insert(k.into(), v);
-        }
-        XffValue::Object(out.into())
+impl<S, V> From<HashMap<S, V>> for XffValue where S: Into<String>, V: Into<XffValue> {
+    fn from(c: HashMap<S, V>) -> Self {
+        XffValue::Object(c.into())
     }
 }
 
