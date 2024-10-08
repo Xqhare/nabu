@@ -85,10 +85,10 @@ impl Number {
     /// let num_f = Number::from(42.69);
     /// let num_i = Number::from(-42);
     ///
-    /// assert_eq!(num_f.into_float(), Some(42.69));
-    /// assert_eq!(num_i.into_float(), None);
+    /// assert_eq!(num_f.into_f64(), Some(42.69));
+    /// assert_eq!(num_i.into_f64(), None);
     /// ```
-    pub fn into_float(self) -> Option<f64> {
+    pub fn into_f64(self) -> Option<f64> {
         match self {
             Number::Float(f) => Some(f),
             _ => None,
