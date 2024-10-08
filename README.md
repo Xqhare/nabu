@@ -6,9 +6,9 @@
 Nabu is a rust library for reading and writing `.xff` files.
 
 The overarching goal of this project is to create a rust library that can be used to build, read and write `.xff` files.
-`.xff` is a general purpose file format, with Nabu as the translation layer.
+`.xff` is a general purpose file format, with Nabu acting as a serializer and deserializer, as well as an IO abstraction.
 
-As with all my projects, this documentation contains everything you never wanted to know about `.xff` files, Nabu and how to work with them.
+As with all my projects, this documentation contains everything you never wanted to know about `.xff` files or Nabu.
 
 This README documents the usage of the most recent version of `.xff`: Version 1.
 The documentation for the previous version 0 can be found [here](LEGACY_V0_README.md).
@@ -18,13 +18,19 @@ All features present in the codebase are used in version 0 only.
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation of v0.
-After a few weeks of work and running into several issues and design oversights (as expected), I started working on v1.
+After a few weeks of work and running into several issues and design oversights (as expected), I started work on v1.
 V1 has morphed the `.xff` specification from a simple, to a more complex format akin to a JSON variation capable of storing arbitrary data in a binary format.
 As `xff` is meant to be a jack of all trades, it is important that it can be used in a wide range of use-cases.
+Because I like creating problems for myself, the `.xff` specification contains several error detection features. If these are of any use to anyone (or actually work as intended), only time will tell.
 
 ## Naming
+As with all my projects, Nabu is named after an ancient god.
+
 This library's namesake is the ancient Babylonian god Nabu, the god of literacy, rational arts and scribes.
 As the inventor of writing, Nabu is a fitting namesake for a tool designed to create and interpret a new form of written data.
+
+I am still undecided if NABU will also be a recursive acronym.
+The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really like it though.
 
 ## Contents
 - [Motivation](#motivation)
@@ -49,11 +55,11 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
     - Basic data types
         - Strings, Numbers, Boolean's, Null
     - Arrays, Objects
-    - Arbitrary Data
+    - Arbitrary data
 - Performant
-- Meaningful Errors
+- Meaningful errors
 - Fully documented
-- Testable
+- High test coverage
 
 ## `.xff` specification
 All specifications are in the `specifications` directory.
@@ -66,15 +72,19 @@ V2 is not yet finalized, but my musings about it can be found [here](specificati
 ## Usage
 
 ### Importing
-Nabu can be imported from GitHub directly:
+Nabu may be imported from GitHub directly:
 ```toml
 [dependencies]
 nabu = { git = "https://github.com/Xqhare/nabu" }
 ```
 
+Please make sure to run `cargo update` to get the latest version of Nabu.
+
+Nabu contains two modules, `serde` and `value`
+
 ### Serde
 Serde is a shorthand for serializing and deserializing. 
-This module contains all the functions needed for serializing and deserializing `.xff` files.
+This module contains all the functions needed for serializing and deserializing `.xff` files, as well as a convenience function for deleting files.
 
 #### Usage of serde
 No matter what the extension of the path you provide, it will be converted to ".xff".
