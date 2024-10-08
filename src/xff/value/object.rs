@@ -201,8 +201,8 @@ impl Object {
     ///
     /// assert_eq!(xff_obj_value.len(), 2);
     /// ```
-    pub fn insert(&mut self, key: String, value: XffValue) {
-        self.map.insert(key, value);
+    pub fn insert<S: Into<String>, V: Into<XffValue>>(&mut self, key: S, value: V) {
+        self.map.insert(key.into(), value.into());
     }
 
     /// Removes a key-value pair from the object
