@@ -3,7 +3,10 @@
 mod legacy_core {
     use nabu::{
         key_value_core::{new_core_store, read, write},
-        xff::value::{CommandCharacter, Data, Number, XffValue},
+        XffValue,
+        Number,
+        CommandCharacter,
+        Data,
     };
     use std::path::Path;
 
@@ -224,7 +227,10 @@ mod legacy_store {
     use nabu::{
         features::key_value::store::NabuDB,
         key_value_store::new_nabudb,
-        xff::value::{CommandCharacter, Data, Number, XffValue},
+        XffValue,
+        Number,
+        CommandCharacter,
+        Data,
     };
 
     #[test]

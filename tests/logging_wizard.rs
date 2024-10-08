@@ -3,7 +3,7 @@
 mod legacy_logging_wizard {
     use nabu::{
         logging_wizard::{Log, LogData, LoggingWizard},
-        xff::value::{CommandCharacter, Data, XffValue},
+        *,
     };
     use std::collections::BTreeMap;
     #[test]

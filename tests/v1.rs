@@ -5,8 +5,7 @@ mod v1 {
 
     use tyche::prelude::*;
 
-    use nabu::serde::{self};
-    use nabu::xff::value::{Array, Data, XffValue};
+    use nabu::*;
 
     #[test]
     fn actual_data() {
