@@ -3,7 +3,10 @@
 
 mod error;
 
-pub mod xff;
+mod xff;
+
+pub use crate::xff::value::XffValue;
+pub use crate::xff::value::{Array, CommandCharacter, Data, Number, Object};
 
 /// Most recent finalised version of XFF specification
 const XFF_VERSION: u8 = 1;
@@ -13,7 +16,7 @@ const XFF_VERSION: u8 = 1;
 /// # Example
 /// ```rust
 /// use nabu::serde::{read, write, remove_file};
-/// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+/// use nabu::{CommandCharacter, Data, Number, XffValue};
 /// // No matter what the extension of the path you provide, it will be converted to .xff
 /// let path = "xff-example-data/serde-main-example.txt";
 /// let path_2 = "xff-example-data/serde-main-example.xff";
@@ -49,7 +52,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// use nabu::serde::read;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let tmp = read("xff-example-data/v0.xff");
     /// assert!(tmp.is_ok());
@@ -81,7 +84,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// use nabu::serde::write;
-    /// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+    /// use nabu::{CommandCharacter, Data, Number, XffValue};
     ///
     /// let data = {
     ///     vec![
@@ -115,7 +118,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// use nabu::serde::write_legacy;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let data = {
     ///     vec![
@@ -146,7 +149,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// # use nabu::serde::write;
-    /// # use nabu::xff::value::XffValue;
+    /// # use nabu::XffValue;
     ///
     /// # let data = {vec![XffValue::String("hello mom".to_string())]};
     /// # let _ = write("xff-example-data/remove.xff", data.clone());
@@ -194,7 +197,7 @@ pub mod logging_wizard {
 /// ```ignore
 /// use std::{collections::BTreeMap, path::Path};
 /// use nabu::features::key_value::core::read_core;
-/// use nabu::xff::value::XffValue;
+/// use nabu::XffValue;
 ///
 /// let data = read_core(&Path::new("xff-example-data/key_value_core.xff"));
 /// assert!(data.is_ok());
@@ -206,7 +209,7 @@ pub mod key_value_core {
     use crate::{
         error::NabuError,
         features::key_value::core::{read_core, write_core},
-        xff::value::XffValue,
+        XffValue,
     };
 
     /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
@@ -220,7 +223,7 @@ pub mod key_value_core {
     /// # Example
     /// ```ignore
     /// use nabu::features::key_value::core::read_core;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     /// use std::collections::BTreeMap;
     /// use std::path::Path;
     ///
@@ -247,7 +250,7 @@ pub mod key_value_core {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_core::{write, new_core_store};
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let mut data = new_core_store();
     /// data.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -271,7 +274,7 @@ pub mod key_value_core {
     /// # Example
     /// ```ignore
     /// use std::collections::BTreeMap;
-    /// use nabu::{key_value_core::new_core_store, xff::value::XffValue};
+    /// use nabu::{key_value_core::new_core_store, XffValue};
     ///
     /// let data: BTreeMap<String, XffValue> = new_core_store();
     /// assert!(data.is_empty());
@@ -302,7 +305,7 @@ pub mod key_value_store {
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
     /// use nabu::features::key_value::store::NabuDB;
-    /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
+    /// use nabu::{XffValue, CommandCharacter, Data, Number};
     ///
     /// let path = "xff-example-data/nabuDB_main_example.xff";
     /// let mut db: NabuDB = new_nabudb(path).unwrap();
