@@ -5,7 +5,7 @@
 ///
 /// # Example
 /// ```rust
-/// use nabu::xff::value::Number;
+/// use nabu::Number;
 ///
 /// let num_float = Number::from(42.69);
 /// let num_unsigned = Number::from(u8::from(42));
@@ -40,7 +40,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_u = Number::from(u8::from(42));
     /// let num_f = Number::from(42.69);
@@ -60,7 +60,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_i = Number::from(-42);
     /// let num_f = Number::from(42.69);
@@ -80,7 +80,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_f = Number::from(42.69);
     /// let num_i = Number::from(-42);
@@ -100,7 +100,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_u = Number::from(u8::from(42));
     /// assert!(num_u.is_unsigned());
@@ -114,7 +114,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_i = Number::from(-42);
     /// assert!(num_i.is_integer());
@@ -128,7 +128,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_f = Number::from(42.69);
     /// assert!(num_f.is_float());
@@ -141,7 +141,7 @@ impl Number {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Number;
+    /// use nabu::Number;
     ///
     /// let num_u = Number::from(42);
     /// assert_eq!(num_u.as_string(), "42".to_string());

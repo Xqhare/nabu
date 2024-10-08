@@ -5,7 +5,7 @@
 ///
 /// # Example
 /// ```rust
-/// use nabu::xff::value::Data;
+/// use nabu::Data;
 ///
 /// let mut data = Data::from(vec![1, 2, 3, 4, 5]);
 ///
@@ -33,7 +33,7 @@ impl Data {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Data;
+    /// use nabu::Data;
     ///
     /// let mut data = Data::from(vec![1, 2, 3, 4, 5]);
     /// data.clear();
@@ -48,7 +48,7 @@ impl Data {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Data;
+    /// use nabu::Data;
     ///
     /// let data = Data::from(vec![1, 2, 3, 4, 5]);
     ///
@@ -62,7 +62,7 @@ impl Data {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Data;
+    /// use nabu::Data;
     ///
     /// let data = Data::from(vec![]);
     /// assert!(data.is_empty());
@@ -75,7 +75,7 @@ impl Data {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::Data;
+    /// use nabu::Data;
     ///
     /// let data = Data::from(vec![1, 2, 3, 4, 5]);
     ///

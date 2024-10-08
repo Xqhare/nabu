@@ -37,7 +37,7 @@ pub mod object;
 ///
 /// # Example
 /// ```rust
-/// use nabu::xff::value::{XffValue, Number, Array, Object, Data};
+/// use nabu::{XffValue, Number, Array, Object, Data};
 ///
 /// let string_val = XffValue::from("hello mom!");
 /// let num_val = XffValue::from(42.69);
@@ -110,7 +110,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Number, Data};
+    /// use nabu::{XffValue, Number, Data};
     ///
     /// let string_value = XffValue::from("hello mom!");
     /// let num_value = XffValue::from(42.69);
@@ -133,7 +133,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let num_value = XffValue::from(42.69);
     /// let string_value = XffValue::from("hello mom!");
@@ -153,7 +153,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let vec_value = XffValue::from(vec![XffValue::from("hello mom!"), XffValue::from(42.69)]);
     /// let num_value = XffValue::from(42.69);
@@ -174,7 +174,7 @@ impl XffValue {
     /// # Example
     /// ```rust
     /// use std::collections::BTreeMap;
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let map = BTreeMap::from([
     ///     ("key0".to_string(), XffValue::from("value0")),
@@ -200,7 +200,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Data};
+    /// use nabu::{XffValue, Data};
     ///
     /// let data_value = XffValue::from(vec![1, 2, 3]);
     /// let num_value = XffValue::from(42.69);
@@ -220,7 +220,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let bool_value_true = XffValue::from(true);
     /// let bool_value_false = XffValue::from(false);
@@ -242,7 +242,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let null_value = XffValue::Null;
     /// let num_value = XffValue::from(42.69);
@@ -262,7 +262,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let string_value = XffValue::from("hello mom!");
     /// let num_value = XffValue::from(42.69);
@@ -279,7 +279,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let number_value = XffValue::from(42.69);
     /// let string_value = XffValue::from("hello mom!");
@@ -296,7 +296,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let array_value = XffValue::from(vec![XffValue::from("hello mom!"), XffValue::from(42.69)]);
     /// let string_value = XffValue::from("hello mom!");
@@ -313,7 +313,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let object_value = XffValue::from(vec![("key0".to_string(), XffValue::from("hello mom!")), ("key1".to_string(), XffValue::from(vec![1, 2, 3]))]);
     /// let string_value = XffValue::from("hello mom!");
@@ -330,7 +330,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let data_value = XffValue::from(vec![1, 2, 3]);
     /// let string_value = XffValue::from("hello mom!");
@@ -347,7 +347,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let boolean_value = XffValue::from(true);
     /// let string_value = XffValue::from("hello mom!");
@@ -364,7 +364,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let boolean_value_true = XffValue::from(true);
     /// let boolean_value_false = XffValue::from(false);
@@ -383,7 +383,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let boolean_value_true = XffValue::from(true);
     /// let boolean_value_false = XffValue::from(false);
@@ -402,7 +402,7 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let null_value = XffValue::Null;
     /// let string_value = XffValue::from("hello mom!");

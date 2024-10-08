@@ -2,12 +2,11 @@ use crate::{
     error::NabuError,
     features::logging_wizard::{Log, LogData, LoggingWizard},
     serde::read,
-    xff::{
-        serializer::{serialize_xff, write_bytes_to_file},
-        value::{CommandCharacter, XffValue},
-    },
-    XFF_VERSION,
+    xff::serializer::{serialize_xff, write_bytes_to_file},
+    XffValue,
+    CommandCharacter,
 };
+
 use std::{
     collections::{BTreeMap, VecDeque},
     path::Path,

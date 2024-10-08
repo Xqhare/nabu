@@ -34,7 +34,7 @@ use crate::{
 /// ```ignore
 /// use std::collections::BTreeMap;
 /// use nabu::key_value_store::new_nabudb;
-/// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
+/// use nabu::{XffValue, CommandCharacter, Data, Number};
 ///
 /// let path = "xff-example-data/nabuDB_main_example_v0.xff";
 /// let mut db = new_nabudb(path).unwrap();
@@ -148,7 +148,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
+    /// use nabu::{XffValue, CommandCharacter, Data, Number};
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_v0.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -206,7 +206,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_clear.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -235,7 +235,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_contains.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -254,7 +254,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_keys.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -278,7 +278,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_insert.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -302,7 +302,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_remove.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -324,7 +324,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_map_example.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -346,7 +346,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -373,7 +373,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -394,7 +394,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB.xff").unwrap();
     /// db.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -416,7 +416,7 @@ impl NabuDB {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut db = new_nabudb("xff-example-data/nabuDB_len.xff").unwrap();
     ///

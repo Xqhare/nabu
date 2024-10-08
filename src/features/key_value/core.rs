@@ -4,7 +4,7 @@ use crate::{
     error::NabuError,
     key_value_core::new_core_store,
     serde::{read, write_legacy},
-    xff::value::XffValue,
+    XffValue,
 };
 
 /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
@@ -68,7 +68,7 @@ pub fn read_core(path: &Path) -> Result<BTreeMap<String, XffValue>, NabuError> {
 /// use std::path::Path;
 /// use std::collections::BTreeMap;
 /// use nabu::features::key_value::core::write_core;
-/// use nabu::xff::value::{XffValue, Number};
+/// use nabu::{XffValue, Number};
 ///
 /// let mut data = BTreeMap::new();
 /// data.insert("key0".to_string(), XffValue::String("value0".to_string()));

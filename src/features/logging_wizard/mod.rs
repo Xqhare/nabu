@@ -3,8 +3,9 @@ mod serde;
 use crate::{
     error::NabuError,
     features::logging_wizard::serde::{append_to_log_wizard, read_log_wizard, write_log_wizard},
-    xff::value::XffValue,
 };
+
+use crate::XffValue;
 
 use std::collections::BTreeMap;
 
@@ -22,7 +23,7 @@ use std::collections::BTreeMap;
 /// ## Example
 /// ```ignore
 /// use nabu::logging_wizard::LoggingWizard;
-/// use nabu::xff::value::XffValue;
+/// use nabu::XffValue;
 ///
 /// let mut wizard = LoggingWizard::from_file("xff-example-data/logging_wizard.xff");
 /// assert!(wizard.is_ok());
@@ -37,7 +38,7 @@ use std::collections::BTreeMap;
 /// ## Example
 /// ```ignore
 /// use nabu::logging_wizard::LoggingWizard;
-/// use nabu::xff::value::XffValue;
+/// use nabu::XffValue;
 ///
 /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
 /// ```
@@ -70,7 +71,7 @@ impl LoggingWizard {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
@@ -183,7 +184,7 @@ impl LoggingWizard {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
@@ -208,7 +209,7 @@ impl LoggingWizard {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
@@ -233,7 +234,7 @@ impl LoggingWizard {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::{LoggingWizard, Log};
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let mut wizard = LoggingWizard::new("xff-example-data/logging_wizard.xff");
     /// let log = Log::new();
@@ -291,7 +292,7 @@ impl Log {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::{Log, LogData};
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let data = LogData::new("name", XffValue::Number(Number::from(42)), None);
     /// let mut log = Log::new();
@@ -313,7 +314,7 @@ impl Log {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::{Log, LogData};
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let data = LogData::new("name", XffValue::Number(Number::from(42)), None);
     /// let mut log = Log::new();
@@ -335,7 +336,7 @@ impl Log {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::Log;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let log = Log::new();
     /// assert!(log.log_data_len == 0);
@@ -381,7 +382,7 @@ impl LogData {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let data = LogData::create("name", XffValue::Number(Number::from(42)), None);
     /// assert!(data.name == "name");
@@ -421,7 +422,7 @@ impl LogData {
     /// # Example
     /// ```ignore
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let data = LogData::new("name", XffValue::Number(Number::from(42)), None);
     /// assert!(data.name == "name");
@@ -449,7 +450,7 @@ impl LogData {
     /// ```ignore
     /// use std::collections::BTreeMap;
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let mut data = LogData::new("name", XffValue::Number(Number::from(42)), Some(BTreeMap::new()));
     /// data.add_metadata("time", "12:34");
@@ -471,7 +472,7 @@ impl LogData {
     /// ```ignore
     /// use std::collections::BTreeMap;
     /// use nabu::logging_wizard::LogData;
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let mut data = LogData::new("name", XffValue::Number(Number::from(42)), Some(BTreeMap::new()));
     /// data.add_metadata("extension", "jpg");

@@ -17,7 +17,7 @@ use super::XffValue;
 ///
 /// # Examples
 /// ```rust
-/// use nabu::xff::value::{XffValue, Array};
+/// use nabu::{XffValue, Array};
 ///
 /// let mut array1 = Array::from(vec![
 ///     XffValue::from("hi mom!"),
@@ -77,7 +77,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -100,7 +100,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -118,7 +118,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::new();
     ///
@@ -132,7 +132,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -154,7 +154,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::new();
     ///
@@ -172,7 +172,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -194,7 +194,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::new();
     ///
@@ -212,7 +212,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -234,7 +234,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -255,7 +255,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let mut array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
@@ -276,7 +276,7 @@ impl Array {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::xff::value::{XffValue, Array};
+    /// use nabu::{XffValue, Array};
     ///
     /// let array = Array::from(vec![
     ///     XffValue::from("hi mom!"),
