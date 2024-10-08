@@ -164,8 +164,8 @@ impl Array {
     ///
     /// assert_eq!(array.len(), 3);
     /// ```
-    pub fn push(&mut self, value: XffValue) {
-        self.values.push(value);
+    pub fn push<V: Into<XffValue>>(&mut self, value: V) {
+        self.values.push(value.into());
     }
 
     /// Pops a value off the end of the `Array`
@@ -204,8 +204,8 @@ impl Array {
     ///
     /// assert_eq!(array.len(), 3);
     /// ```
-    pub fn insert(&mut self, index: usize, value: XffValue) {
-        self.values.insert(index, value);
+    pub fn insert<V: Into<XffValue>>(&mut self, index: usize, value: V) {
+        self.values.insert(index, value.into());
     }
 
     /// Removes a value at a given index
