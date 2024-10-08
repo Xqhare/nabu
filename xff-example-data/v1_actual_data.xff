@@ -1,9 +1,12 @@
-TG"+/*!
+²I+/*!
 */
 
 mod error;
 
-pub mod xff;
+mod xff;
+
+pub use crate::xff::value::XffValue;
+pub use crate::xff::value::{Array, CommandCharacter, Data, Number, Object};
 
 /// Most recent finalised version of XFF specification
 const XFF_VERSION: u8 = 1;
@@ -13,7 +16,7 @@ const XFF_VERSION: u8 = 1;
 /// # Example
 /// ```rust
 /// use nabu::serde::{read, write, remove_file};
-/// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+/// use nabu::{CommandCharacter, Data, Number, XffValue};
 /// // No matter what the extension of the path you provide, it will be converted to .xff
 /// let path = "xff-example-data/serde-main-example.txt";
 /// let path_2 = "xff-example-data/serde-main-example.xff";
@@ -49,7 +52,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// use nabu::serde::read;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let tmp = read("xff-example-data/v0.xff");
     /// assert!(tmp.is_ok());
@@ -81,7 +84,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// use nabu::serde::write;
-    /// use nabu::xff::value::{CommandCharacter, Data, Number, XffValue};
+    /// use nabu::{CommandCharacter, Data, Number, XffValue};
     ///
     /// let data = {
     ///     vec![
@@ -115,7 +118,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// use nabu::serde::write_legacy;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     ///
     /// let data = {
     ///     vec![
@@ -146,7 +149,7 @@ pub mod serde {
     /// # Example
     /// ```rust
     /// # use nabu::serde::write;
-    /// # use nabu::xff::value::XffValue;
+    /// # use nabu::XffValue;
     ///
     /// # let data = {vec![XffValue::String("hello mom".to_string())]};
     /// # let _ = write("xff-example-data/remove.xff", data.clone());
@@ -194,7 +197,7 @@ pub mod logging_wizard {
 /// ```ignore
 /// use std::{collections::BTreeMap, path::Path};
 /// use nabu::features::key_value::core::read_core;
-/// use nabu::xff::value::XffValue;
+/// use nabu::XffValue;
 ///
 /// let data = read_core(&Path::new("xff-example-data/key_value_core.xff"));
 /// assert!(data.is_ok());
@@ -206,7 +209,7 @@ pub mod key_value_core {
     use crate::{
         error::NabuError,
         features::key_value::core::{read_core, write_core},
-        xff::value::XffValue,
+        XffValue,
     };
 
     /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead
@@ -220,7 +223,7 @@ pub mod key_value_core {
     /// # Example
     /// ```ignore
     /// use nabu::features::key_value::core::read_core;
-    /// use nabu::xff::value::XffValue;
+    /// use nabu::XffValue;
     /// use std::collections::BTreeMap;
     /// use std::path::Path;
     ///
@@ -247,7 +250,7 @@ pub mod key_value_core {
     /// # Example
     /// ```ignore
     /// use nabu::key_value_core::{write, new_core_store};
-    /// use nabu::xff::value::{XffValue, Number};
+    /// use nabu::{XffValue, Number};
     ///
     /// let mut data = new_core_store();
     /// data.insert("key0".to_string(), XffValue::String("value0".to_string()));
@@ -271,7 +274,7 @@ pub mod key_value_core {
     /// # Example
     /// ```ignore
     /// use std::collections::BTreeMap;
-    /// use nabu::{key_value_core::new_core_store, xff::value::XffValue};
+    /// use nabu::{key_value_core::new_core_store, XffValue};
     ///
     /// let data: BTreeMap<String, XffValue> = new_core_store();
     /// assert!(data.is_empty());
@@ -302,7 +305,7 @@ pub mod key_value_store {
     /// ```ignore
     /// use nabu::key_value_store::new_nabudb;
     /// use nabu::features::key_value::store::NabuDB;
-    /// use nabu::xff::value::{XffValue, CommandCharacter, Data, Number};
+    /// use nabu::{XffValue, CommandCharacter, Data, Number};
     ///
     /// let path = "xff-example-data/nabuDB_main_example.xff";
     /// let mut db: NabuDB = new_nabudb(path).unwrap();
@@ -341,7 +344,7 @@ logging_wizard = []
 
 [package.metadata.docs.rs]
 all-features = true
-# Nabu
+x# Nabu
 
 > [!note]
 > This is a hobby project. It is not intended nor ready to be used in production.
@@ -349,9 +352,9 @@ all-features = true
 Nabu is a rust library for reading and writing `.xff` files.
 
 The overarching goal of this project is to create a rust library that can be used to build, read and write `.xff` files.
-`.xff` is a general purpose file format, with Nabu as the translation layer.
+`.xff` is a general purpose file format, with Nabu acting as a serializer and deserializer, as well as an IO abstraction.
 
-As with all my projects, this documentation contains everything you never wanted to know about `.xff` files, Nabu and how to work with them.
+As with all my projects, this documentation contains everything you never wanted to know about `.xff` files or Nabu.
 
 This README documents the usage of the most recent version of `.xff`: Version 1.
 The documentation for the previous version 0 can be found [here](LEGACY_V0_README.md).
@@ -361,13 +364,19 @@ All features present in the codebase are used in version 0 only.
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation of v0.
-After a few weeks of work and running into several issues and design oversights (as expected), I started working on v1.
+After a few weeks of work and running into several issues and design oversights (as expected), I started work on v1.
 V1 has morphed the `.xff` specification from a simple, to a more complex format akin to a JSON variation capable of storing arbitrary data in a binary format.
 As `xff` is meant to be a jack of all trades, it is important that it can be used in a wide range of use-cases.
+Because I like creating problems for myself, the `.xff` specification contains several error detection features. If these are of any use to anyone (or actually work as intended), only time will tell.
 
 ## Naming
+As with all my projects, Nabu is named after an ancient god.
+
 This library's namesake is the ancient Babylonian god Nabu, the god of literacy, rational arts and scribes.
 As the inventor of writing, Nabu is a fitting namesake for a tool designed to create and interpret a new form of written data.
+
+I am still undecided if NABU will also be a recursive acronym.
+The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really like it though.
 
 ## Contents
 - [Motivation](#motivation)
@@ -392,11 +401,11 @@ As the inventor of writing, Nabu is a fitting namesake for a tool designed to cr
     - Basic data types
         - Strings, Numbers, Boolean's, Null
     - Arrays, Objects
-    - Arbitrary Data
+    - Arbitrary data
 - Performant
-- Meaningful Errors
+- Meaningful errors
 - Fully documented
-- Testable
+- High test coverage
 
 ## `.xff` specification
 All specifications are in the `specifications` directory.
@@ -409,15 +418,19 @@ V2 is not yet finalized, but my musings about it can be found [here](specificati
 ## Usage
 
 ### Importing
-Nabu can be imported from GitHub directly:
+Nabu may be imported from GitHub directly:
 ```toml
 [dependencies]
 nabu = { git = "https://github.com/Xqhare/nabu" }
 ```
 
+Please make sure to run `cargo update` to get the latest version of Nabu.
+
+Nabu contains two modules, `serde` and `value`
+
 ### Serde
 Serde is a shorthand for serializing and deserializing. 
-This module contains all the functions needed for serializing and deserializing `.xff` files.
+This module contains all the functions needed for serializing and deserializing `.xff` files, as well as a convenience function for deleting files.
 
 #### Usage of serde
 No matter what the extension of the path you provide, it will be converted to ".xff".
