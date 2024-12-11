@@ -1,4 +1,4 @@
-ù•è_/*!
+–è_/*!
 # Nabu
 
 > This is a hobby project. It is not intended nor ready to be used in production.
@@ -731,7 +731,7 @@ pub mod key_value_store {
 }
 [package]
 name = "nabu"
-version = "1.3.0"
+version = "1.3.1"
 edition = "2021"
 
 [dependencies]
@@ -746,7 +746,7 @@ logging_wizard = []
 
 [package.metadata.docs.rs]
 all-features = true
-ã4# Nabu
+ñ4# Nabu
 
 > [!note]
 > This is a hobby project. It is not intended nor ready to be used in production.
@@ -870,7 +870,7 @@ let path = "xff-example-data/hello-world.xff";
 let mut object: Object = Object::new();
 
 object.insert("String", XffValue::from("Hi mom!"));
-object.insert("Number", XffValue::from(42));
+object.insert("Number", XffValue::from(usize::MAX));
 object.insert("Number", XffValue::from(-42));
 object.insert("Number", XffValue::from(42.69));
 object.insert("Boolean", XffValue::from(true));
@@ -878,7 +878,7 @@ object.insert("Null", XffValue::from(XffValue::Null));
 
 let mut array: Array = Array::new();
 array.push(XffValue::from("Hello mom!"));
-array.push(XffValue::from(42));
+array.push(XffValue::from(usize::MAX));
 
 object.insert("Array", XffValue::from(array));
 
@@ -892,9 +892,10 @@ let read = read(path);
 assert!(read.is_ok());
 let ok = read.unwrap();
 assert_eq!(ok, value);
-let remove = remove_file(path).unwrap();
+let remove = remove_file(path);
 assert!(remove.is_ok());
 ```
+
 
 ### Serde
 `Serde` is a shorthand for serializing and deserializing. 
@@ -1101,11 +1102,11 @@ let mut object = Object::new();
 object.insert("Key", "hello mom");
 object.insert("Key2", -42);
 
-let value = object["Key"];
-assert_eq!(value, XffValue::from("hello mom"));
+let value = &object["Key"];
+assert_eq!(value, &XffValue::from("hello mom"));
 
-let value2 = object["Key2"];
-assert_eq!(value2, XffValue::from(-42));
+let value2 = &object["Key2"];
+assert_eq!(value2, &XffValue::from(-42));
 ```
 
 ##### `Array`
@@ -1117,8 +1118,8 @@ let mut array = Array::new();
 
 array.push("hello mom");
 
-let value = array[0];
-assert_eq!(value, XffValue::from("hello mom"));
+let value = &array[0];
+assert_eq!(value, &XffValue::from("hello mom"));
 ```
 
 ### Errors
