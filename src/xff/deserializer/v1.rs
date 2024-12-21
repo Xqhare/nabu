@@ -297,6 +297,7 @@ fn deserialize_xff_v1_value(
         }
         _ => {
             //Error
+            println!("DOG");
             return Err(NabuError::InvalidXFFByte(content[0], byte_pos.get(), 1));
         }
     }
@@ -331,7 +332,6 @@ fn deserialize_xff_v1_key_value(
             byte_pos.set(byte_pos.get() + 1);
 
             let value = deserialize_xff_v1_value(content, byte_pos)?;
-            println!("DOG");
             // Trailing GS
             if content[0] != 29 {
                 return Err(NabuError::InvalidObject(byte_pos.get(), content[0]));
