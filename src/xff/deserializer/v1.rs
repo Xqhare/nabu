@@ -297,7 +297,6 @@ fn deserialize_xff_v1_value(
         }
         _ => {
             //Error
-            println!("DOG");
             return Err(NabuError::InvalidXFFByte(content[0], byte_pos.get(), 1));
         }
     }
@@ -320,6 +319,7 @@ fn deserialize_xff_v1_key_value(
             byte_pos.set(byte_pos.get() + 1);
         }
         let key_bind = deserialize_xff_v1_value(&mut key_bytes, byte_pos)?;
+        println!("{:?}", key_bind);
         if !key_bind.is_string() {
             return Err(NabuError::InvalidKey(byte_pos.get(), key_bind));
         }
@@ -332,6 +332,7 @@ fn deserialize_xff_v1_key_value(
             byte_pos.set(byte_pos.get() + 1);
 
             let value = deserialize_xff_v1_value(content, byte_pos)?;
+            println!("{:?}", value);
             // Trailing GS
             if content[0] != 29 {
                 return Err(NabuError::InvalidObject(byte_pos.get(), content[0]));
