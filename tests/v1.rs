@@ -28,6 +28,35 @@ mod v1 {
     }
 
     #[test]
+    fn zero_length_data_stores() {
+        let path = "xff-example-data/v1_empty.xff";
+        let obj = Object::new();
+        let data = XffValue::from(obj);
+        let write = serde::write(path, data);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_object());
+        let obj = read.into_object().unwrap();
+        assert_eq!(obj.len(), 0);
+
+        let ary = Array::new();
+        let data = XffValue::from(ary);
+        let write = serde::write(path, data);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_array());
+        let ary = read.into_array().unwrap();
+        assert_eq!(ary.len(), 0);
+
+        //cleanup
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
     fn read_write_loop_object() {
         let path = "xff-example-data/v1_loop_complex.xff";
         for n in 0..100 {
