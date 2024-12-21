@@ -320,6 +320,7 @@ fn deserialize_xff_v1_key_value(
         }
         println!("{:?}", key_bytes);
         let key_bind = deserialize_xff_v1_value(&mut key_bytes, byte_pos)?;
+        println!("DOG");
         if !key_bind.is_string() {
             return Err(NabuError::InvalidKey(byte_pos.get(), key_bind));
         }
