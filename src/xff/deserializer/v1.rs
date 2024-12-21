@@ -184,12 +184,13 @@ fn deserialize_xff_v1_value(
             byte_pos.set(byte_pos.get() + 1);
             //ARY
 
-            let start_pos = byte_pos.get();
             let len = deserialize_xff_v1_value_length(content, byte_pos)?;
 
             let mut ary_bind: Vec<XffValue> = Default::default();
 
-            ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
+            if len != 0 {
+                ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
+            }
 
             while content[0] != 24 && content.front().is_some() {
                 if content[0] == 30 {
@@ -215,9 +216,6 @@ fn deserialize_xff_v1_value(
                 // closing ARY
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
-                if byte_pos.get() - start_pos != len {
-                    return Err(NabuError::MissingEV(byte_pos.get()));
-                }
 
                 return Ok(XffValue::from(ary_bind));
             } else {
@@ -229,29 +227,30 @@ fn deserialize_xff_v1_value(
             byte_pos.set(byte_pos.get() + 1);
             //OBJ
 
-            let start_pos = byte_pos.get();
             let len = deserialize_xff_v1_value_length(content, byte_pos)?;
 
             let mut obj_bind: BTreeMap<String, XffValue> = Default::default();
 
-            while content[0] != 24 && content.front().is_some() {
-                let (key, value) = deserialize_xff_v1_key_value(content, byte_pos)?;
-                obj_bind.insert(key, value);
-                if content[0] == 30 {
-                    if content[1] == 24 {
-                        // closing OBJ
-                        let _ = content.pop_front();
-                        let _ = content.pop_front();
-                        byte_pos.set(byte_pos.get() + 2);
-                        return Ok(XffValue::from(obj_bind));
+            if len != 0 {
+                while content[0] != 24 && content.front().is_some() {
+                    let (key, value) = deserialize_xff_v1_key_value(content, byte_pos)?;
+                    obj_bind.insert(key, value);
+                    if content[0] == 30 {
+                        if content[1] == 24 {
+                            // closing OBJ
+                            let _ = content.pop_front();
+                            let _ = content.pop_front();
+                            byte_pos.set(byte_pos.get() + 2);
+                            return Ok(XffValue::from(obj_bind));
+                        } else {
+                            let _ = content.pop_front();
+                            byte_pos.set(byte_pos.get() + 1);
+                            // another key value pair
+                            continue;
+                        }
                     } else {
-                        let _ = content.pop_front();
-                        byte_pos.set(byte_pos.get() + 1);
-                        // another key value pair
-                        continue;
+                        break;
                     }
-                } else {
-                    break;
                 }
             }
 
@@ -260,9 +259,7 @@ fn deserialize_xff_v1_value(
                 // closing ARY
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
-                if byte_pos.get() - start_pos != len {
-                    return Err(NabuError::MissingEV(byte_pos.get()));
-                }
+                
                 return Ok(XffValue::from(obj_bind));
             } else {
                 return Err(NabuError::InvalidObject(byte_pos.get(), content[0]));
@@ -319,7 +316,6 @@ fn deserialize_xff_v1_key_value(
             byte_pos.set(byte_pos.get() + 1);
         }
         let key_bind = deserialize_xff_v1_value(&mut key_bytes, byte_pos)?;
-        println!("{:?}", key_bind);
         if !key_bind.is_string() {
             return Err(NabuError::InvalidKey(byte_pos.get(), key_bind));
         }
@@ -332,7 +328,6 @@ fn deserialize_xff_v1_key_value(
             byte_pos.set(byte_pos.get() + 1);
 
             let value = deserialize_xff_v1_value(content, byte_pos)?;
-            println!("{:?}", value);
             // Trailing GS
             if content[0] != 29 {
                 return Err(NabuError::InvalidObject(byte_pos.get(), content[0]));
