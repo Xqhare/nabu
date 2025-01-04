@@ -542,8 +542,20 @@ impl From<String> for XffValue {
     }
 }
 
+impl From<&String> for XffValue {
+    fn from(c: &String) -> Self {
+        XffValue::String(c.clone())
+    }
+}
+
 impl From<&str> for XffValue {
     fn from(c: &str) -> Self {
+        XffValue::String(c.to_string())
+    }
+}
+
+impl From<char> for XffValue {
+    fn from(c: char) -> Self {
         XffValue::String(c.to_string())
     }
 }

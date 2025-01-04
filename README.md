@@ -195,7 +195,7 @@ The types are explained along with the `XffValue` enum, instead of in their own 
 There are many implementations of the `From` trait for the `XffValue` enum, this is a comprehensive list:
 
 - `XffValue::from()`
-    - `&str`, `String` -> `XffValue::String`
+    - `&str`, `String`, `&String`, `char` -> `XffValue::String`
     - `usize`, `u8`, `u16`, `u32`, `u64` -> `XffValue::Number`
     - `isize`, `i8`, `i16`, `i32`, `i64` -> `XffValue::Number`
     - `f32`, `f64` -> `XffValue::Number`
