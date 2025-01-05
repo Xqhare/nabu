@@ -48,12 +48,14 @@ pub mod object;
 ///     ]
 /// );
 /// let object_val = XffValue::from(
-///     vec![
-///         ("keyA".to_string(), XffValue::from("hi mom!")),
-///         ("keyB".to_string(), XffValue::from(42.69))
-///     ]
+///     Object::from(
+///        vec![
+///            ("keyA".to_string(), XffValue::from("hi mom!")),
+///            ("keyB".to_string(), XffValue::from(42.69))
+///        ]
+///     )
 /// );
-/// let data_val = XffValue::from(vec![1, 2, 3]);
+/// let data_val = XffValue::from(Data::from(vec![1, 2, 3]));
 /// let boolean_val = XffValue::from(true);
 /// let null_val = XffValue::Null;
 ///
@@ -313,9 +315,9 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::XffValue;
+    /// use nabu::{XffValue, Object};
     ///
-    /// let object_value = XffValue::from(vec![("key0".to_string(), XffValue::from("hello mom!")), ("key1".to_string(), XffValue::from(vec![1, 2, 3]))]);
+    /// let object_value = XffValue::from(Object::from(vec![("key0".to_string(), XffValue::from("hello mom!")), ("key1".to_string(), XffValue::from(vec![1, 2, 3]))]));
     /// let string_value = XffValue::from("hello mom!");
     ///
     /// assert!(!string_value.is_object());
@@ -330,9 +332,9 @@ impl XffValue {
     ///
     /// # Example
     /// ```rust
-    /// use nabu::XffValue;
+    /// use nabu::{XffValue, Data};
     ///
-    /// let data_value = XffValue::from(vec![1, 2, 3]);
+    /// let data_value = XffValue::from(Data::from(vec![1, 2, 3]));
     /// let string_value = XffValue::from("hello mom!");
     ///
     /// assert!(!string_value.is_data());
@@ -451,9 +453,9 @@ impl From<Array> for XffValue {
     }
 }
 
-impl<S, V> From<Vec<(S, V)>> for XffValue where S: Into<String>, V: Into<XffValue> {
-    fn from(c: Vec<(S, V)>) -> Self {
-        XffValue::Object(Object::from(c))
+impl<V> From<Vec<V>> for XffValue where V: Into<XffValue> {
+    fn from(c: Vec<V>) -> Self {
+        XffValue::Array(Array::from(c))
     }
 }
 
@@ -484,24 +486,6 @@ impl<S, V> From<BTreeMap<S, V>> for XffValue where S: Into<String>, V: Into<XffV
 impl<S, V> From<HashMap<S, V>> for XffValue where S: Into<String>, V: Into<XffValue> {
     fn from(c: HashMap<S, V>) -> Self {
         XffValue::Object(c.into())
-    }
-}
-
-impl From<Vec<XffValue>> for XffValue {
-    fn from(c: Vec<XffValue>) -> Self {
-        XffValue::Array(Array::from(c))
-    }
-}
-
-impl From<Vec<u8>> for XffValue {
-    fn from(c: Vec<u8>) -> Self {
-        XffValue::Data(Data::from(c))
-    }
-}
-
-impl From<Vec<CommandCharacter>> for XffValue {
-    fn from(c: Vec<CommandCharacter>) -> Self {
-        XffValue::ArrayCmdChar(c)
     }
 }
 

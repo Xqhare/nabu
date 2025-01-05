@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     error::NabuError,
-    xff::value::{Number, XffValue},
+    xff::value::{Number, XffValue}, Data,
 };
 
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
@@ -278,7 +278,7 @@ fn deserialize_xff_v1_value(
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
             }
-            return Ok(XffValue::from(data));
+            return Ok(XffValue::from(Data::from(data)));
         }
         16 => {
             let _ = content.pop_front();

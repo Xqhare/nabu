@@ -60,7 +60,7 @@ use std::{collections::{BTreeMap, HashMap}, ops::Index};
 ///     ("keyC".to_string(), XffValue::from(42.69)),
 /// ];
 ///
-/// let xff_obj_value = XffValue::from(key_values);
+/// let xff_obj_value = XffValue::from(Object::from(key_values));
 /// assert!(xff_obj_value.is_object());
 ///
 /// let mut object = xff_obj_value.into_object().unwrap();
