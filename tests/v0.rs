@@ -95,7 +95,7 @@ mod v0 {
         for _ in 0..seed {
             out.push(random_u8().unwrap());
         }
-        XffValue::from(out)
+        XffValue::from(Data::from(out))
     }
 
     fn make_random_number() -> XffValue {

@@ -10,9 +10,9 @@ mod v1 {
     #[test]
     fn actual_data() {
         let path = "xff-example-data/v1_actual_data.xff";
-        let real_data = XffValue::from(fs::read("src/lib.rs").unwrap());
-        let real_data2 = XffValue::from(fs::read("Cargo.toml").unwrap());
-        let real_data3 = XffValue::from(fs::read("README.md").unwrap());
+        let real_data = XffValue::from(Data::from(fs::read("src/lib.rs").unwrap()));
+        let real_data2 = XffValue::from(Data::from(fs::read("Cargo.toml").unwrap()));
+        let real_data3 = XffValue::from(Data::from(fs::read("README.md").unwrap()));
         let data = XffValue::from(vec![real_data.clone(), real_data2.clone(), real_data3.clone()]);
         let write = serde::write(path, data);
         assert!(write.is_ok());
@@ -199,9 +199,9 @@ mod v1 {
 
     #[test]
     fn data() {
-        let small_data = XffValue::from(make_random_data_with_length(100));
-        let medium_data = XffValue::from(make_random_data_with_length(10_000));
-        let large_data = XffValue::from(make_random_data_with_length(1_000_000));
+        let small_data = XffValue::from(Data::from(make_random_data_with_length(100)));
+        let medium_data = XffValue::from(Data::from(make_random_data_with_length(10_000)));
+        let large_data = XffValue::from(Data::from(make_random_data_with_length(1_000_000)));
 
         let xff_val = XffValue::from(vec![small_data, medium_data, large_data]);
         assert!(xff_val.is_array());
@@ -332,6 +332,7 @@ mod v1 {
 
     #[test]
     fn complete_array() {
+        let tmp: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
         let values = vec![
             XffValue::from("hello"),
             XffValue::from(42.69),
@@ -349,7 +350,7 @@ mod v1 {
             XffValue::from(f32::from(42.69)),
             XffValue::from(f64::from(69.42)),
             XffValue::from("hello".to_string()),
-            XffValue::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]),
+            XffValue::from(tmp),
             XffValue::from(false),
             XffValue::Null,
         ];
