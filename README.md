@@ -201,9 +201,8 @@ There are many implementations of the `From` trait for the `XffValue` enum, this
     - `f32`, `f64` -> `XffValue::Number`
     - `Number` -> `XffValue::Number`
     - `bool` -> `XffValue::Boolean`
-    - `Vec<u8>` -> `XffValue::Data`
     - `Data` -> `XffValue::Data`
-    - `Vec<XffValue>` -> `XffValue::Array`
+    - `Vec<V>` where `V` can be converted to `XffValue` -> `XffValue::Array`
     - `Array` -> `XffValue::Array`
     - `HashMap<S, V>`, `BTreeMap<S, V>` or `Vec<(S, V)>` where `S` can be converted to `String` and `V` to `XffValue` -> `XffValue::Object`
     - `Object` -> `XffValue::Object`
