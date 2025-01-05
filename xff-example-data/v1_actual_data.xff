@@ -1,4 +1,4 @@
-m”N^/*!
+–è_/*!
 # Nabu
 
 > This is a hobby project. It is not intended nor ready to be used in production.
@@ -602,6 +602,7 @@ pub mod logging_wizard {
 /// use nabu::XffValue;
 ///
 /// let data = read_core(&Path::new("xff-example-data/key_value_core.xff"));
+/// assert!(data.is_ok());
 /// let map: BTreeMap<String, XffValue> = data.unwrap();
 /// ```
 pub mod key_value_core {
@@ -629,6 +630,7 @@ pub mod key_value_core {
     /// use std::path::Path;
     ///
     /// let data = read_core(&Path::new("xff-example-data/key_value_core.xff"));
+    /// assert!(data.is_ok());
     /// let map: BTreeMap<String, XffValue> = data.unwrap();
     /// ```
     pub fn read<P>(path: P) -> Result<BTreeMap<String, XffValue>, NabuError>
@@ -657,6 +659,7 @@ pub mod key_value_core {
     /// data.insert("key1".to_string(), XffValue::Number(Number::from(42)));
     ///
     /// let tmp = write("xff-example-data/key_value_core.xff", data.clone());
+    /// assert!(tmp.is_ok());
     /// ```
     pub fn write<P>(path: P, data: BTreeMap<String, XffValue>) -> Result<(), NabuError>
     where
@@ -676,6 +679,7 @@ pub mod key_value_core {
     /// use nabu::{key_value_core::new_core_store, XffValue};
     ///
     /// let data: BTreeMap<String, XffValue> = new_core_store();
+    /// assert!(data.is_empty());
     /// ```
     pub fn new_core_store() -> BTreeMap<String, XffValue> {
         BTreeMap::new()
@@ -713,6 +717,10 @@ pub mod key_value_store {
     /// db.insert("key3".to_string(), XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
     /// db.save();
     /// let read = new_nabudb(path).unwrap();
+    /// assert_eq!(read.get("key0").unwrap(), db.get("key0").unwrap());
+    /// assert_eq!(read.get("key1").unwrap(), db.get("key1").unwrap());
+    /// assert_eq!(read.get("key2").unwrap(), db.get("key2").unwrap());
+    /// assert_eq!(read.get("key3").unwrap(), db.get("key3").unwrap());
     /// ```
     pub fn new_nabudb<P>(path: P) -> Result<NabuDB, NabuError>
     where
@@ -723,7 +731,7 @@ pub mod key_value_store {
 }
 [package]
 name = "nabu"
-version = "1.3.1"
+version = "1.3.2"
 edition = "2021"
 
 [dependencies]
@@ -738,7 +746,7 @@ logging_wizard = []
 
 [package.metadata.docs.rs]
 all-features = true
-ñ4# Nabu
+5# Nabu
 
 > [!note]
 > This is a hobby project. It is not intended nor ready to be used in production.
@@ -935,7 +943,7 @@ The types are explained along with the `XffValue` enum, instead of in their own 
 There are many implementations of the `From` trait for the `XffValue` enum, this is a comprehensive list:
 
 - `XffValue::from()`
-    - `&str`, `String` -> `XffValue::String`
+    - `&str`, `String`, `&String`, `char` -> `XffValue::String`
     - `usize`, `u8`, `u16`, `u32`, `u64` -> `XffValue::Number`
     - `isize`, `i8`, `i16`, `i32`, `i64` -> `XffValue::Number`
     - `f32`, `f64` -> `XffValue::Number`
