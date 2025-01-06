@@ -77,6 +77,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
 - Meaningful errors
 - Fully documented
 - High test coverage
+- Macros
 
 ## `.xff` specification
 To use Nabu it is not needed to have read the specification, but it is recommended.
@@ -190,7 +191,7 @@ let data_4 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 
 The types are explained along with the `XffValue` enum, instead of in their own chapters, as I found it easier to understand.
 
-### From
+#### From
 
 There are many implementations of the `From` trait for the `XffValue` enum, this is a comprehensive list:
 
@@ -266,7 +267,17 @@ There are also several implementations of the `From` trait for the different typ
 - `Object`
     - `HashMap<S, V>`, `BTreeMap<S, V>` or `Vec<(S, V)>` where `S` can be converted to `String` and `V` to `XffValue` -> `Object`
 
-### Associated Functions
+#### Macros
+
+Two macros are made available:
+
+1. `xff!()`
+    - Creates a new `XffValue` from any supported type
+    - Convenience for `XffValue::from()`
+2. `tvec_to_xff_value!(Vec<T>)`
+    - Converts a vector of any type `T` to a `XffValue::Array` filled with `XffValue` derived from `T`
+
+#### Associated Functions
 
 `XffValue` has several associated functions:
 - `into_{type}`
@@ -339,11 +350,11 @@ The underlying data can be interacted with directly by using:
 - `len`
 - `into_vec`
 
-#### Notes on value types
+##### Notes on value types
 All types are printable.
 The default returned by `XffValue::default()` is `XffValue::Null`.
 
-##### `Object`
+###### `Object`
 Any `Object` can be indexed with strings. This returns a reference by key.
 ```rust
 use nabu::{Object, XffValue};
@@ -360,7 +371,7 @@ let value2 = &object["Key2"];
 assert_eq!(value2, &XffValue::from(-42));
 ```
 
-##### `Array`
+###### `Array`
 Any `Array` can be indexed with integers. This returns a reference by index.
 ```rust
 use nabu::{Array, XffValue};
