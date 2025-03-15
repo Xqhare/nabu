@@ -42,7 +42,6 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                 array_bytes.extend(serialize_xff_v1_value(value)?);
                 // RS separator
                 array_bytes.push(30);
-                
             }
             // byte structure and push
             out.push(3);

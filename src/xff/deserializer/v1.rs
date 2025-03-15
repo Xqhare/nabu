@@ -7,7 +7,8 @@ use std::{
 
 use crate::{
     error::NabuError,
-    xff::value::{Number, XffValue}, Data,
+    xff::value::{Number, XffValue},
+    Data,
 };
 
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
@@ -222,7 +223,7 @@ fn deserialize_xff_v1_value(
                 // closing ARY
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
-                
+
                 return Ok(XffValue::from(obj_bind));
             } else {
                 return Err(NabuError::InvalidObject(byte_pos.get(), content[0]));
@@ -286,7 +287,10 @@ fn deserialize_xff_number(
                 num_store.push(num_bytes.pop_front().expect("num_bytes.len() > 0"));
                 byte_pos.set(byte_pos.get() + 1);
                 if float {
-                    return Err(NabuError::InvalidNumber(byte_pos.get(), "Multiple decimal points".to_string()));
+                    return Err(NabuError::InvalidNumber(
+                        byte_pos.get(),
+                        "Multiple decimal points".to_string(),
+                    ));
                 } else {
                     float = true;
                 };
@@ -325,7 +329,6 @@ fn deserialize_xff_number(
             } else {
                 Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str))
             }
-            
         }
     };
 
@@ -376,7 +379,10 @@ fn deserialize_xff_v1_key_value(
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
 
-                return Ok((key_bind.into_string().expect("Checked for String above!"), value));
+                return Ok((
+                    key_bind.into_string().expect("Checked for String above!"),
+                    value,
+                ));
             }
         }
     }

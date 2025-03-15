@@ -453,7 +453,10 @@ impl From<Array> for XffValue {
     }
 }
 
-impl<V> From<Vec<V>> for XffValue where V: Into<XffValue> {
+impl<V> From<Vec<V>> for XffValue
+where
+    V: Into<XffValue>,
+{
     fn from(c: Vec<V>) -> Self {
         XffValue::Array(Array::from(c))
     }
@@ -477,13 +480,21 @@ impl From<bool> for XffValue {
     }
 }
 
-impl<S, V> From<BTreeMap<S, V>> for XffValue where S: Into<String>, V: Into<XffValue> {
+impl<S, V> From<BTreeMap<S, V>> for XffValue
+where
+    S: Into<String>,
+    V: Into<XffValue>,
+{
     fn from(c: BTreeMap<S, V>) -> Self {
         XffValue::Object(Object::from(c))
     }
 }
 
-impl<S, V> From<HashMap<S, V>> for XffValue where S: Into<String>, V: Into<XffValue> {
+impl<S, V> From<HashMap<S, V>> for XffValue
+where
+    S: Into<String>,
+    V: Into<XffValue>,
+{
     fn from(c: HashMap<S, V>) -> Self {
         XffValue::Object(c.into())
     }

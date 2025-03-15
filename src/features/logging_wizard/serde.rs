@@ -3,8 +3,7 @@ use crate::{
     features::logging_wizard::{Log, LogData, LoggingWizard},
     serde::read,
     xff::serializer::{serialize_xff, write_bytes_to_file},
-    XffValue,
-    CommandCharacter,
+    CommandCharacter, XffValue,
 };
 
 use std::{
@@ -113,7 +112,11 @@ where
 {
     let mut value_pos: usize = 1;
     // creating the Token array
-    let mut data: VecDeque<XffValue> = read(path.as_ref())?.into_array().unwrap().into_iter().collect();
+    let mut data: VecDeque<XffValue> = read(path.as_ref())?
+        .into_array()
+        .unwrap()
+        .into_iter()
+        .collect();
     let mut logs: Vec<Log> = Vec::new();
     while data.len() > 0 {
         match data[0] {
