@@ -1,5 +1,8 @@
 use super::XffValue;
-use std::{collections::{BTreeMap, HashMap}, ops::Index};
+use std::{
+    collections::{BTreeMap, HashMap},
+    ops::Index,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 /// An object made up of key-value pairs of XFF values with string key with string keys.
@@ -305,7 +308,11 @@ impl Object {
 //                     From implementations
 // -----------------------------------------------------------
 
-impl<S, V> From<Vec<(S, V)>> for Object where S: Into<String>, V: Into<XffValue> {
+impl<S, V> From<Vec<(S, V)>> for Object
+where
+    S: Into<String>,
+    V: Into<XffValue>,
+{
     fn from(vec: Vec<(S, V)>) -> Self {
         Object {
             map: vec.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
@@ -313,7 +320,11 @@ impl<S, V> From<Vec<(S, V)>> for Object where S: Into<String>, V: Into<XffValue>
     }
 }
 
-impl<S, V> From<HashMap<S, V>> for Object where S: Into<String>, V: Into<XffValue> {
+impl<S, V> From<HashMap<S, V>> for Object
+where
+    S: Into<String>,
+    V: Into<XffValue>,
+{
     fn from(map: HashMap<S, V>) -> Self {
         let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
         for (k, v) in map {
@@ -323,7 +334,11 @@ impl<S, V> From<HashMap<S, V>> for Object where S: Into<String>, V: Into<XffValu
     }
 }
 
-impl<S, V> From<BTreeMap<S, V>> for Object where S: Into<String>, V: Into<XffValue> {
+impl<S, V> From<BTreeMap<S, V>> for Object
+where
+    S: Into<String>,
+    V: Into<XffValue>,
+{
     fn from(map: BTreeMap<S, V>) -> Self {
         let mut out: BTreeMap<String, XffValue> = BTreeMap::new();
         for (k, v) in map {
@@ -337,7 +352,10 @@ impl<S, V> From<BTreeMap<S, V>> for Object where S: Into<String>, V: Into<XffVal
 //                     Index implementations
 // -----------------------------------------------------------
 
-impl<S> Index<S> for Object where S: AsRef<str> {
+impl<S> Index<S> for Object
+where
+    S: AsRef<str>,
+{
     type Output = XffValue;
 
     fn index(&self, index: S) -> &Self::Output {

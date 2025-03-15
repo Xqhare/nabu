@@ -12,8 +12,8 @@ As with all my projects, this documentation contains everything you never wanted
 
 This README documents the usage of the most recent version of `.xff`: Version 1.
 
-If you would like to use version 0, please refer to the [releases page](https://github.com/Xqhare/nabu/releases/tag/v.0.6.2). 
-There you can find the documentation and code for version 0. 
+If you would like to use version 0, please refer to the [releases page](https://github.com/Xqhare/nabu/releases/tag/v.0.6.2).
+There you can find the documentation and code for version 0.
 While all code is still present the usage has changed slightly. Mainly the return value is now no longer a `Vec<XffValue>`, instead it is a single `XffValue::Array`.
 
 All features present in the codebase are used in version 0 only.
@@ -62,7 +62,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     - [IO Errors](#ioerror)
     - [InternalError](#internalerror)
 - [Testing](#testing)
-    
+
 ## Roadmap
 
 ## Features
@@ -81,7 +81,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
 ## `.xff` specification
 To use Nabu it is not needed to have read the specification, but it is recommended.
 
-All specifications are in the `specifications` directory. 
+All specifications are in the `specifications` directory.
 
 - [V0](specifications/v0.md).
 - [V1](specifications/v1.md).
@@ -149,7 +149,7 @@ assert!(remove.is_ok());
 ```
 
 ### Serde
-`Serde` is a shorthand for serializing and deserializing. 
+`Serde` is a shorthand for serializing and deserializing.
 This module contains all the functions needed for serializing and deserializing `.xff` files, as well as a convenience function for deleting files.
 
 #### Usage of serde
@@ -416,7 +416,7 @@ const XFF_VERSION: u8 = 1;
 // Macros
 // ----------------------------------------------------------
 
-#[macro_export] 
+#[macro_export]
 /// Macro to convert any value into a `XffValue`
 ///
 /// ## Example
@@ -611,7 +611,7 @@ pub mod serde {
 }
 
 // -------------------------------------------------
-//                      LEGACY 
+//                      LEGACY
 // -------------------------------------------------
 
 // Remember to add any and all new features to this!
@@ -629,7 +629,6 @@ pub mod features;
 pub mod logging_wizard {
     pub use crate::features::logging_wizard::{Log, LogData, LoggingWizard};
 }
-
 
 #[cfg(any(doc, feature = "key_value_core"))]
 /// LEGACY (v0) - Please consider using the inbuilt `OBJECT` type instead

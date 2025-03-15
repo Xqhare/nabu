@@ -28,7 +28,11 @@ mod v1 {
         let real_data = XffValue::from(Data::from(fs::read("src/lib.rs").unwrap()));
         let real_data2 = XffValue::from(Data::from(fs::read("Cargo.toml").unwrap()));
         let real_data3 = XffValue::from(Data::from(fs::read("README.md").unwrap()));
-        let data = XffValue::from(vec![real_data.clone(), real_data2.clone(), real_data3.clone()]);
+        let data = XffValue::from(vec![
+            real_data.clone(),
+            real_data2.clone(),
+            real_data3.clone(),
+        ]);
         let write = serde::write(path, data);
         assert!(write.is_ok());
         let read = serde::read(path);
@@ -78,7 +82,10 @@ mod v1 {
             if n == 0 {
                 // create a new file
                 let data = XffValue::from(BTreeMap::from([
-                    ("array".to_string(), XffValue::from(Array::from(vec![XffValue::from(n)]))),
+                    (
+                        "array".to_string(),
+                        XffValue::from(Array::from(vec![XffValue::from(n)])),
+                    ),
                     ("key0".to_string(), XffValue::from(42.69)),
                 ]));
                 let write = serde::write(path, data);
@@ -235,7 +242,10 @@ mod v1 {
         let map_small = XffValue::from(BTreeMap::from([
             ("key0", XffValue::from("value0")),
             ("key1", XffValue::from(-42)),
-            ("key2", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))),
+            (
+                "key2",
+                XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])),
+            ),
         ]));
         let map_medium = XffValue::from(BTreeMap::from([
             ("key0", XffValue::from("value0")),
@@ -265,10 +275,7 @@ mod v1 {
             ("key18", XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))])),),
             ("key19", XffValue::from(42.69)),
         ]));
-        let xff_val = XffValue::from(BTreeMap::from([
-            ("key0", map_small),
-            ("key1", map_medium),
-        ]));
+        let xff_val = XffValue::from(BTreeMap::from([("key0", map_small), ("key1", map_medium)]));
         assert!(xff_val.is_object());
         let write = serde::write("xff-example-data/v1_object.xff", xff_val.clone());
         assert!(write.is_ok());
@@ -291,8 +298,10 @@ mod v1 {
         let write_number_f = serde::write("xff-example-data/v1_number_f.xff", xff_number_f.clone());
         let write_number_i = serde::write("xff-example-data/v1_number_i.xff", xff_number_i.clone());
         let write_number_u = serde::write("xff-example-data/v1_number_u.xff", xff_number_u.clone());
-        let write_boolean_t = serde::write("xff-example-data/v1_boolean_t.xff", xff_boolean_t.clone());
-        let write_boolean_f = serde::write("xff-example-data/v1_boolean_f.xff", xff_boolean_f.clone());
+        let write_boolean_t =
+            serde::write("xff-example-data/v1_boolean_t.xff", xff_boolean_t.clone());
+        let write_boolean_f =
+            serde::write("xff-example-data/v1_boolean_f.xff", xff_boolean_f.clone());
         let write_null = serde::write("xff-example-data/v1_null.xff", xff_null.clone());
         let write_data = serde::write("xff-example-data/v1_data.xff", xff_data.clone());
         let write_array = serde::write("xff-example-data/v1_array.xff", xff_array.clone());
@@ -347,7 +356,9 @@ mod v1 {
 
     #[test]
     fn complete_array() {
-        let tmp: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+        let tmp: Vec<u8> = vec![
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        ];
         let values = vec![
             XffValue::from("hello"),
             XffValue::from(42.69),
@@ -370,19 +381,24 @@ mod v1 {
             XffValue::Null,
         ];
 
-        let write = serde::write("xff-example-data/v1_complete_array.xff", XffValue::from(values.clone()));
+        let write = serde::write(
+            "xff-example-data/v1_complete_array.xff",
+            XffValue::from(values.clone()),
+        );
         assert!(write.is_ok());
 
         let read = serde::read("xff-example-data/v1_complete_array.xff");
         if read.is_err() {
             println!("Failed to read {}", read.err().unwrap());
         } else {
-            for (v1, v2) in values.iter().zip(read.unwrap().into_array().unwrap().iter()) {
+            for (v1, v2) in values
+                .iter()
+                .zip(read.unwrap().into_array().unwrap().iter())
+            {
                 println!("v1: {:?} v2: {:?}", v1, v2);
                 assert_eq!(v1, v2);
             }
         }
-       
     }
 
     #[test]

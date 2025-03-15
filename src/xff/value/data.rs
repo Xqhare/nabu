@@ -91,7 +91,10 @@ impl Data {
 //                     From implementations
 // -----------------------------------------------------------
 
-impl<D> From<D> for Data where D: Into<Vec<u8>> {
+impl<D> From<D> for Data
+where
+    D: Into<Vec<u8>>,
+{
     fn from(data: D) -> Self {
         let data = data.into();
         Data {

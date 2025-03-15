@@ -9,7 +9,6 @@ use crate::XffValue;
 
 use std::collections::BTreeMap;
 
-
 /// LEGACY (v0) - Useable, but not recommended.
 /// Module to create, read and write XFF-Logging files
 ///
