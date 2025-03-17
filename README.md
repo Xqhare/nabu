@@ -86,8 +86,9 @@ All specifications are in the `specifications` directory.
 
 - [V0](specifications/v0.md).
 - [V1](specifications/v1.md).
+- [V2](specifications/v2.md).
 
-V2 is not yet finalized, but my musings about it can be found [here](specifications/v2.md).
+V3 is not yet finalized, but my musings about it can be found [here](specifications/v3.md).
 
 ## Usage
 
