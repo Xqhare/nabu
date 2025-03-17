@@ -132,9 +132,9 @@ mod v0 {
         let mut out: String = Default::default();
         for n in 0..seed {
             if n == 0 {
-                out.push(random_latin_char().unwrap().to_uppercase().next().unwrap());
+                out.push(random_latin_char(true).unwrap());
             } else {
-                out.push(random_latin_char().unwrap().to_lowercase().next().unwrap());
+                out.push(random_latin_char(false).unwrap());
             }
         }
         XffValue::String(out)
@@ -378,6 +378,7 @@ mod v0 {
         let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path);
+        println!("{:?}", tmp_2);
         assert!(tmp_2.is_ok());
         let ok = tmp_2.unwrap().into_array().unwrap().into_vec();
         for n in 0..ok.len() {

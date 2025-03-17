@@ -329,6 +329,8 @@ mod v1 {
         let read_array = serde::read("xff-example-data/v1_array.xff");
         let read_object = serde::read("xff-example-data/v1_object.xff");
 
+        println!("{:?}", read_boolean_t);
+
         assert!(read_string.is_ok());
         assert!(read_number_f.is_ok());
         assert!(read_number_i.is_ok());
@@ -526,9 +528,9 @@ mod v1 {
         let mut out: String = Default::default();
         for n in 0..seed {
             if n == 0 {
-                out.push(random_latin_char().unwrap().to_uppercase().next().unwrap());
+                out.push(random_latin_char(true).unwrap());
             } else {
-                out.push(random_latin_char().unwrap().to_lowercase().next().unwrap());
+                out.push(random_latin_char(false).unwrap());
             }
         }
         XffValue::String(out)
