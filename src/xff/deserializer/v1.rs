@@ -12,8 +12,7 @@ use crate::{
 };
 
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
-    // version is byte 0; already match against and used but not removed, for performance, until now
-    let _ = contents.pop_front();
+    // version is byte 0; 
     let byte_pos: Cell<usize> = Cell::new(1);
     let out = deserialize_xff_v1_value(contents, byte_pos.borrow())?;
     if contents.len() > 0 {

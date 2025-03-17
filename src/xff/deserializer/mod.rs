@@ -1,5 +1,8 @@
 use std::collections::VecDeque;
 use std::path::Path;
+use std::usize;
+
+use athena::tools::bitreader::bitreader;
 
 use crate::{error::NabuError, xff::value::XffValue};
 
@@ -7,6 +10,8 @@ pub mod v0;
 use crate::xff::deserializer::v0::deserialize_xff_v0;
 pub mod v1;
 use crate::xff::deserializer::v1::deserialize_xff_v1;
+pub mod v2;
+use crate::xff::deserializer::v2::deserialize_xff_v2;
 
 /// Reads the content of a XFF file and returns a Vec
 ///
@@ -24,15 +29,26 @@ use crate::xff::deserializer::v1::deserialize_xff_v1;
 pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
     //takes about 200ms for 300mb
     let mut content: VecDeque<u8> = std::fs::read(path)?.into();
-    if content.len() == 1 {
-        return Err(NabuError::MissingEM(2));
-    } else if content.len() == 0 {
-        return Err(NabuError::EmpthyXFF);
-    }
-    // check for 2 bytes is done
-    match content[0] {
+    // check for empty is done
+    let ver = deserialize_xff_version(&mut content);
+    match ver {
         0 => deserialize_xff_v0(&mut content),
-        1 => Ok(deserialize_xff_v1(&mut content)?),
-        _ => Err(NabuError::UnknownXFFVersion(content[0])),
+        1 => deserialize_xff_v1(&mut content),
+        2 => deserialize_xff_v2(&mut content),
+        _ => Err(NabuError::UnknownXFFVersion(ver as u8)),
+    }
+}
+
+fn deserialize_xff_version(content: &mut VecDeque<u8>) -> usize {
+    let mut acc: usize = 0;
+    loop {
+        let bits = bitreader(content.pop_front().unwrap());
+        let bits_acc: u8 = bits.iter().sum();
+        if bits_acc == 8 {
+            acc += 7;
+        } else {
+            acc += bits_acc as usize;
+            return acc;
+        }
     }
 }

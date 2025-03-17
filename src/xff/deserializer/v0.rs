@@ -12,8 +12,7 @@ use crate::{
 pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
     let xff_ver = 0;
     let mut out: Vec<XffValue> = Default::default();
-    // version is byte 0; already match against and used but not removed, for performance, until now
-    let _ = content.pop_front();
+    // version is byte 0;
     let mut byte_pos: usize = 1;
 
     // debug; put true for debug, use --nocapture
