@@ -4,6 +4,7 @@ version = "1.3.5"
 edition = "2021"
 
 [dependencies]
+athena = { git = "https://github.com/Xqhare/athena" }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
