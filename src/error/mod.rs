@@ -170,6 +170,15 @@ pub enum NabuError {
     /// * `value` - The invalid value
     /// * `version` - The invalid version
     InvalidXFFVersion(XffValue, u8),
+
+    /// Invalid XFF file checksum
+    InvalidFileChecksum,
+
+    /// Invalid XFF value checksum
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the invalid checksum was found
+    InvalidXFFValueChecksum(usize),
 }
 
 pub type Result<T> = std::result::Result<T, NabuError>;
@@ -220,6 +229,10 @@ impl fmt::Display for NabuError {
             NabuError::TruncatedXFF(u) => write!(f, "Truncated XFF at byte position {}", u),
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {}", ver),
             NabuError::InvalidXFFVersion(val, ver) => write!(f, "Invalid XffValue for XFF version. Value {}; Version {}", val, ver),
+
+            // checksum errors
+            NabuError::InvalidFileChecksum => write!(f, "Invalid file checksum"),
+            NabuError::InvalidXFFValueChecksum(u) => write!(f, "Invalid XFF value checksum at byte position {}", u),
         }
     }
 }
