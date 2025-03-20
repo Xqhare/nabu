@@ -42,7 +42,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                 byte_pos += 1;
                 b
             } else {
-                Err(NabuError::TruncatedXFF(byte_pos))?
+                Err(NabuError::TruncatedXFF(byte_pos, 0))?
             }
         };
         byte_pos += 1;
@@ -57,7 +57,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                             byte_pos += 1;
                             b
                         } else {
-                            Err(NabuError::TruncatedXFF(byte_pos))?
+                            Err(NabuError::TruncatedXFF(byte_pos, 0))?
                         }
                     };
                     byte_pos += 1;
@@ -239,7 +239,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                         out.push(XffValue::CommandCharacter(CommandCharacter::from(27)));
                     } else {
                         // pop front returned None, truncation!
-                        return Err(NabuError::TruncatedXFF(byte_pos));
+                        return Err(NabuError::TruncatedXFF(byte_pos, 0));
                     };
                 }
                 if debug {
@@ -264,5 +264,5 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
         }
     }
     // Premature EoF
-    Err(NabuError::TruncatedXFF(byte_pos))
+    Err(NabuError::TruncatedXFF(byte_pos, 0))
 }
