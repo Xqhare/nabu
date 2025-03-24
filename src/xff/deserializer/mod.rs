@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::usize;
 
-use athena::tools::bitreader::bitreader;
+use athena::tools::byte_bit::byte_bit_decoder;
 use athena::tools::checksum::crc32::{generate_crc32_lookuptable, Crc32Table};
 use v1::deserialize_xff_v1_value;
 use v2::deserialize_xff_v2_value;
@@ -48,7 +48,7 @@ pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
 fn deserialize_xff_version(content: &mut VecDeque<u8>) -> usize {
     let mut acc: usize = 0;
     loop {
-        let bits = bitreader(content.pop_front().unwrap());
+        let bits = byte_bit_decoder(content.pop_front().unwrap());
         let bits_acc: u8 = bits.iter().sum();
         if bits_acc == 8 {
             acc += 7;
@@ -122,6 +122,7 @@ fn deserialize_xff_key_value(
     }
 }
 
+#[inline]
 fn deserialize_xff_data(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, len: usize) -> Result<XffValue, NabuError> {
     //DAT
     let data = content.drain(0..len).collect::<Vec<u8>>();
