@@ -10,11 +10,11 @@ The overarching goal of this project is to create a rust library that can be use
 
 As with all my projects, this documentation contains everything you never wanted to know about `.xff` files or Nabu.
 
-This README documents the usage of the most recent version of `.xff`: Version 1.
+This README documents the usage of the most recent version of `.xff`: Version 2.
 
 If you would like to use version 0, please refer to the [releases page](https://github.com/Xqhare/nabu/releases/tag/v.0.6.2). 
 There you can find the documentation and code for version 0. 
-While all code is still present the usage has changed slightly. Mainly the return value is now no longer a `Vec<XffValue>`, instead it is a single `XffValue::Array`.
+While all code is still present the usage has changed slightly. Mainly the return value is now no longer a `Vec<XffValue>`, instead it is a single `XffValue`.
 
 All features present in the codebase are used in version 0 only.
 
