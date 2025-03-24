@@ -2,12 +2,11 @@ use std::{
     borrow::Borrow, cell::Cell, collections::{BTreeMap, VecDeque},
 };
 
-use athena::tools::{bitreader::bitreader, checksum::crc32::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, leb128::deserialize_leb128_unsigned};
+use athena::tools::{checksum::crc32::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, leb128::deserialize_leb128_unsigned};
 
 use crate::{
     error::NabuError,
-    xff::value::{self, Number, XffValue},
-    Data,
+    xff::value::XffValue,
 };
 
 use super::{deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};
@@ -268,7 +267,7 @@ fn deserialize_xff_v2_object(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
 
         return Ok(XffValue::from(obj_bind));
     } else {
-        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], 1));
+        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], 2));
     }
 }
 

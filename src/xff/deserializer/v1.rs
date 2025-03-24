@@ -7,8 +7,7 @@ use std::{
 
 use crate::{
     error::NabuError,
-    xff::value::{Number, XffValue},
-    Data,
+    xff::value::XffValue,
 };
 
 use super::{deserialize_xff_data, deserialize_xff_number, deserialize_xff_text, deserialize_xff_key_value};
