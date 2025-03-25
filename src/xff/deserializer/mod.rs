@@ -34,6 +34,7 @@ use crate::xff::deserializer::v2::deserialize_xff_v2;
 pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
     //takes about 200ms for 300mb
     let mut content: VecDeque<u8> = std::fs::read(path)?.into();
+    content.make_contiguous();
     // check for empty is done
     let ver = deserialize_xff_version(&mut content);
     match ver {

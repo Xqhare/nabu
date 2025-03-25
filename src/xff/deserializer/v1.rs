@@ -17,7 +17,7 @@ pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuE
     let byte_pos: Cell<usize> = Cell::new(1);
     let out = deserialize_xff_v1_value(contents, byte_pos.borrow())?;
     if contents.len() > 0 {
-        if contents[0] == 25 {
+        if contents[0] == 25 && contents.len() == 1 {
             Ok(out)
         } else {
             Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
