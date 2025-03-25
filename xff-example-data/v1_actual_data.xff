@@ -1,4 +1,4 @@
-~œÒd/*!
+_œ³d/*!
 # Nabu
 
 > This is a hobby project. It is not intended nor ready to be used in production.
@@ -410,7 +410,7 @@ pub use crate::xff::value::XffValue;
 pub use crate::xff::value::{Array, CommandCharacter, Data, Number, Object};
 
 /// Most recent finalised version of XFF specification
-const XFF_VERSION: u8 = 1;
+const XFF_VERSION: u8 = 2;
 
 // ----------------------------------------------------------
 // Macros
@@ -529,11 +529,7 @@ pub mod serde {
     /// use nabu::serde::write;
     /// use nabu::{CommandCharacter, Data, Number, XffValue};
     ///
-    /// let data = {
-    ///     vec![
-    ///         XffValue::String("hello mom".to_string()),
-    ///     ]
-    /// };
+    /// let data = XffValue::String("hello mom".to_string());
     /// let tmp = write("xff-example-data/v0.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
@@ -571,12 +567,13 @@ pub mod serde {
     /// let tmp = write_legacy("xff-example-data/v0.xff", data.clone(), 0);
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write_legacy<P>(path: P, data: Vec<XffValue>, xff_version: u8) -> Result<(), NabuError>
+    pub fn write_legacy<P, D>(path: P, data: D, xff_version: u8) -> Result<(), NabuError>
     where
         P: AsRef<std::path::Path>,
+        D: Into<Vec<XffValue>>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        let byte_data = serialize_xff(data, xff_version)?;
+        let byte_data = serialize_xff(data.into(), xff_version)?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
     }
 

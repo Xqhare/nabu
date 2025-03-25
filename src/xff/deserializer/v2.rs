@@ -51,7 +51,7 @@ fn check_file_checksum(content: &mut VecDeque<u8>, crc_table: &Crc32Table) -> bo
     // pop checksum, 4 bytes
     let mut checksum: [u8; 4] = Default::default();
     // I am reading in the checksum backwards, so I reverse it here
-    for i in 3..=0 {
+    for i in (0..4).rev() {
         checksum[i] = content.pop_back().unwrap();
     }
     // pop CHK
@@ -67,7 +67,6 @@ fn check_file_checksum(content: &mut VecDeque<u8>, crc_table: &Crc32Table) -> bo
         false
     }
 }
-
 
 #[inline]
 fn deserialize_xff_value_checksum(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<u32, NabuError> {
@@ -91,10 +90,13 @@ fn deserialize_xff_v2_value_length(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
 ) -> Result<usize, NabuError> {
-    let (res, len) = deserialize_leb128_unsigned(content);
-    let _ = content.drain(0..len as usize);
-    byte_pos.set(byte_pos.get() + len as usize);
-    Ok(res as usize)
+    if let Ok((res, len)) = deserialize_leb128_unsigned(content.make_contiguous()) {
+        let _ = content.drain(0..len as usize);
+        byte_pos.set(byte_pos.get() + len as usize);
+        Ok(res as usize)
+    } else {
+        Err(NabuError::InvalidXFFValueLength(byte_pos.get(), 2))
+    }
 }
 
 pub fn deserialize_xff_v2_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
@@ -245,18 +247,18 @@ fn deserialize_xff_v2_object(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
         if crc32_with_table(obj_data.make_contiguous(), table) != obj_checksum {
             return Err(NabuError::InvalidXFFValueChecksum(byte_pos.get(), 2));
         }
-        while content[0] != 24 && content.front().is_some() {
+        while obj_data[0] != 24 && obj_data.front().is_some() {
             let (key, value) = deserialize_xff_key_value(&mut obj_data, byte_pos, 2)?;
             obj_bind.insert(key, value);
-            if content[0] == 30 {
-                if content[1] == 24 {
+            if obj_data[0] == 30 {
+                if obj_data[1] == 24 {
                     // closing OBJ
-                    let _ = content.pop_front();
-                    let _ = content.pop_front();
+                    let _ = obj_data.pop_front();
+                    let _ = obj_data.pop_front();
                     byte_pos.set(byte_pos.get() + 2);
                     return Ok(XffValue::from(obj_bind));
                 } else {
-                    let _ = content.pop_front();
+                    let _ = obj_data.pop_front();
                     byte_pos.set(byte_pos.get() + 1);
                     // another key value pair
                     continue;
