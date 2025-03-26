@@ -229,6 +229,9 @@ fn deserialize_xff_v2_array(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, 
         }
         Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2))
     } else {
+        // remove checksum + ev
+        let _ = content.drain(0..6);
+        byte_pos.set(byte_pos.get() + 6);
         Ok(XffValue::from(ary_bind))
     }
 }
@@ -267,6 +270,11 @@ fn deserialize_xff_v2_object(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
                 break;
             }
         }
+    } else {
+        // remove checksum + ev
+        let _ = content.drain(0..6);
+        byte_pos.set(byte_pos.get() + 6);
+        return Ok(XffValue::from(obj_bind));
     }
 
     // no trailing RS
