@@ -199,7 +199,7 @@ mod v2 {
     
     #[test]
     fn actual_data() {
-        let path = "xff-example-data/v1_actual_data.xff";
+        let path = "xff-example-data/v2_actual_data.xff";
         let real_data = XffValue::from(Data::from(fs::read("src/lib.rs").unwrap()));
         let real_data2 = XffValue::from(Data::from(fs::read("Cargo.toml").unwrap()));
         let real_data3 = XffValue::from(Data::from(fs::read("README.md").unwrap()));
@@ -223,7 +223,7 @@ mod v2 {
 
     #[test]
     fn zero_length_data_stores() {
-        let path = "xff-example-data/v1_empty.xff";
+        let path = "xff-example-data/v2_empty.xff";
         let obj = Object::new();
         let data = XffValue::from(obj);
         let write = serde::write(path, data);
@@ -252,7 +252,7 @@ mod v2 {
 
     #[test]
     fn read_write_loop_object() {
-        let path = "xff-example-data/v1_loop_complex.xff";
+        let path = "xff-example-data/v2_loop_complex.xff";
         for n in 0..100 {
             if n == 0 {
                 // create a new file
@@ -298,7 +298,7 @@ mod v2 {
 
     #[test]
     fn read_write_loop_array() {
-        let path = "xff-example-data/v1_loop.xff";
+        let path = "xff-example-data/v2_loop.xff";
         for n in 0..100 {
             if n == 0 {
                 // create a new file
@@ -352,10 +352,10 @@ mod v2 {
             lorem_long,
         ]);
         assert!(xff_val.is_array());
-        let write = serde::write("xff-example-data/v1_primitive_values.xff", xff_val.clone());
+        let write = serde::write("xff-example-data/v2_primitive_values.xff", xff_val.clone());
         assert!(write.is_ok());
 
-        let read = serde::read("xff-example-data/v1_primitive_values.xff");
+        let read = serde::read("xff-example-data/v2_primitive_values.xff");
         assert!(read.is_ok());
         let read = read.unwrap().clone();
         assert!(read.is_array());
@@ -386,10 +386,10 @@ mod v2 {
             str_with_single_quote,
         ]);
         assert!(xff_val.is_array());
-        let write = serde::write("xff-example-data/v1_escape_chars.xff", xff_val.clone());
+        let write = serde::write("xff-example-data/v2_escape_chars.xff", xff_val.clone());
         assert!(write.is_ok());
 
-        let read = serde::read("xff-example-data/v1_escape_chars.xff");
+        let read = serde::read("xff-example-data/v2_escape_chars.xff");
         assert!(read.is_ok());
         let read = read.unwrap().clone();
         assert!(read.is_array());
@@ -404,10 +404,10 @@ mod v2 {
 
         let xff_val = XffValue::from(vec![small_data, medium_data, large_data]);
         assert!(xff_val.is_array());
-        let write = serde::write("xff-example-data/v1_data.xff", xff_val.clone());
+        let write = serde::write("xff-example-data/v2_data.xff", xff_val.clone());
         assert!(write.is_ok());
 
-        let read = serde::read("xff-example-data/v1_data.xff");
+        let read = serde::read("xff-example-data/v2_data.xff");
         assert!(read.is_ok());
         let read = read.unwrap().clone();
         assert!(read.is_array());
@@ -454,7 +454,7 @@ mod v2 {
         ]));
         let xff_val = XffValue::from(BTreeMap::from([("key0", map_small), ("key1", map_medium)]));
         assert!(xff_val.is_object());
-        let write = serde::write("xff-example-data/v1_object.xff", xff_val.clone());
+        let write = serde::write("xff-example-data/v2_object.xff", xff_val.clone());
         assert!(write.is_ok());
     }
 
@@ -471,18 +471,18 @@ mod v2 {
         let xff_array = XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]);
         let xff_object = XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))]));
 
-        let write_string = serde::write("xff-example-data/v1_string.xff", xff_string.clone());
-        let write_number_f = serde::write("xff-example-data/v1_number_f.xff", xff_number_f.clone());
-        let write_number_i = serde::write("xff-example-data/v1_number_i.xff", xff_number_i.clone());
-        let write_number_u = serde::write("xff-example-data/v1_number_u.xff", xff_number_u.clone());
+        let write_string = serde::write("xff-example-data/v2_string.xff", xff_string.clone());
+        let write_number_f = serde::write("xff-example-data/v2_number_f.xff", xff_number_f.clone());
+        let write_number_i = serde::write("xff-example-data/v2_number_i.xff", xff_number_i.clone());
+        let write_number_u = serde::write("xff-example-data/v2_number_u.xff", xff_number_u.clone());
         let write_boolean_t =
-            serde::write("xff-example-data/v1_boolean_t.xff", xff_boolean_t.clone());
+            serde::write("xff-example-data/v2_boolean_t.xff", xff_boolean_t.clone());
         let write_boolean_f =
-            serde::write("xff-example-data/v1_boolean_f.xff", xff_boolean_f.clone());
-        let write_null = serde::write("xff-example-data/v1_null.xff", xff_null.clone());
-        let write_data = serde::write("xff-example-data/v1_data.xff", xff_data.clone());
-        let write_array = serde::write("xff-example-data/v1_array.xff", xff_array.clone());
-        let write_object = serde::write("xff-example-data/v1_object.xff", xff_object.clone());
+            serde::write("xff-example-data/v2_boolean_f.xff", xff_boolean_f.clone());
+        let write_null = serde::write("xff-example-data/v2_null.xff", xff_null.clone());
+        let write_data = serde::write("xff-example-data/v2_data.xff", xff_data.clone());
+        let write_array = serde::write("xff-example-data/v2_array.xff", xff_array.clone());
+        let write_object = serde::write("xff-example-data/v2_object.xff", xff_object.clone());
 
         assert!(write_string.is_ok());
         assert!(write_number_f.is_ok());
@@ -495,16 +495,16 @@ mod v2 {
         assert!(write_array.is_ok());
         assert!(write_object.is_ok());
 
-        let read_string = serde::read("xff-example-data/v1_string.xff");
-        let read_number_f = serde::read("xff-example-data/v1_number_f.xff");
-        let read_number_i = serde::read("xff-example-data/v1_number_i.xff");
-        let read_number_u = serde::read("xff-example-data/v1_number_u.xff");
-        let read_boolean_t = serde::read("xff-example-data/v1_boolean_t.xff");
-        let read_boolean_f = serde::read("xff-example-data/v1_boolean_f.xff");
-        let read_null = serde::read("xff-example-data/v1_null.xff");
-        let read_data = serde::read("xff-example-data/v1_data.xff");
-        let read_array = serde::read("xff-example-data/v1_array.xff");
-        let read_object = serde::read("xff-example-data/v1_object.xff");
+        let read_string = serde::read("xff-example-data/v2_string.xff");
+        let read_number_f = serde::read("xff-example-data/v2_number_f.xff");
+        let read_number_i = serde::read("xff-example-data/v2_number_i.xff");
+        let read_number_u = serde::read("xff-example-data/v2_number_u.xff");
+        let read_boolean_t = serde::read("xff-example-data/v2_boolean_t.xff");
+        let read_boolean_f = serde::read("xff-example-data/v2_boolean_f.xff");
+        let read_null = serde::read("xff-example-data/v2_null.xff");
+        let read_data = serde::read("xff-example-data/v2_data.xff");
+        let read_array = serde::read("xff-example-data/v2_array.xff");
+        let read_object = serde::read("xff-example-data/v2_object.xff");
 
         assert!(read_string.is_ok());
         assert!(read_number_f.is_ok());
@@ -559,12 +559,12 @@ mod v2 {
         ];
 
         let write = serde::write(
-            "xff-example-data/v1_complete_array.xff",
+            "xff-example-data/v2_complete_array.xff",
             XffValue::from(values.clone()),
         );
         assert!(write.is_ok());
 
-        let read = serde::read("xff-example-data/v1_complete_array.xff");
+        let read = serde::read("xff-example-data/v2_complete_array.xff");
         if read.is_err() {
             println!("Failed to read {}", read.err().unwrap());
         } else {
@@ -589,16 +589,16 @@ mod v2 {
                 gen_len -= 1;
             }
             let write = serde::write(
-                "tests/v1_simulated_data_40-ignore.xff",
+                "tests/v2_simulated_data_40-ignore.xff",
                 XffValue::from(data),
             );
             assert!(write.is_ok());
         }
 
         // 100MB file
-        let path = "xff-example-data/v1_simulated_data_100MB_ignore.xff";
+        let path = "xff-example-data/v2_simulated_data_100MB_ignore.xff";
         // 1MB file
-        //let path = "xff-example-data/v1_simulated_data_1MB.xff";
+        //let path = "xff-example-data/v2_simulated_data_1MB.xff";
         let read = serde::read(path);
         if read.is_err() {
             println!("Failed to read {}", read.err().unwrap());
