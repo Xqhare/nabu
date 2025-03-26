@@ -83,7 +83,7 @@ fn deserialize_xff_key_value(
                 1 => deserialize_xff_v1_value(&mut key_bytes, byte_pos)?,
                 2 => deserialize_xff_v2_value(&mut key_bytes, byte_pos, &table)?,
                 _ => {
-                    unreachable!("Invalid version: {}", ver)
+                    return Err(NabuError::UnknownXFFVersion(ver));
                 }
             }
         };
@@ -109,7 +109,6 @@ fn deserialize_xff_key_value(
             };
             // Trailing GS
             if content[0] != 29 {
-            println!("{}", content[0]);
                 return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver));
             } else {
                 let _ = content.pop_front();
