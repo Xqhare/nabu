@@ -204,6 +204,21 @@ pub enum NabuError {
     /// * `pos` - The position in the file where the invalid checksum was found
     /// * `version` - The XFF version
     InvalidXFFValueChecksum(usize, u8),
+
+    /// String contains non-ASCII characters
+    ///
+    /// # Parameters
+    /// * `value` - The invalid String
+    /// * `version` - The XFF version
+    StringContainsNonASCII(String, u8),
+
+    /// Number contains invalid character
+    ///
+    /// # Parameters
+    /// * `char` - The invalid character
+    /// * `value` - The invalid number
+    /// * `version` - The XFF version
+    NumberContainsInvalidCharacter(u8, String, u8),
 }
 
 pub type Result<T> = std::result::Result<T, NabuError>;
@@ -260,6 +275,10 @@ impl fmt::Display for NabuError {
             // checksum errors
             NabuError::InvalidFileChecksum(c, v) => write!(f, "Invalid XFF version {} file checksum: {}", v, c),
             NabuError::InvalidXFFValueChecksum(u, v) => write!(f, "Invalid XFF version {} value checksum at byte position {}", v, u),
+
+            // other errors
+            NabuError::StringContainsNonASCII(s, v) => write!(f, "Invalid XFF version {} string contains non-ASCII characters: {}", v, s),
+            NabuError::NumberContainsInvalidCharacter(c, n, v) => write!(f, "Invalid XFF version {} number contains invalid character: {} in number: {}", v, c, n),
         }
     }
 }
