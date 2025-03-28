@@ -20,8 +20,8 @@ pub fn serialize_xff_v2(data: Vec<XffValue>) -> Result<Vec<u8>> {
 
 fn serialize_xff_v2_value(data: &XffValue, table: &Crc32Table) -> Result<Vec<u8>> {
     match data {
-        XffValue::String(s) => Ok(serialize_xff_v2_string(s, table)),
-        XffValue::Number(n) => Ok(serialize_xff_v2_number(n, table)),
+        XffValue::String(s) => serialize_xff_v2_string(s, table),
+        XffValue::Number(n) => serialize_xff_v2_number(n, table),
         XffValue::Array(a) => serialize_xff_v2_array(a, table),
         XffValue::Object(o) => serialize_xff_v2_object(o, table),
         XffValue::Data(d) => serialize_xff_v2_data(d, table),
@@ -37,9 +37,31 @@ fn serialize_xff_v2_value(data: &XffValue, table: &Crc32Table) -> Result<Vec<u8>
     }
 }
 
-fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Vec<u8> {
+fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Result<Vec<u8>> {
     // first create the string
-    let tmp: Vec<u8> = s.chars().map(|c| c as u8).collect();
+    let tmp: Vec<u8> = {
+        let mut out = Vec::new();
+        for char in s.chars() {
+            let tmp = char as u8;
+            if tmp >= 8 && tmp <= 13 {
+                out.push(tmp);
+            } else if tmp >= 32 && tmp <= 126 {
+                out.push(tmp);
+            } else if tmp == 128 || tmp == 142 {
+                out.push(tmp);
+            } else if tmp >= 130 && tmp <= 140 {
+                out.push(tmp);
+            } else if tmp >= 145 && tmp <= 156 {
+                out.push(tmp);
+            } else if tmp >= 158 {
+                out.push(tmp);
+            } else {
+                return Err(NabuError::StringContainsNonASCII(s.to_string(), 2));
+            }
+        }
+        out
+
+    };
     let checksum = crc32_with_table(&tmp, &table);
     // now byte structure and push
     let mut out: Vec<u8> = Vec::with_capacity(tmp.len());
@@ -49,12 +71,40 @@ fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Vec<u8> {
     out.push(23);
     out.extend(checksum.to_le_bytes());
     out.push(24);
-    out
+    Ok(out)
 }
 
-fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Vec<u8> {
+fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
     // first create the string from the number
-    let tmp: Vec<u8> = n.as_string().chars().map(|c| c as u8).collect();
+    let tmp: Vec<u8> = {
+        let mut out = Vec::new();
+        let mut sep_used = false;
+        let mut neg_used = false;
+        for char in n.as_string().chars() {
+            let tmp = char as u8;
+            if tmp == 45 {
+                if neg_used {
+                    return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 2));
+                } else {
+                    out.push(tmp);
+                    neg_used = true;
+                }
+            } else if tmp == 44 || tmp == 46 {
+                if sep_used {
+                    return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 2));
+                } else {
+                    out.push(tmp);
+                    sep_used = true;
+                }
+            } else if tmp >= 48 && tmp <= 57 {
+                out.push(tmp);
+            } else {
+                return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 2));
+            }
+        }
+        out
+
+    };
     let checksum = crc32_with_table(&tmp, &table);
     // now byte structure and push - over allocate for length
     let mut out: Vec<u8> = Vec::with_capacity(tmp.len() + 10);
@@ -64,7 +114,7 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Vec<u8> {
     out.push(23);
     out.extend(checksum.to_le_bytes());
     out.push(24);
-    out
+    Ok(out)
 }
 
 fn serialize_xff_v2_array(a: &Array, table: &Crc32Table) -> Result<Vec<u8>> {

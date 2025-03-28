@@ -19,7 +19,36 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
     match data {
         XffValue::String(s) => {
             // first create the string
-            let tmp_str: Vec<u8> = s.chars().map(|c| c as u8).collect();
+            /* let tmp_str: Vec<u8> = {
+                if s.len() > 0 {
+                    s.chars().map(|c| c as u8).collect()
+                } else {
+                    vec![]
+                }
+            }; */
+            let tmp_str: Vec<u8> = {
+                let mut out = Vec::new();
+                for char in s.chars() {
+                    let tmp = char as u8;
+                    if tmp >= 8 && tmp <= 13 {
+                        out.push(tmp);
+                    } else if tmp >= 32 && tmp <= 126 {
+                        out.push(tmp);
+                    } else if tmp == 128 || tmp == 142 {
+                        out.push(tmp);
+                    } else if tmp >= 130 && tmp <= 140 {
+                        out.push(tmp);
+                    } else if tmp >= 145 && tmp <= 156 {
+                        out.push(tmp);
+                    } else if tmp >= 158 {
+                        out.push(tmp);
+                    } else {
+                        return Err(NabuError::StringContainsNonASCII(s.clone(), 1));
+                    }
+                }
+                out
+
+            };
             // now byte structure and push
             out.push(1);
             out.extend(encode_length(tmp_str.len()));
@@ -28,7 +57,35 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Number(n) => {
             // first create the string from the number
-            let tmp_num: Vec<u8> = n.as_string().chars().map(|c| c as u8).collect();
+            let tmp_num: Vec<u8> = {
+                let mut out = Vec::new();
+                let mut sep_used = false;
+                let mut neg_used = false;
+                for char in n.as_string().chars() {
+                    let tmp = char as u8;
+                    if tmp == 45 {
+                        if neg_used {
+                            return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 1));
+                        } else {
+                            out.push(tmp);
+                            neg_used = true;
+                        }
+                    } else if tmp == 44 || tmp == 46 {
+                        if sep_used {
+                            return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 1));
+                        } else {
+                            out.push(tmp);
+                            sep_used = true;
+                        }
+                    } else if tmp >= 48 && tmp <= 57 {
+                        out.push(tmp);
+                    } else {
+                        return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 1));
+                    }
+                }
+                out
+
+            };
             // now byte structure and push
             out.push(2);
             out.extend(encode_length(tmp_num.len()));

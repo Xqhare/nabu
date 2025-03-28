@@ -105,8 +105,7 @@ fn deserialize_xff_v1_text(
         let _ = content.pop_front();
         byte_pos.set(byte_pos.get() + 1);
     }
-    
-    deserialize_xff_text(&mut str_bytes, byte_pos)
+    deserialize_xff_text(&mut str_bytes, byte_pos, 1)
 }
 
 fn deserialize_xff_v1_array(
@@ -229,7 +228,7 @@ fn deserialize_xff_v1_number(
         let _ = content.pop_front();
         byte_pos.set(byte_pos.get() + 1);
     }
-    deserialize_xff_number(&mut num_bytes, byte_pos)
+    deserialize_xff_number(&mut num_bytes, byte_pos, 1)
 }
 
 fn deserialize_xff_v1_value_length(
@@ -241,7 +240,7 @@ fn deserialize_xff_v1_value_length(
         .ok_or(NabuError::TruncatedXFF(byte_pos.get(), 1))?;
     byte_pos.set(byte_pos.get() + 1);
     let len_of_len = u8::from_le_bytes([len_of_len_bytes]);
-    if len_of_len > 8 {
+    if len_of_len > 8 || content.len() < len_of_len as usize {
         return Err(NabuError::InvalidXFFValueLength(len_of_len.into(), 1));
     }
     let mut len_bytes = content.drain(0..len_of_len as usize).collect::<Vec<u8>>();
