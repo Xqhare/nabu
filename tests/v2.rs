@@ -34,7 +34,6 @@ mod v2 {
         let write = write(path, value.clone());
         assert!(write.is_ok());
         let read = read(path);
-        println!("{:?}", read);
         assert!(read.is_ok());
         let ok = read.unwrap();
         assert_eq!(ok, value);
@@ -121,7 +120,6 @@ mod v2 {
         assert!(write.is_ok());
         let read = read("xff-example-data/v2_simple_vector.xff");
         assert!(read.is_ok());
-        println!("{:?}", read);
         let ok = read.unwrap();
         assert_eq!(ok, val);
         let remove = remove_file("xff-example-data/v2_simple_vector.xff");
@@ -189,7 +187,6 @@ mod v2 {
         let write = write("xff-example-data/v2_nested_vector.xff", val.clone());
         assert!(write.is_ok());
         let read = read("xff-example-data/v2_nested_vector.xff");
-        println!("{:?}", read);
         assert!(read.is_ok());
         let ok = read.unwrap();
         assert_eq!(ok, val);
@@ -268,8 +265,6 @@ mod v2 {
             } else {
                 // read the file and append
                 let read = serde::read(path);
-        println!("{:?}", read);
-                println!("loop: {}", n);
                 assert!(read.is_ok());
                 let mut data = read.unwrap().into_object().unwrap();
                 let mut ary = data.remove("array").unwrap().into_array().unwrap();
@@ -565,16 +560,12 @@ mod v2 {
         assert!(write.is_ok());
 
         let read = serde::read("xff-example-data/v2_complete_array.xff");
-        if read.is_err() {
-            println!("Failed to read {}", read.err().unwrap());
-        } else {
-            for (v1, v2) in values
-                .iter()
-                .zip(read.unwrap().into_array().unwrap().iter())
-            {
-                println!("v1: {:?} v2: {:?}", v1, v2);
-                assert_eq!(v1, v2);
-            }
+        for (v1, v2) in values
+            .iter()
+            .zip(read.unwrap().into_array().unwrap().iter())
+        {
+            println!("v1: {:?} v2: {:?}", v1, v2);
+            assert_eq!(v1, v2);
         }
     }
 
@@ -600,12 +591,7 @@ mod v2 {
         // 1MB file
         //let path = "xff-example-data/v2_simulated_data_1MB.xff";
         let read = serde::read(path);
-        if read.is_err() {
-            println!("Failed to read {}", read.err().unwrap());
-        } else {
-            assert!(read.is_ok());
-            println!("read len: {:?}", read.unwrap().into_array().unwrap().len());
-        }
+        assert!(read.is_ok());
     }
 
     fn make_random_value(end: usize) -> XffValue {

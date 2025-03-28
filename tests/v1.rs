@@ -23,6 +23,46 @@ mod v1 {
     }
 
     #[test]
+    fn random_strings() {
+        for _ in 0..100 {
+            let str = make_random_string();
+            let data = XffValue::from(str);
+            let write = serde::write_legacy("xff-example-data/v1_random_strings.xff", data, 1);
+            assert!(write.is_ok());
+            let read = serde::read("xff-example-data/v1_random_strings.xff");
+            assert!(read.is_ok());
+            let read = read.unwrap();
+            assert!(read.is_string());
+        }
+    }
+
+    #[test]
+    fn zero_length_key() {
+        let path = "xff-example-data/v1_empty_key.xff";
+        let data = XffValue::from(Object::from(vec![("", XffValue::from("tmp"))]));
+        let write = serde::write_legacy(path, data, 1);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_object());
+        assert_eq!(read.into_object().unwrap().get("").unwrap(), &XffValue::from("tmp"));
+    }
+
+    #[test]
+    fn zero_length_string() {
+        let path = "xff-example-data/v1_empty_string.xff";
+        let data = XffValue::from("");
+        let write = serde::write_legacy(path, data, 1);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_string());
+        assert_eq!(read, XffValue::from(""));
+    }
+
+    #[test]
     fn actual_data() {
         let path = "xff-example-data/v1_actual_data.xff";
         let real_data = XffValue::from(Data::from(fs::read("src/lib.rs").unwrap()));
@@ -329,8 +369,6 @@ mod v1 {
         let read_array = serde::read("xff-example-data/v1_array.xff");
         let read_object = serde::read("xff-example-data/v1_object.xff");
 
-        println!("{:?}", read_boolean_t);
-
         assert!(read_string.is_ok());
         assert!(read_number_f.is_ok());
         assert!(read_number_i.is_ok());
@@ -390,24 +428,20 @@ mod v1 {
         assert!(write.is_ok());
 
         let read = serde::read("xff-example-data/v1_complete_array.xff");
-        if read.is_err() {
-            println!("Failed to read {}", read.err().unwrap());
-        } else {
-            for (v1, v2) in values
-                .iter()
-                .zip(read.unwrap().into_array().unwrap().iter())
-            {
-                println!("v1: {:?} v2: {:?}", v1, v2);
-                assert_eq!(v1, v2);
-            }
+        assert!(read.is_ok());
+        for (v1, v2) in values
+            .iter()
+            .zip(read.unwrap().into_array().unwrap().iter())
+        {
+            assert_eq!(v1, v2);
         }
     }
 
     #[test]
     fn create_simulated_data() {
-        if false {
+        if true {
             let mut data: Vec<XffValue> = Vec::new();
-            let mut gen_len = 9000;
+            let mut gen_len = 100;
             while gen_len > 0 {
                 println!("gen_len: {}", gen_len);
                 data.push(make_random_value(7));
@@ -418,19 +452,17 @@ mod v1 {
                 XffValue::from(data), 1,
             );
             assert!(write.is_ok());
+            println!("gen done");
         }
 
+        let path = "tests/v1_simulated_data_40-ignore.xff";
         // 100MB file
-        let path = "xff-example-data/v1_simulated_data_100MB_ignore.xff";
+        //let path = "xff-example-data/v1_simulated_data_100MB_ignore.xff";
         // 1MB file
         //let path = "xff-example-data/v1_simulated_data_1MB.xff";
         let read = serde::read(path);
-        if read.is_err() {
-            println!("Failed to read {}", read.err().unwrap());
-        } else {
-            assert!(read.is_ok());
-            println!("read len: {:?}", read.unwrap().into_array().unwrap().len());
-        }
+        println!("read: {:?}", read);
+        assert!(read.is_ok());
     }
 
     fn make_random_value(end: usize) -> XffValue {
@@ -450,9 +482,12 @@ mod v1 {
     fn make_random_object() -> XffValue {
         let mut out = BTreeMap::new();
         let seed = random_from_range(1, 1_000).unwrap();
-        for _n in 0..seed {
-            //println!("object k-v pair: {}", n);
-            out.insert(random_string().unwrap(), make_random_value(5));
+        for n in 0..seed {
+            println!("object k-v pair: {}", n);
+            let key = make_random_string().into_string().unwrap();
+            let value = make_random_value(5);
+            println!("key: {}, value: {:?}", key, value);
+            out.insert(key, value);
         }
         //println!("obj made");
         XffValue::from(out)
@@ -511,7 +546,8 @@ mod v1 {
                 let seed2 = random_from_range(1, 4564253).unwrap();
                 if random_from_range(0, 1).unwrap() == 0 {
                     // negative
-                    XffValue::from(-(seed1 as f64 / seed2 as f64))
+                    let tmp = -(seed1 as f64 / seed2 as f64);
+                    XffValue::from(tmp)
                 } else {
                     // positive
                     XffValue::from(seed1 as f64 / seed2 as f64)
