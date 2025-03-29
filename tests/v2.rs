@@ -564,8 +564,22 @@ mod v2 {
             .iter()
             .zip(read.unwrap().into_array().unwrap().iter())
         {
-            println!("v1: {:?} v2: {:?}", v1, v2);
             assert_eq!(v1, v2);
+        }
+    }
+
+    #[test]
+    fn read_sim_data() {
+        let paths = vec![
+            "xff-example-data/v2_simulated_data_1.xff",
+            "xff-example-data/v2_simulated_data_4_small.xff",
+            "xff-example-data/v2_simulated_data_4_large.xff",
+            "xff-example-data/v2_simulated_data_5.xff",
+            "xff-example-data/v2_simulated_data_10.xff",
+        ];
+        for path in paths {
+            let read = serde::read(path);
+            assert!(read.is_ok());
         }
     }
 
@@ -573,23 +587,23 @@ mod v2 {
     fn create_simulated_data() {
         if false {
             let mut data: Vec<XffValue> = Vec::new();
-            let mut gen_len = 9000;
+            let mut gen_len = 4;
             while gen_len > 0 {
-                println!("gen_len: {}", gen_len);
+                //println!("gen_len: {}", gen_len);
                 data.push(make_random_value(7));
                 gen_len -= 1;
             }
             let write = serde::write(
-                "tests/v2_simulated_data_40-ignore.xff",
+                "tests/v2_simulated_data_4_2-ignore.xff",
                 XffValue::from(data),
             );
             assert!(write.is_ok());
         }
 
         // 100MB file
-        let path = "xff-example-data/v2_simulated_data_100MB_ignore.xff";
-        // 1MB file
-        //let path = "xff-example-data/v2_simulated_data_1MB.xff";
+        let path = "tests/v2_simulated_data_100-ignore.xff";
+        
+        //let path = "xff-example-data/v2_simulated_data_10.xff";
         let read = serde::read(path);
         assert!(read.is_ok());
     }
@@ -613,7 +627,7 @@ mod v2 {
         let seed = random_from_range(1, 1_000).unwrap();
         for _n in 0..seed {
             //println!("object k-v pair: {}", n);
-            out.insert(random_string().unwrap(), make_random_value(5));
+            out.insert(make_random_string().into_string().unwrap(), make_random_value(5));
         }
         //println!("obj made");
         XffValue::from(out)
