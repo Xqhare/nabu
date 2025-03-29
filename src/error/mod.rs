@@ -101,6 +101,12 @@ pub enum NabuError {
     /// * `version` - The XFF version
     InvalidXFFValueLength(usize, u8),
 
+    /// # Parameters
+    /// * `len` - The length of the value
+    /// * `pos` - The position in the file where the invalid value was found
+    /// * `version` - The XFF version
+    XFFValueLengthTooLong(usize, usize, u8),
+
     // -----------------------------------------------
     //             Xff general serde errors
     // -----------------------------------------------
@@ -279,6 +285,7 @@ impl fmt::Display for NabuError {
             // other errors
             NabuError::StringContainsNonASCII(s, v) => write!(f, "Invalid XFF version {} string contains non-ASCII characters: {}", v, s),
             NabuError::NumberContainsInvalidCharacter(c, n, v) => write!(f, "Invalid XFF version {} number contains invalid character: {} in number: {}", v, c, n),
+            NabuError::XFFValueLengthTooLong(l, u, v) => write!(f, "Invalid XFF version {} value length too long: {} at byte position {}", v, l, u),
         }
     }
 }

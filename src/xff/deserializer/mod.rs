@@ -75,7 +75,11 @@ fn deserialize_xff_key_value(
 
         let mut key_bytes: VecDeque<u8> = Default::default();
         if ver < 2 {
-            while content[0] != 31 && content.front().is_some() {
+            while content.len() > 1 {
+                if content[1] == 31 && content[0] == 24 {
+                    key_bytes.push_back(content.pop_front().unwrap());
+                    break;
+                }
                 key_bytes.push_back(content.pop_front().unwrap());
             }
         } else {

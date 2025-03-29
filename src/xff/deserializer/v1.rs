@@ -79,6 +79,9 @@ fn deserialize_xff_v1_text(
     // reading length first
     let len = deserialize_xff_v1_value_length(content, byte_pos)?;
     // drain the string from the content
+    if content.len() < len {
+        return Err(NabuError::TruncatedXFF(byte_pos.get(), 1));
+    }
     let mut str_bytes = content.drain(0..len).collect::<VecDeque<u8>>();
     let out = deserialize_xff_text(&mut str_bytes, byte_pos, 1);
     // check
@@ -222,8 +225,10 @@ fn deserialize_xff_v1_value_length(
         .ok_or(NabuError::TruncatedXFF(byte_pos.get(), 1))?;
     byte_pos.set(byte_pos.get() + 1);
     let len_of_len = u8::from_le_bytes([len_of_len_bytes]);
-    if len_of_len > 8 || content.len() < len_of_len as usize {
+    if len_of_len > 8 {
         return Err(NabuError::InvalidXFFValueLength(len_of_len.into(), 1));
+    } else if content.len() < len_of_len as usize {
+        return Err(NabuError::XFFValueLengthTooLong(len_of_len.into(), byte_pos.get(), 1));
     }
     let mut len_bytes = content.drain(0..len_of_len as usize).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len_of_len as usize);

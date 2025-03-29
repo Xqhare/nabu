@@ -472,30 +472,36 @@ mod v1 {
     }
 
     #[test]
+    fn sim_data_bug() {
+        let path = "tests/v1_simulated_data_40-1-ignore.xff";
+        let read = serde::read(path);
+        assert!(read.is_ok());
+    }
+
+    #[test]
     fn create_simulated_data() {
         if false {
             let mut data: Vec<XffValue> = Vec::new();
-            let mut gen_len = 9;
+            let mut gen_len = 100;
             while gen_len > 0 {
                 println!("gen_len: {}", gen_len);
                 data.push(make_random_value(7));
                 gen_len -= 1;
             }
             let write = serde::write_legacy(
-                "tests/v1_simulated_data_40-1-ignore.xff",
+                "xff-example-data/v1_simulated_data.xff",
                 XffValue::from(data), 1,
             );
             assert!(write.is_ok());
             println!("gen done");
         }
 
-        let path = "tests/v1_simulated_data_40-1-ignore.xff";
+        let path = "xff-example-data/v1_simulated_data.xff";
         // 100MB file
         //let path = "xff-example-data/v1_simulated_data_100MB_ignore.xff";
         // 1MB file
         //let path = "xff-example-data/v1_simulated_data_1MB.xff";
         let read = serde::read(path);
-        println!("read: {:?}", read);
         assert!(read.is_ok());
     }
 
