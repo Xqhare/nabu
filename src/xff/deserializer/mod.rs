@@ -254,7 +254,6 @@ fn deserialize_xff_text(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, ver:
         {
             str_out.push(char::from_u32(current_char as u32).unwrap());
         } else {
-            println!("ERR {current_char} | out: {str_out} | len: {}", content.len());
             return Err(NabuError::InvalidASCIIString(
                 current_char,
                 byte_pos.get(),

@@ -3,6 +3,7 @@ mod v1 {
     use std::collections::BTreeMap;
     use std::{fs, usize};
 
+    use serde::write_legacy;
     use tyche::prelude::*;
 
     use nabu::*;
@@ -20,6 +21,39 @@ mod v1 {
         let path = "xff-example-data/journal2.xff";
         let read = serde::read(path);
         assert!(read.is_ok());
+    }
+
+    #[test]
+    fn hello_world() {
+        let path = "xff-example-data/v1-hello-world.xff";
+
+        let mut object: Object = Object::new();
+
+        object.insert("String", XffValue::from("Hi mom!"));
+        object.insert("Number", XffValue::from(usize::MAX));
+        object.insert("Number", XffValue::from(-42));
+        object.insert("Number", XffValue::from(42.69));
+        object.insert("Boolean", XffValue::from(true));
+        object.insert("Null", XffValue::from(XffValue::Null));
+
+        let mut array: Array = Array::new();
+        array.push(XffValue::from("Hello mom!"));
+        array.push(XffValue::from(usize::MAX));
+
+        object.insert("Array", XffValue::from(array));
+
+        object.insert("Data", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+
+        let value = XffValue::from(object);
+
+        let write = write_legacy(path, value.clone(), 1);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let ok = read.unwrap();
+        assert_eq!(ok, value);
+        /* let remove = serde::remove_file(path);
+        assert!(remove.is_ok()); */
     }
 
     #[test]
@@ -441,21 +475,21 @@ mod v1 {
     fn create_simulated_data() {
         if false {
             let mut data: Vec<XffValue> = Vec::new();
-            let mut gen_len = 100;
+            let mut gen_len = 9;
             while gen_len > 0 {
                 println!("gen_len: {}", gen_len);
                 data.push(make_random_value(7));
                 gen_len -= 1;
             }
             let write = serde::write_legacy(
-                "tests/v1_simulated_data_40-ignore.xff",
+                "tests/v1_simulated_data_40-1-ignore.xff",
                 XffValue::from(data), 1,
             );
             assert!(write.is_ok());
             println!("gen done");
         }
 
-        let path = "tests/v1_simulated_data_40-ignore.xff";
+        let path = "tests/v1_simulated_data_40-1-ignore.xff";
         // 100MB file
         //let path = "xff-example-data/v1_simulated_data_100MB_ignore.xff";
         // 1MB file
