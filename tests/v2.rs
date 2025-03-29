@@ -601,9 +601,9 @@ mod v2 {
         }
 
         // 100MB file
-        let path = "tests/v2_simulated_data_100-ignore.xff";
+        //let path = "tests/v2_simulated_data_100-ignore.xff";
         
-        //let path = "xff-example-data/v2_simulated_data_10.xff";
+        let path = "xff-example-data/v2_simulated_data_10.xff";
         let read = serde::read(path);
         assert!(read.is_ok());
     }
