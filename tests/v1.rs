@@ -439,7 +439,7 @@ mod v1 {
 
     #[test]
     fn create_simulated_data() {
-        if true {
+        if false {
             let mut data: Vec<XffValue> = Vec::new();
             let mut gen_len = 100;
             while gen_len > 0 {
