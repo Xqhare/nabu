@@ -12,8 +12,7 @@ use crate::{
 pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
     let xff_ver = 0;
     let mut out: Vec<XffValue> = Default::default();
-    // version is byte 0; already match against and used but not removed, for performance, until now
-    let _ = content.pop_front();
+    // version is byte 0;
     let mut byte_pos: usize = 1;
 
     // debug; put true for debug, use --nocapture
@@ -43,7 +42,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                 byte_pos += 1;
                 b
             } else {
-                Err(NabuError::TruncatedXFF(byte_pos))?
+                Err(NabuError::TruncatedXFF(byte_pos, 0))?
             }
         };
         byte_pos += 1;
@@ -58,7 +57,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                             byte_pos += 1;
                             b
                         } else {
-                            Err(NabuError::TruncatedXFF(byte_pos))?
+                            Err(NabuError::TruncatedXFF(byte_pos, 0))?
                         }
                     };
                     byte_pos += 1;
@@ -240,7 +239,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                         out.push(XffValue::CommandCharacter(CommandCharacter::from(27)));
                     } else {
                         // pop front returned None, truncation!
-                        return Err(NabuError::TruncatedXFF(byte_pos));
+                        return Err(NabuError::TruncatedXFF(byte_pos, 0));
                     };
                 }
                 if debug {
@@ -265,5 +264,5 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
         }
     }
     // Premature EoF
-    Err(NabuError::TruncatedXFF(byte_pos))
+    Err(NabuError::TruncatedXFF(byte_pos, 0))
 }

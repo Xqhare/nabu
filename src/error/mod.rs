@@ -71,32 +71,41 @@ pub enum NabuError {
     /// # Parameters
     /// * `pos` - The position in the file where the invalid number was found
     /// * `String` - The invalid number
-    InvalidNumber(usize, String),
+    /// * `version` - The XFF version
+    InvalidNumber(usize, String, u8),
     /// The wrapped byte is not a valid array separator, making the array invalid
     ///
     /// # Parameters
     /// * `pos` - The position in the file where the invalid array was found
     /// * `byte` - The invalid byte
-    InvalidArray(usize, u8),
+    /// * `version` - The XFF version
+    InvalidArray(usize, u8, u8),
     /// The wrapped byte is not a valid object separator, making the object invalid
     ///
     /// # Parameters
     /// * `pos` - The position in the file where the invalid object was found
     /// * `byte` - The invalid byte
-    InvalidObject(usize, u8),
+    /// * `version` - The XFF version
+    InvalidObject(usize, u8, u8),
 
     /// The wrapped value is not a valid string. The invalid string ends at the wrapped position.
     ///
     /// # Parameters
     /// * `pos` - The position in the file where the invalid key was found
     /// * `key` - The invalid key
-    InvalidKey(usize, XffValue),
+    /// * `version` - The XFF version
+    InvalidKey(usize, XffValue, u8),
 
-    /// Nabu only supports Values up to a size of 1 petabyte
-    ///
     /// # Parameters
     /// * `len` - The length of the value
-    InvalidXFFValueLength(usize),
+    /// * `version` - The XFF version
+    InvalidXFFValueLength(usize, u8),
+
+    /// # Parameters
+    /// * `len` - The length of the value
+    /// * `pos` - The position in the file where the invalid value was found
+    /// * `version` - The XFF version
+    XFFValueLengthTooLong(usize, usize, u8),
 
     // -----------------------------------------------
     //             Xff general serde errors
@@ -111,6 +120,8 @@ pub enum NabuError {
     InvalidASCIIString(u8, usize, u8),
     /// Invalid, wrapped Extension encountered
     /// The file is valid XFF, but not the correct extension
+    ///
+    /// ONLY USED IN SOME V0 CODE - DEPRECATED
     ///
     /// # Parameters
     /// * `ext` - The invalid extension
@@ -156,7 +167,8 @@ pub enum NabuError {
     ///
     /// # Parameters
     /// * `pos` - The position in the file where the missing EM was found
-    TruncatedXFF(usize),
+    /// * `version` - The XFF version
+    TruncatedXFF(usize, u8),
 
     /// Unknown XFF version
     ///
@@ -170,6 +182,49 @@ pub enum NabuError {
     /// * `value` - The invalid value
     /// * `version` - The invalid version
     InvalidXFFVersion(XffValue, u8),
+
+    /// Invalid XFF file checksum
+    /// 
+    /// # Parameters
+    /// * `pos` - The position in the file where the invalid checksum was found
+    /// * `version` - The XFF version
+    InvalidFileChecksum(usize, u8),
+
+    /// Truncated XFF value
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the truncated value was found
+    /// * `version` - The XFF version
+    TruncatedXFFValue(usize, u8),
+
+    /// Truncated XFF value checksum
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the truncated checksum was found
+    /// * `version` - The XFF version
+    TruncatedXFFValueChecksum(usize, u8),
+
+    /// Invalid XFF value checksum
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the invalid checksum was found
+    /// * `version` - The XFF version
+    InvalidXFFValueChecksum(usize, u8),
+
+    /// String contains non-ASCII characters
+    ///
+    /// # Parameters
+    /// * `value` - The invalid String
+    /// * `version` - The XFF version
+    StringContainsNonASCII(String, u8),
+
+    /// Number contains invalid character
+    ///
+    /// # Parameters
+    /// * `char` - The invalid character
+    /// * `value` - The invalid number
+    /// * `version` - The XFF version
+    NumberContainsInvalidCharacter(u8, String, u8),
 }
 
 pub type Result<T> = std::result::Result<T, NabuError>;
@@ -199,14 +254,14 @@ impl fmt::Display for NabuError {
             NabuError::MissingOBJ(u) => write!(f, "Missing OBJ at byte position {}", u),
             NabuError::MissingDAT(u) => write!(f, "Missing DAT at byte position {}", u),
             NabuError::MissingEV(u) => write!(f, "Missing EV at byte position {}", u),
-            NabuError::InvalidNumber(i, n) => write!(f, "Invalid number: {} at byte position {}", n, i),
-            NabuError::InvalidArray(a, i) => write!(f, "Invalid array structure byte: {} at byte position {}. Expected an array separator", a, i),
-            NabuError::InvalidObject(o, i) => write!(f, "Invalid object structure byte: {} at byte position {}. Expected an object separator", o, i),
-            NabuError::InvalidKey(p, v) => write!(f, "Invalid non string key: {} at byte position {}", v, p),
-            NabuError::InvalidXFFValueLength(len) => write!(f, "Invalid XFF value length: {} (max: 8 bytes / 18.446.744.073.709.551.615)", len),
+            NabuError::InvalidNumber(i, n, v) => write!(f, "Invalid XFF version {} number: {} at byte position {}", v, n, i),
+            NabuError::InvalidArray(a, i, v) => write!(f, "Invalid XFF version {} array structure byte: {} at byte position {}. Expected an array separator", v, a, i),
+            NabuError::InvalidObject(o, i, v) => write!(f, "Invalid XFF version {} object structure byte: {} at byte position {}. Expected an object separator", v, o, i),
+            NabuError::InvalidKey(p, val, ver) => write!(f, "Invalid XFF version {} non string key: {} at byte position {}", ver, val, p),
+            NabuError::InvalidXFFValueLength(len, v) => write!(f, "Invalid XFF version {} value length: {}", v, len),
 
             // Xff general serde errors
-            NabuError::InvalidASCIIString(b, i, v) => write!(f, "Invalid ASCII character (according to xff specification version: {}): {} at byte position {}", b, v, i),
+            NabuError::InvalidASCIIString(b, i, v) => write!(f, "Invalid ASCII character for XFF version{}: {} at byte position {}", v, b, i),
             NabuError::InvalidXFFExtension(ext, err) => write!(f, "Invalid {} extension, {}", ext, err),
             NabuError::InvalidXFFByte(b, i, v) => write!(f, "Invalid XFF byte: {} for Xff Version {} at byte position {}", b, v, i),
             NabuError::InvalidXFFValueForVersion(value, ver) => write!(f, "Invalid XffValue for xff specification version {}: {:?}", ver, value),
@@ -217,9 +272,20 @@ impl fmt::Display for NabuError {
             // Xff file errors
             NabuError::MissingEM(u) => write!(f, "Missing End of File marker EM, end of file, at expected byte position {}.", u),
             NabuError::EmpthyXFF => write!(f, "Empthy XFF"),
-            NabuError::TruncatedXFF(u) => write!(f, "Truncated XFF at byte position {}", u),
+            NabuError::TruncatedXFF(u, v) => write!(f, "Truncated XFF version {} at byte position {}", v, u),
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {}", ver),
-            NabuError::InvalidXFFVersion(val, ver) => write!(f, "Invalid XffValue for XFF version. Value {}; Version {}", val, ver),
+            NabuError::InvalidXFFVersion(val, ver) => write!(f, "Invalid XffValue for XFF version {}. Value {};", ver, val),
+            NabuError::TruncatedXFFValue(u, v) => write!(f, "Truncated XFF version {} value at byte position {}; ", v, u),
+            NabuError::TruncatedXFFValueChecksum(u, v) => write!(f, "Truncated XFF version {} value checksum at byte position {}", v, u),
+
+            // checksum errors
+            NabuError::InvalidFileChecksum(c, v) => write!(f, "Invalid XFF version {} file checksum: {}", v, c),
+            NabuError::InvalidXFFValueChecksum(u, v) => write!(f, "Invalid XFF version {} value checksum at byte position {}", v, u),
+
+            // other errors
+            NabuError::StringContainsNonASCII(s, v) => write!(f, "Invalid XFF version {} string contains non-ASCII characters: {}", v, s),
+            NabuError::NumberContainsInvalidCharacter(c, n, v) => write!(f, "Invalid XFF version {} number contains invalid character: {} in number: {}", v, c, n),
+            NabuError::XFFValueLengthTooLong(l, u, v) => write!(f, "Invalid XFF version {} value length too long: {} at byte position {}", v, l, u),
         }
     }
 }

@@ -9,6 +9,8 @@ pub mod v0;
 use crate::xff::serializer::v0::serialize_xff_v0;
 pub mod v1;
 use crate::xff::serializer::v1::serialize_xff_v1;
+pub mod v2;
+use crate::xff::serializer::v2::serialize_xff_v2;
 
 /// Takes in a Vec of XffValues and serializes it into a byte vector
 ///
@@ -30,10 +32,16 @@ pub fn serialize_xff(data: Vec<XffValue>, ver: u8) -> Result<Vec<u8>> {
         0 => serialize_xff_v0(data),
         1 => {
             if data.len() != 1 {
-                return Err(NabuError::InvalidXFFVersion(data.into(), 1));
+                return Err(NabuError::TruncatedXFF(1, 1));
             }
             serialize_xff_v1(data)
-        }
+        },
+        2 => {
+            if data.len() != 1 {
+                return Err(NabuError::TruncatedXFF(1, 2));
+            }
+            serialize_xff_v2(data)
+        },
         _ => Err(NabuError::UnknownXFFVersion(ver)),
     }
 }

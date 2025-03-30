@@ -13,7 +13,6 @@ mod v0 {
             let mut data: Vec<XffValue> = Default::default();
             let mut gen_len = 100_000;
             while gen_len > 0 {
-                println!("gen_len: {}", gen_len);
                 let seed = random_from_range(1, 4).unwrap();
                 match seed {
                     1 => data.push(make_random_string()),
@@ -41,9 +40,6 @@ mod v0 {
         // 1.5MB file
         //let path = "xff-example-data/v0_simulated_data_1MB_v0.xff";
         let read = serde::read(path);
-        if read.is_err() {
-            println!("Failed to read {:?}", read);
-        }
         assert!(read.is_ok());
     }
 
@@ -132,9 +128,9 @@ mod v0 {
         let mut out: String = Default::default();
         for n in 0..seed {
             if n == 0 {
-                out.push(random_latin_char().unwrap().to_uppercase().next().unwrap());
+                out.push(random_latin_char(true).unwrap());
             } else {
-                out.push(random_latin_char().unwrap().to_lowercase().next().unwrap());
+                out.push(random_latin_char(false).unwrap());
             }
         }
         XffValue::String(out)
