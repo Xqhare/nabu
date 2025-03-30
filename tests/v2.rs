@@ -248,6 +248,32 @@ mod v2 {
     }
 
     #[test]
+    fn zero_length_string() {
+        let path = "xff-example-data/v2_empty_string.xff";
+        let data = XffValue::from("");
+        let write = serde::write(path, data);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_string());
+        assert_eq!(read.into_string().unwrap(), "");
+    }
+
+    #[test]
+    fn zero_length_data() {
+        let path = "xff-example-data/v2_empty_data.xff";
+        let data = XffValue::from(Data::from(vec![]));
+        let write = serde::write(path, data);
+        assert!(write.is_ok());
+        let read = serde::read(path);
+        assert!(read.is_ok());
+        let read = read.unwrap();
+        assert!(read.is_data());
+        assert_eq!(read.into_data().unwrap(), Data::from(vec![]));
+    }
+
+    #[test]
     fn read_write_loop_object() {
         let path = "xff-example-data/v2_loop_complex.xff";
         for n in 0..100 {
