@@ -1,7 +1,7 @@
 # Nabu
 
 > [!note]
-> This is a hobby project. It is not intended nor ready to be used in production.
+> This is a hobby project. You probably shouldn't use this in production. I am not your dad though.
 
 Nabu is a rust library for reading and writing `.xff` files.
 
@@ -12,15 +12,19 @@ As with all my projects, this documentation contains everything you never wanted
 
 This README documents the usage of the most recent version of `.xff`: Version 2.
 
-If you would like to use version 0, please refer to the [releases page](https://github.com/Xqhare/nabu/releases/tag/v.0.6.2). 
-There you can find the documentation and code for version 0. 
-While all code is still present the usage has changed slightly. Mainly the return value is now no longer a `Vec<XffValue>`, instead it is a single `XffValue`.
+If you would like to use version 0 or 1, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
 All features present in the codebase are used in version 0 only.
+
+## Contributing
+Nabu is open to contributions. There is a simple rule: You may only create issues after you have created a pull request addressing the issue.
+Only maintainers may create issues without a pull request, all others will be purged and ignored.
 
 ## Purpose
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
 I also tried to make it easy to detect malformed data, and to make it slightly harder to manipulate the file by hand.
+
+In version 2, I wanted to play with single bits and bit operations.
 
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
@@ -74,7 +78,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     - Arbitrary data
 - Performant
     - 100MB are read in approximately 3 seconds
-- Meaningful errors
+- Somewhat meaningful errors
 - Fully documented
 - High test coverage
 - Macros
@@ -149,7 +153,6 @@ assert_eq!(ok, value);
 let remove = remove_file(path);
 assert!(remove.is_ok());
 ```
-
 
 ### Serde
 `Serde` is a shorthand for serializing and deserializing. 
