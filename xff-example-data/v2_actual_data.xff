@@ -1,7 +1,7 @@
-è¸¯É/*!
+Œ¾²Í/*!
 # Nabu
 
-> This is a hobby project. It is not intended nor ready to be used in production.
+> This is a hobby project. You probably shouldn't use this in production. I am not your dad though.
 
 Nabu is a rust library for reading and writing `.xff` files.
 
@@ -10,17 +10,21 @@ The overarching goal of this project is to create a rust library that can be use
 
 As with all my projects, this documentation contains everything you never wanted to know about `.xff` files or Nabu.
 
-This README documents the usage of the most recent version of `.xff`: Version 1.
+This README documents the usage of the most recent version of `.xff`: Version 2.
 
-If you would like to use version 0, please refer to the [releases page](https://github.com/Xqhare/nabu/releases/tag/v.0.6.2).
-There you can find the documentation and code for version 0.
-While all code is still present the usage has changed slightly. Mainly the return value is now no longer a `Vec<XffValue>`, instead it is a single `XffValue::Array`.
+If you would like to use version 0 or 1, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
 All features present in the codebase are used in version 0 only.
+
+## Contributing
+Nabu is open to contributions. There is a simple rule: You may only create issues after you have created a pull request addressing the issue.
+Only maintainers may create issues without a pull request, all others will be purged and ignored.
 
 ## Purpose
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
 I also tried to make it easy to detect malformed data, and to make it slightly harder to manipulate the file by hand.
+
+In version 2, I wanted to play with single bits and bit operations.
 
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
@@ -62,7 +66,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     - [IO Errors](#ioerror)
     - [InternalError](#internalerror)
 - [Testing](#testing)
-
+    
 ## Roadmap
 
 ## Features
@@ -74,19 +78,21 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     - Arbitrary data
 - Performant
     - 100MB are read in approximately 3 seconds
-- Meaningful errors
+- Somewhat meaningful errors
 - Fully documented
 - High test coverage
+- Macros
 
 ## `.xff` specification
 To use Nabu it is not needed to have read the specification, but it is recommended.
 
-All specifications are in the `specifications` directory.
+All specifications are in the `specifications` directory. 
 
 - [V0](specifications/v0.md).
 - [V1](specifications/v1.md).
+- [V2](specifications/v2.md).
 
-V2 is not yet finalized, but my musings about it can be found [here](specifications/v2.md).
+V3 is not yet finalized, but my musings about it can be found [here](specifications/v3.md).
 
 ## Usage
 
@@ -149,7 +155,7 @@ assert!(remove.is_ok());
 ```
 
 ### Serde
-`Serde` is a shorthand for serializing and deserializing.
+`Serde` is a shorthand for serializing and deserializing. 
 This module contains all the functions needed for serializing and deserializing `.xff` files, as well as a convenience function for deleting files.
 
 #### Usage of serde
@@ -189,12 +195,12 @@ let data_4 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 
 The types are explained along with the `XffValue` enum, instead of in their own chapters, as I found it easier to understand.
 
-### From
+#### From
 
 There are many implementations of the `From` trait for the `XffValue` enum, this is a comprehensive list:
 
 - `XffValue::from()`
-    - `&str`, `String` -> `XffValue::String`
+    - `&str`, `String`, `&String`, `char` -> `XffValue::String`
     - `usize`, `u8`, `u16`, `u32`, `u64` -> `XffValue::Number`
     - `isize`, `i8`, `i16`, `i32`, `i64` -> `XffValue::Number`
     - `f32`, `f64` -> `XffValue::Number`
@@ -265,7 +271,17 @@ There are also several implementations of the `From` trait for the different typ
 - `Object`
     - `HashMap<S, V>`, `BTreeMap<S, V>` or `Vec<(S, V)>` where `S` can be converted to `String` and `V` to `XffValue` -> `Object`
 
-### Associated Functions
+#### Macros
+
+Two macros are made available:
+
+1. `xff!()`
+    - Creates a new `XffValue` from any supported type
+    - Convenience for `XffValue::from()`
+2. `tvec_to_xff_value!(Vec<T>)`
+    - Converts a vector of any type `T` to a `XffValue::Array` filled with `XffValue` derived from `T`
+
+#### Associated Functions
 
 `XffValue` has several associated functions:
 - `into_{type}`
@@ -338,11 +354,11 @@ The underlying data can be interacted with directly by using:
 - `len`
 - `into_vec`
 
-#### Notes on value types
+##### Notes on value types
 All types are printable.
 The default returned by `XffValue::default()` is `XffValue::Null`.
 
-##### `Object`
+###### `Object`
 Any `Object` can be indexed with strings. This returns a reference by key.
 ```rust
 use nabu::{Object, XffValue};
@@ -359,7 +375,7 @@ let value2 = &object["Key2"];
 assert_eq!(value2, &XffValue::from(-42));
 ```
 
-##### `Array`
+###### `Array`
 Any `Array` can be indexed with integers. This returns a reference by index.
 ```rust
 use nabu::{Array, XffValue};
@@ -766,7 +782,7 @@ pub mod key_value_store {
         NabuDB::new(path.as_ref().with_extension("xff"))
     }
 }
-m•6kÒ[package]
+ŒQÙÒ[package]
 name = "nabu"
 version = "1.3.5"
 edition = "2021"
@@ -784,10 +800,10 @@ logging_wizard = []
 
 [package.metadata.docs.rs]
 all-features = true
-^èBÈl# Nabu
+^èBém# Nabu
 
 > [!note]
-> This is a hobby project. It is not intended nor ready to be used in production.
+> This is a hobby project. You probably shouldn't use this in production. I am not your dad though.
 
 Nabu is a rust library for reading and writing `.xff` files.
 
@@ -798,15 +814,19 @@ As with all my projects, this documentation contains everything you never wanted
 
 This README documents the usage of the most recent version of `.xff`: Version 2.
 
-If you would like to use version 0, please refer to the [releases page](https://github.com/Xqhare/nabu/releases/tag/v.0.6.2). 
-There you can find the documentation and code for version 0. 
-While all code is still present the usage has changed slightly. Mainly the return value is now no longer a `Vec<XffValue>`, instead it is a single `XffValue`.
+If you would like to use version 0 or 1, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
 All features present in the codebase are used in version 0 only.
+
+## Contributing
+Nabu is open to contributions. There is a simple rule: You may only create issues after you have created a pull request addressing the issue.
+Only maintainers may create issues without a pull request, all others will be purged and ignored.
 
 ## Purpose
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
 I also tried to make it easy to detect malformed data, and to make it slightly harder to manipulate the file by hand.
+
+In version 2, I wanted to play with single bits and bit operations.
 
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
@@ -860,7 +880,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     - Arbitrary data
 - Performant
     - 100MB are read in approximately 3 seconds
-- Meaningful errors
+- Somewhat meaningful errors
 - Fully documented
 - High test coverage
 - Macros
@@ -935,7 +955,6 @@ assert_eq!(ok, value);
 let remove = remove_file(path);
 assert!(remove.is_ok());
 ```
-
 
 ### Serde
 `Serde` is a shorthand for serializing and deserializing. 
@@ -1200,4 +1219,4 @@ cargo test --all-features -- --include-ignored
 
 > [!note]
 > Ignored tests require the `--all-features` flag as some are feature dependent.
-ðþ2$ÛFïÏ±Û]
+·ø$5âóÈ)ÿ>C¨
