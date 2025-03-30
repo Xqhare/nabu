@@ -498,9 +498,7 @@ pub mod serde {
     use crate::xff::value::XffValue;
     use crate::XFF_VERSION;
 
-    /// Reads the content of a XFF file and returns a Vec of XffValues
-    ///
-    /// Because of the way v0 is implemented, it always returns a vector, for v1 it only has one element
+    /// Reads the content of a XFF file and returns a XffValue
     ///
     /// # Arguments
     /// * `path` - The path to the file to read
@@ -513,7 +511,7 @@ pub mod serde {
     /// use nabu::serde::read;
     /// use nabu::XffValue;
     ///
-    /// let tmp = read("xff-example-data/v0.xff");
+    /// let tmp = read("xff-example-data/v2.xff");
     /// assert!(tmp.is_ok());
     /// let data: XffValue = tmp.unwrap();
     /// println!("{}", data);
@@ -528,9 +526,7 @@ pub mod serde {
 
     /// Writes XffValues to a XFF file
     ///
-    /// Supports the most up to date version of the XFF specification.
-    /// To write v1, please supply only one element.
-    ///
+    /// Uses the most up to date version of the XFF specification.
     /// To write legacy versions, please refer to `write_legacy`.
     ///
     /// # Arguments
@@ -546,7 +542,7 @@ pub mod serde {
     /// use nabu::{CommandCharacter, Data, Number, XffValue};
     ///
     /// let data = XffValue::String("hello mom".to_string());
-    /// let tmp = write("xff-example-data/v0.xff", data.clone());
+    /// let tmp = write("xff-example-data/v2.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
     pub fn write<P, D>(path: P, data: D) -> Result<(), NabuError>
@@ -561,6 +557,8 @@ pub mod serde {
 
     /// Writes a Vec of XffValues to a XFF file with a specific XFF version
     /// Provided for backwards compatibility and convenience
+    ///
+    /// Only use a Vector with more than one element if using version 0.
     ///
     /// # Arguments
     /// * `path` - The path to the file to write
@@ -580,7 +578,7 @@ pub mod serde {
     ///         XffValue::String("hello mom".to_string()),
     ///     ]
     /// };
-    /// let tmp = write_legacy("xff-example-data/v0.xff", data.clone(), 0);
+    /// let tmp = write_legacy("xff-example-data/v2.xff", data.clone(), 0);
     /// assert!(tmp.is_ok());
     /// ```
     pub fn write_legacy<P, D>(path: P, data: D, xff_version: u8) -> Result<(), NabuError>
