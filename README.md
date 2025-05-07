@@ -17,8 +17,8 @@ If you would like to use version 0 or 1, I discourage you from doing so but you 
 All features present in the codebase are used in version 0 only.
 
 ## Contributing
-Nabu is open to contributions. There is a simple rule: You may only create issues after you have created a pull request addressing the issue.
-Only maintainers may create issues without a pull request, all others will be purged and ignored.
+
+If you would like to contribute to this project, please make sure to read the [Contributing](https://github.com/Xqhare/nabu/blob/main/CONTRIBUTING) file.
 
 ## Purpose
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
