@@ -27,7 +27,7 @@ To be clear: You may choose one of the two licenses, or both.
 
 ## Contributing
 
-If you would like to contribute to this project, please make sure to read the [Contributing](CONTRIBUTING) file.
+If you would like to contribute to this project, please make sure to read the [Contributing](CONTRIBUTING.md) file.
 
 ## Purpose
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
