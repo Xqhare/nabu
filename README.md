@@ -6,7 +6,7 @@
 Nabu is a rust library for reading and writing `.xff` files.
 
 <p align="center">
-    <img src="pictures/logo.png" alt="Logo made by AI. Edited by me. Because I can't draw for the life of me.">
+    <img src="pictures/logo_mini.jpeg" alt="Logo made by AI. Edited by me. Because I can't draw for the life of me.">
 </p>
 
 The overarching goal of this project is to create a rust library that can be used to build, read and write `.xff` files.
