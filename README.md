@@ -20,6 +20,11 @@ If you would like to use version 0 or 1, I discourage you from doing so but you 
 
 All features present in the codebase are used in version 0 only.
 
+## License
+
+All files in this repository are doubly licensed under the [MIT License](https://github.com/Xqhare/nabu/blob/main/LICENSE-MIT) and [EPL-2.0 License](https://github.com/Xqhare/nabu/blob/main/LICENSE).
+To be clear: You may choose one of the two licenses, or both.
+
 ## Contributing
 
 If you would like to contribute to this project, please make sure to read the [Contributing](https://github.com/Xqhare/nabu/blob/main/CONTRIBUTING) file.
