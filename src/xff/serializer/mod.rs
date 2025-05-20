@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::{
     error::{NabuError, Result},
-    xff::value::XffValue,
+    XffValue,
 };
 
 pub mod v0;

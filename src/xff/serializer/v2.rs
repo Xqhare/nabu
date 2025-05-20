@@ -1,4 +1,4 @@
-use athena::tools::{byte_bit::byte_bit_encoder, checksum::crc32::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, leb128::serialize_leb128_unsigned};
+use athena::{byte_bit::byte_bit_encoder, checksum::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, encoding_and_decoding::serialize_leb128_unsigned};
 
 use crate::{error::{NabuError, Result}, Array, Data, Number, Object, XffValue};
 

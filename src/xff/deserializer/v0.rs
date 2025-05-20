@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{
     error::NabuError,
-    xff::value::{CommandCharacter, Data, XffValue},
+    {CommandCharacter, Data, XffValue},
 };
 
 // ---------------------------------------------------

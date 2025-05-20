@@ -1,6 +1,6 @@
 use crate::{
     error::{NabuError, Result},
-    xff::value::{CommandCharacter, XffValue},
+    {CommandCharacter, XffValue},
 };
 
 pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {

@@ -2,10 +2,10 @@ use std::{
     borrow::Borrow, cell::Cell, collections::{BTreeMap, VecDeque},
 };
 
-use athena::tools::{checksum::crc32::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, leb128::deserialize_leb128_unsigned};
+use athena::{checksum::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, encoding_and_decoding::deserialize_leb128_unsigned};
 
 use crate::{
-    error::NabuError, xff::value::XffValue, Data
+    error::NabuError, XffValue, Data
 };
 
 use super::{deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};

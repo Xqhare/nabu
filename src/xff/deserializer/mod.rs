@@ -3,13 +3,13 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::usize;
 
-use athena::tools::byte_bit::byte_bit_decoder;
-use athena::tools::checksum::crc32::{generate_crc32_lookuptable, Crc32Table};
+use athena::byte_bit::byte_bit_decoder;
+use athena::checksum::{generate_crc32_lookuptable, Crc32Table};
 use v1::deserialize_xff_v1_value;
 use v2::deserialize_xff_v2_value;
 
 use crate::{Data, Number};
-use crate::{error::NabuError, xff::value::XffValue};
+use crate::{error::NabuError, XffValue};
 
 pub mod v0;
 use crate::xff::deserializer::v0::deserialize_xff_v0;
