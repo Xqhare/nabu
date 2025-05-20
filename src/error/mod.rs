@@ -1,7 +1,7 @@
 use core::fmt;
 use std::usize;
 
-use crate::xff::value::XffValue;
+use crate::XffValue;
 
 #[derive(Debug)]
 pub enum NabuError {
