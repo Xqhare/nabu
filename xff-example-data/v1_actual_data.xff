@@ -1,4 +1,4 @@
-îˆÌO/*!
+ ˆÌO/*!
 # Nabu
 
 > This is a hobby project. You probably shouldn't use this in production. I am not your dad though.
@@ -621,24 +621,17 @@ pub mod serde {
     }
 }
 
-R[package]
+[package]
 name = "nabu"
 version = "2.0.0"
 edition = "2021"
 
 [dependencies]
-athena = { git = "https://github.com/Xqhare/athena" }
+athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
 
-[features]
-key_value_core = []
-key_value_store = ["key_value_core"]
-logging_wizard = []
-
-[package.metadata.docs.rs]
-all-features = true
 ¾7# Nabu
 
 > [!note]
