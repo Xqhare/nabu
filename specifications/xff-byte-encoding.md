@@ -15,7 +15,7 @@ All differences can be found in the first 32 elements of the table below.
 | 3 | 03 | 00000011 | ARY | Array |
 | 4 | 04 | 00000100 | OBJ | Object |
 | 5 | 05 | 00000101 | DAT | Data |
-| 6 | 06 | 00000110 | -- | Unused |
+| 6 | 06 | 00000110 | DT | Date and Time |
 | 7 | 07 | 00000111 | -- | Unused |
 | 8 | 08 | 00001000 | BS | Backspace
 | 9 | 09 | 00001001 | HT | Horizontal Tab |
@@ -23,8 +23,8 @@ All differences can be found in the first 32 elements of the table below.
 | 11 | 0B | 00001011 | VT | Vertical Tabulation |
 | 12 | 0C | 00001100 | FF | Form Feed |
 | 13 | 0D | 00001101 | CR | Carriage Return |
-| 14 | 0E | 00001110 | -- | Unused |
-| 15 | 0F | 00001111 | -- | Unused |
+| 14 | 0E | 00001110 | NAN | Not a Number |
+| 15 | 0F | 00001111 | INF | Infinity |
 | 16 | 10 | 00010000 | TRU | True |
 | 17 | 11 | 00010001 | FAL | False |
 | 18 | 12 | 00010010 | -- | Unused |
