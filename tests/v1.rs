@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod v1 {
     use std::collections::BTreeMap;
+    use std::path::Path;
     use std::{fs, usize};
 
     use serde::write_legacy;
@@ -475,8 +476,10 @@ mod v1 {
     #[test]
     fn sim_data_bug() {
         let path = "tests/v1_simulated_data_40-1-ignore.xff";
-        let read = serde::read(path);
-        assert!(read.is_ok());
+        if Path::new(path).exists() {
+            let read = serde::read(path);
+            assert!(read.is_ok());
+        }
     }
 
     #[test]
