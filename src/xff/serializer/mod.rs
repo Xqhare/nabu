@@ -27,22 +27,24 @@ use crate::xff::serializer::v2::serialize_xff_v2;
 ///
 /// # Errors
 /// Returns IO errors when issues with reading the file from disk occur
-pub fn serialize_xff(data: Vec<XffValue>, ver: u8) -> Result<Vec<u8>> {
-    match ver {
+pub fn serialize_xff(data: Vec<XffValue>, version: u8) -> Result<Vec<u8>> {
+    match version {
         0 => serialize_xff_v0(data),
         1 => {
             if data.len() != 1 {
-                return Err(NabuError::TruncatedXFF(1, 1));
+                let pos = 1;
+                return Err(NabuError::TruncatedXFF(pos, version));
             }
             serialize_xff_v1(data)
         },
         2 => {
             if data.len() != 1 {
-                return Err(NabuError::TruncatedXFF(1, 2));
+                let pos = 1;
+                return Err(NabuError::TruncatedXFF(pos, version));
             }
             serialize_xff_v2(data)
         },
-        _ => Err(NabuError::UnknownXFFVersion(ver)),
+        _ => Err(NabuError::UnknownXFFVersion(version)),
     }
 }
 
