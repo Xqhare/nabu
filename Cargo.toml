@@ -2,6 +2,7 @@
 name = "nabu"
 version = "2.0.0"
 edition = "2021"
+rust-version = "1.93.0"
 
 [dependencies]
 athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
