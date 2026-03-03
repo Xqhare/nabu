@@ -95,50 +95,50 @@ Multi-byte data payloads are protected by a 4-byte CRC-32 checksum (ISO-HDLC var
 
 All markers in version 3 are assigned a specific, even-parity byte value based on their group (Simple, Complex, Parent, Internal).
 
-| HEX | Symbol | Description | Group |
-| :---: | :---: | :-- | :---: |
-| `0x00` | NUL | Null | Simple |
-| `0x81` | INF | Infinity | Simple |
-| `0x82` | NINF | Negative Infinity | Simple |
-| `0x84` | NAN | Not a Number | Simple |
-| `0x05` | TRU | True | Simple |
-| `0x06` | FAL | False | Simple |
-| `0xA0` | TXT | Text (UTF-8) | Complex |
-| `0x21` | DAT | Data (Binary) | Complex |
-| `0x22` | SINT | Signed Integer | Complex |
-| `0x27` | UINT | Unsigned Integer | Complex |
-| `0xA3` | FLT | Float (f64) | Complex |
-| `0x24` | DT | Date and Time | Complex |
-| `0xA5` | DUR | Duration | Complex |
-| `0xA6` | UUID | UUID | Complex |
-| `0xC0` | ARY | Array | Parent |
-| `0x41` | OBJ | Object | Parent |
-| `0x42` | OOBJ | Ordered Object | Parent |
-| `0xC3` | TBL | Table | Parent |
-| `0x5F` | META | Metadata | Parent |
-| `0x60` | EV | End of Value | Internal |
-| `0xF0` | EM | End of Medium | Internal |
+| DEC | HEX | Symbol | Description | Group |
+| :---: | :---: | :---: | :-- | :---: |
+| 0 | `0x00` | NUL | Null | Simple |
+| 129 | `0x81` | INF | Infinity | Simple |
+| 130 | `0x82` | NINF | Negative Infinity | Simple |
+| 132 | `0x84` | NAN | Not a Number | Simple |
+| 5 | `0x05` | TRU | True | Simple |
+| 6 | `0x06` | FAL | False | Simple |
+| 160 | `0xA0` | TXT | Text (UTF-8) | Complex |
+| 33 | `0x21` | DAT | Data (Binary) | Complex |
+| 34 | `0x22` | SINT | Signed Integer | Complex |
+| 39 | `0x27` | UINT | Unsigned Integer | Complex |
+| 163 | `0xA3` | FLT | Float (f64) | Complex |
+| 36 | `0x24` | DT | Date and Time | Complex |
+| 165 | `0xA5` | DUR | Duration | Complex |
+| 166 | `0xA6` | UUID | UUID | Complex |
+| 192 | `0xC0` | ARY | Array | Parent |
+| 65 | `0x41` | OBJ | Object | Parent |
+| 66 | `0x42` | OOBJ | Ordered Object | Parent |
+| 195 | `0xC3` | TBL | Table | Parent |
+| 95 | `0x5F` | META | Metadata | Parent |
+| 96 | `0x60` | EV | End of Value | Internal |
+| 240 | `0xF0` | EM | End of Medium | Internal |
 
-For a complete reference of the v3 byte-map, including binary and decimal values, see the [XFF v3 Byte-Map Reference](xff-v3-byte-map.md).
+For a complete reference of the v3 byte-map, including binary values and reserved/unused slots, see the [XFF v3 Byte-Map Reference](xff-v3-byte-map.md).
 
 ## Values
 
-In version 3, the `length` field is used only when a value's size cannot be determined from its marker or encoding.
+In version 3, the `length` field is used only when a value's size cannot be determined from its marker or encoding. This is specifically the case for `Text` and `Data` value types.
 
 ### Length Attribute
 The length is the count of bytes the raw data stream of a value takes up. It is stored as an unsigned integer using LEB128 encoding.
 
-Counting starts immediately after the end of the `length` field. The bytes occupied by the `length` field itself, the type marker, the checksum, and the `EV` marker are not included in this count.
+Counting starts immediately after the end of the `length` field. Not included in this count are the bytes occupied by the `length` field itself, the type marker, the checksum, and the `EV` marker.
 
 ### Simple Values
-Simple values consist only of their marker byte. No length, checksum, or `EV` marker is required.
+Simple values consist only of their marker byte. No length, checksum, or `EV` marker is required. They have inbuilt error detection as their MSB is used as a parity bit.
 
 *   `Null`: Represents a null value.
 *   `True` / `False`: Boolean values.
 *   `NaN` / `Infinity` / `NegInfinity`: Floating-point special values.
 
 ### Complex Values
-Complex values store multi-byte data. They are followed by a CRC-32 checksum and an `EV` marker.
+Complex values store multi-byte data. They contain a CRC-32 checksum and an `EV` marker.
 
 #### Text
 Text is stored as a raw UTF-8 byte stream.
@@ -174,20 +174,16 @@ Parent types use an index-based structure to allow for efficient random access w
 4.  **`[Checksum]`**: A 4-byte CRC-32 covering the `[Element Count]`, `[Offsets]`, and `[Data Block]`.
 
 *   **Array**: A sequence of anonymous values of any type.
-*   **Object**: A sequence of Key-Value pairs. Keys must be `Text` values.
+*   **Object**: A sequence of Key-Value pairs. Keys must be `Text` values. The order of key value pairs is not guaranteed.
 *   **OrderedObject**: Similar to `Object`, but implementations must preserve the insertion order of keys as they appear in the file.
-
-### Table Value
-The `Table` type is an optimized structure for sets of objects with a shared schema (columns). It dramatically reduces overhead by storing column names once and then packing the row values contiguously.
-
-**Structure:** `[Table Marker] [Column Schema] [Row Index] [Row Data] [Checksum] [EV]`
-
-1.  **`[Column Schema]`**: `[Column Count (LEB128)]` + a sequence of `Column Count` `Text` values representing column names.
-2.  **`[Row Index]`**: `[Row Count (LEB128)]` + a sequence of `Row Count` LEB128 offsets. Each offset specifies the start of a row relative to the start of `Row Data`.
-3.  **`[Row Data]`**: The contiguous block of row values. Each row consists of exactly `Column Count` values, matching the order and types implied by the schema. Rows are not individually marked as `Array` or `Object` to save space.
+*   **Table**: An optimized structure for sets of objects with a shared schema (columns). It dramatically reduces overhead by storing column names once and then packing the row values contiguously.
+    **Structure:** `[Table Marker] [Column Schema] [Row Index] [Row Data] [Checksum] [EV]`
+    1.  **`[Column Schema]`**: `[Column Count (LEB128)]` + a sequence of `Column Count` `Text` values representing column names.
+    2.  **`[Row Index]`**: `[Row Count (LEB128)]` + a sequence of `Row Count` LEB128 offsets. Each offset specifies the start of a row relative to the start of `Row Data`.
+    3.  **`[Row Data]`**: The contiguous block of row values. Each row consists of exactly `Column Count` values, matching the order and types implied by the schema. Rows are not individually marked as `Array` or `Object` to save space.
 
 ## End of Medium
-The `EM` marker (`0xF0`) signifies the end of the file stream and follows the main body value.
+The `EM` marker (`0xF0`) signifies the end of the file stream and follows the main body value. While technically superfluous, it is kept to show descendancy from v0, v1, and v2, and serves as a good practice for stream validation.
 
 ---
 
