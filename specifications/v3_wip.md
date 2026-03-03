@@ -1,0 +1,942 @@
+# `.xff` specification v3
+
+> [!note]
+> ***Version 3 is currently a Work-In-Progress draft.***
+
+Started design on 2025-05-24;\
+Complete rethink and finalization of core principles on 2026-01-02;\
+Drafting of finalized specification on 2026-03-03;
+
+---
+
+`.xff` is a specification for storing structured and unstructured data in a binary format.
+It is designed as a binary JSON alternative with a primary focus on universal error detection.
+
+`.xff` stands for `xqhares file format`, pronounced `squares file format`.
+
+Version 3 represents a significant departure from previous versions, reworking the in version 2 introduced two-tier integrity system and introducing an optimized, index-based structure for parent types.
+Unlike version 2, version 3 is not designed for direct byte-level backwards compatibility with the previous version, though any implementation should aim to support reading all previous versions.
+
+While version 3 introduces significantly more integrity checks, it is designed to use roughly the same amount of disk space as version 2, due to the optimization of several value types and the removal of the mandatory `length` field for fixed-size or self-terminating types.
+
+`.xff` is capable of holding any kind of data and any amount of it. The `.xff` format itself has no maximum file size.
+
+A `.xff` file can store several value types:
+
+1. [Simple Values](#simple-values) (`Null`, `Boolean`, `NaN`, `Infinity`)
+2. [Text](#text) (UTF-8)
+3. [Numbers](#numbers) (`Integer`, `Float`)
+4. [Data](#data) (Binary)
+5. [DateTime / Duration / UUID](#specialized-complex-types)
+6. [Arrays](#array)
+7. [Objects](#object)
+8. [Tables](#table-value)
+
+A `.xff` file may never contain zero values.
+
+## Overall File Structure
+
+A `.xff` v3 file follows a strict sequential structure:
+
+1.  **File Signature**: A 4-byte magic number.
+2.  **Head**: Contains metadata and version information.
+3.  **Body**: Consists of exactly **one** single XFF `Value`.
+4.  **Terminator**: The `EM` marker.
+
+### File Signature
+The file begins with a 4-byte magic number, `XFFV` (`0x58 0x46 0x46 0x56`), used for immediate file type identification.
+
+The magic number is technically made up of two parts, `XFF` and `V`.
+`XFF` is an abbreviation for the `.xff` file format, and `V` is a version identifier, as the version encoding immediately follows the signature.
+
+### Head
+The head contains metadata about the file and the version identifier.
+
+#### Version Encoding
+The version is encoded using a custom bit-chain variation of LEB128. This encoding is variable length, where the most significant bit (MSB) of each byte serves as a `continuation bit`.
+
+> [!important]
+> The version is encoded not as a binary number, but as a chain of bits. The order of the bits is from least significant to most significant. The first bit is always part of the version, thus `0` is an acceptable bit and denotes version 0. All bits set to `1` are added together to form the version number. The last version byte is always padded to a full width byte with `0`.
+
+| Hex | Binary | Version |
+| :---: | :---: | :---: |
+| 00 | 0000 0000 | 0 |
+| 01 | 0000 0001 | 1 |
+| 03 | 0000 0011 | 2 |
+| 07 | 0000 0111 | 3 |
+| 0F | 0000 1111 | 4 |
+
+To encode version number 8, two bytes are required: `1111 1111` (all bits 1, MSB=1 continuation) and `0000 0001` (bit 0 is 1, MSB=0 stop).
+
+#### File Metadata (Optional)
+The head may optionally include a single `Metadata` object to provide high-level context.
+
+1.  **Constraints**: To simplify parsing of the file head, the metadata object must be **flat**. It cannot contain nested `Object`s, `Table`s, or recursive `Array`s.
+2.  **Standard Keys**: Implementations are encouraged to use standard keys: 
+    * `creator`: The application or library that generated the file.
+    * `created_at`: `DateTime` of creation.
+    * `source`: Original source of the data (e.g., a URL or database name).
+    * `description`: A human-readable summary of the file content.
+    * `license`: The legal license governing the data.
+
+## Integrity System
+
+Version 3 employs a two-tier integrity system to ensure the correctness of both the file structure and the data it contains.
+
+### 1. Lightweight Check (Parity Bit)
+The most significant bit (MSB) of every **marker byte** defined in the v3 byte-map is a parity bit (even parity). This provides immediate, byte-level error detection for type identifiers and control markers.
+
+The parity rule **only** applies to markers. Raw data bytes (e.g., within `Text` or `Data` blocks) are exempt from the parity constraint but are always covered by a CRC-32 checksum.
+
+### 2. Heavyweight Check (CRC-32)
+Multi-byte data payloads are protected by a 4-byte CRC-32 checksum (ISO-HDLC variant). This checksum is calculated over the raw bytes of the payload.
+
+## V3 Byte-Map
+
+All markers in version 3 are assigned a specific, even-parity byte value based on their group (Simple, Complex, Parent, Internal).
+
+| HEX | Symbol | Description | Group |
+| :---: | :---: | :-- | :---: |
+| `0x00` | NUL | Null | Simple |
+| `0x81` | INF | Infinity | Simple |
+| `0x82` | NINF | Negative Infinity | Simple |
+| `0x84` | NAN | Not a Number | Simple |
+| `0x05` | TRU | True | Simple |
+| `0x06` | FAL | False | Simple |
+| `0xA0` | TXT | Text (UTF-8) | Complex |
+| `0x21` | DAT | Data (Binary) | Complex |
+| `0x22` | SINT | Signed Integer | Complex |
+| `0x27` | UINT | Unsigned Integer | Complex |
+| `0xA3` | FLT | Float (f64) | Complex |
+| `0x24` | DT | Date and Time | Complex |
+| `0xA5` | DUR | Duration | Complex |
+| `0xA6` | UUID | UUID | Complex |
+| `0xC0` | ARY | Array | Parent |
+| `0x41` | OBJ | Object | Parent |
+| `0x42` | OOBJ | Ordered Object | Parent |
+| `0xC3` | TBL | Table | Parent |
+| `0x5F` | META | Metadata | Parent |
+| `0x60` | EV | End of Value | Internal |
+| `0xF0` | EM | End of Medium | Internal |
+
+For a complete reference of the v3 byte-map, including binary and decimal values, see the [XFF v3 Byte-Map Reference](xff-v3-byte-map.md).
+
+## Values
+
+In version 3, the `length` field is used only when a value's size cannot be determined from its marker or encoding.
+
+### Length Attribute
+The length is the count of bytes the raw data stream of a value takes up. It is stored as an unsigned integer using LEB128 encoding.
+
+Counting starts immediately after the end of the `length` field. The bytes occupied by the `length` field itself, the type marker, the checksum, and the `EV` marker are not included in this count.
+
+### Simple Values
+Simple values consist only of their marker byte. No length, checksum, or `EV` marker is required.
+
+*   `Null`: Represents a null value.
+*   `True` / `False`: Boolean values.
+*   `NaN` / `Infinity` / `NegInfinity`: Floating-point special values.
+
+### Complex Values
+Complex values store multi-byte data. They are followed by a CRC-32 checksum and an `EV` marker.
+
+#### Text
+Text is stored as a raw UTF-8 byte stream.
+**Structure**: `[Marker] [Length (LEB128)] [UTF-8 bytes] [CRC-32] [EV]`
+
+#### Numbers
+Numbers are split into `Integer` and `Float` types for optimized storage and processing.
+
+*   **Unsigned Integer**: Stored using standard LEB128 encoding.
+    **Structure**: `[Marker] [LEB128 bytes] [CRC-32] [EV]`
+*   **Signed Integer**: Stored using a custom LEB128 encoding. To handle signedness, the first byte of the LEB128 sequence uses 2 signal bits: Bit 7 for continuation and Bit 6 for signaling (negative/positive). This leaves 6 bits for the initial value fragment. Subsequent bytes follow standard LEB128 (7 bits value, 1 bit continuation).
+    **Structure**: `[Marker] [LEB128 bytes] [CRC-32] [EV]`
+*   **Float**: Stored as a 64-bit IEEE-754 double-precision floating-point number. This ensures a consistent and high-precision representation for decimal values.
+    **Structure**: `[Marker] [8 raw f64 bytes] [CRC-32] [EV]`
+
+#### Data
+Arbitrary binary data. This type is used to embed raw byte streams (e.g., images, encrypted blobs) directly into the XFF structure.
+**Structure**: `[Marker] [Length (LEB128)] [Raw bytes] [CRC-32] [EV]`
+
+#### Specialized Complex Types
+*   **DateTime**: Stored as a LEB128-encoded Unix epoch timestamp (milliseconds since 1970-01-01).
+*   **Duration**: Stored as a LEB128-encoded number of milliseconds.
+*   **UUID**: Stored as a 16-byte raw binary sequence, representing a 128-bit Universally Unique Identifier.
+
+### Parent Values
+Parent types use an index-based structure to allow for efficient random access without parsing the entire container. This is particularly useful for large datasets where only specific elements need to be accessed and enables multithreaded parsing of child elements.
+
+**Structure:** `[Parent Marker] [Element Count] [Offsets...] [Data Block...] [Checksum] [EV]`
+
+1.  **`[Element Count]`**: LEB128-encoded number of child elements.
+2.  **`[Offsets...]`**: A sequence of LEB128-encoded byte offsets, one for each element. Each offset specifies the starting position of a child value relative to the start of the `Data Block`.
+3.  **`[Data Block...]`**: The contiguous block containing the serialized child values.
+4.  **`[Checksum]`**: A 4-byte CRC-32 covering the `[Element Count]`, `[Offsets]`, and `[Data Block]`.
+
+*   **Array**: A sequence of anonymous values of any type.
+*   **Object**: A sequence of Key-Value pairs. Keys must be `Text` values.
+*   **OrderedObject**: Similar to `Object`, but implementations must preserve the insertion order of keys as they appear in the file.
+
+### Table Value
+The `Table` type is an optimized structure for sets of objects with a shared schema (columns). It dramatically reduces overhead by storing column names once and then packing the row values contiguously.
+
+**Structure:** `[Table Marker] [Column Schema] [Row Index] [Row Data] [Checksum] [EV]`
+
+1.  **`[Column Schema]`**: `[Column Count (LEB128)]` + a sequence of `Column Count` `Text` values representing column names.
+2.  **`[Row Index]`**: `[Row Count (LEB128)]` + a sequence of `Row Count` LEB128 offsets. Each offset specifies the start of a row relative to the start of `Row Data`.
+3.  **`[Row Data]`**: The contiguous block of row values. Each row consists of exactly `Column Count` values, matching the order and types implied by the schema. Rows are not individually marked as `Array` or `Object` to save space.
+
+## End of Medium
+The `EM` marker (`0xF0`) signifies the end of the file stream and follows the main body value.
+
+---
+
+<details>
+    <summary>
+        V3 Musings - for prosperity
+    </summary>
+
+## Musings
+After almost a full year of thinking about the future of the `.xff` format, I have finally reached a point where I want to start working on a new version of the format.
+While some of the features I have had in mind for the original v3 spec are still present, I have decided that a full rework of the spec is in order.
+
+Most importantly, I want to rework the byte encoding again, this time for values specifically.
+Firstly, I am going to get rid of all byte markers inside the byte encoding, except for `EV` and `EM`.
+
+Secondly, the value encoding will be 8-bit encoded with 7-bit usable value space. This is because the most significant bit is reserved as a `parity-bit`. All bytes must have an even number of ones and zeros.
+
+The usable space is split into 4 groups by using the 2 bits following the `parity-bit`.
+
+| Group-bits | Group name | Contained values|
+| --------------- | --------------- | --------------- |
+| 00 | Simple Values | Null, Booleans, NaN, Infinity, NegInfinity |
+| 01 | Complex Values | Text, Numbers, Data, Date and Time |
+| 10 | Parent Values | Array, Object, Metadata |
+| 11 | Internal use | EndOfValue, EndOfMedium |
+
+Text will be stored as an utf-8 byte stream. This way Text cannot lose the length field, as no clear boundary between the utf stream and the checksum can be defined without using a byte marker.
+
+Numbers will be expanded to cover several byte values. It can also lose the `length` field.
+1. Unsigned Integers
+2. Signed Integers
+3. Floats (now stored as IEEE)
+
+Date and Time will still be added, it will be stored as a simple LEB128 encoded unix epoch timestamp. This will not need a length field but will have a checksum.
+
+Array and Object will largely stay the same, but lose all marker bytes inside them.
+
+Object support will be extended with the addition of an `Ordered Object` where all elements are always in the same order.
+
+Also a `Table` value will be added - This is just an `Array` of same length `Objects` containing the same key's.
+
+Data will remain unchanged.
+
+The table below still can be worked on - I need to think more about the HEX (the last 4 bits of the 5-bit value specifically)
+
+| Dec | Parity-bit | Group-bits | 5-bit value | Description |
+| --------------- | --------------- | --------------- | --------------- | ------- |
+| 0 | 0 | 00 | 0 0000 | Null |
+| 129 | 1 | 00 | 0 0001 | - |
+| 130 | 1 | 00 | 0 0010 | - |
+| 3 | 0 | 00 | 0 0011 | - |
+| 132 | 1 | 00 | 0 0100 | - |
+| 5 | 0 | 00 | 0 0101 | - |
+| 6 | 0 | 00 | 0 0110 | - |
+| 135 | 1 | 00 | 0 0111 | True |
+| 136 | 1 | 00 | 0 1000 | False |
+| 9 | 0 | 00 | 0 1001 | - |
+| 10 | 0 | 00 | 0 1010 | - |
+| 139 | 1 | 00 | 0 1011 | - |
+| 12 | 0 | 00 | 0 1100 | - |
+| 141 | 1 | 00 | 0 1101 | - |
+| 142 | 1 | 00 | 0 1110 | - |
+| 15 | 0 | 00 | 0 1111 | - |
+| 144 | 1 | 00 | 1 0000 | - |
+| 17 | 0 | 00 | 1 0001 | - |
+| 18 | 0 | 00 | 1 0010 | - |
+| 147 | 1 | 00 | 1 0011 | - |
+| 20 | 0 | 00 | 1 0100 | - |
+| 149 | 1 | 00 | 1 0101 | - |
+| 150 | 1 | 00 | 1 0110 | - |
+| 23 | 0 | 00 | 1 0111 | - |
+| 24 | 0 | 00 | 1 1000 | - |
+| 153 | 1 | 00 | 1 1001 | Infinity |
+| 154 | 1 | 00 | 1 1010 | NegInfinity |
+| 155 | 1 | 00 | 1 1011 | NaN |
+| 156 | 1 | 00 | 1 1100 | - |
+| 29 | 0 | 00 | 1 1101 | - |
+| 30 | 0 | 00 | 1 1110 | - |
+| 159 | 1 | 00 | 1 1111 | - | 
+| 160 | 1 | 01 | 0 0000 | Data |
+| 33 | 0 | 01 | 0 0001 | - |
+| 34 | 0 | 01 | 0 0010 | - |
+| 163 | 1 | 01 | 0 0011 | Text |
+| 36 | 0 | 01 | 0 0100 | - |
+| 165 | 1 | 01 | 0 0101 | - |
+| 166 | 1 | 01 | 0 0110 | - |
+| 39 | 0 | 01 | 0 0111 | - |
+| 40 | 0 | 01 | 0 1000 | Date and Time |
+| 169 | 1 | 01 | 0 1001 | - |
+| 170 | 1 | 01 | 0 1010 | - |
+| 43 | 0 | 01 | 0 1011 | - |
+| 172 | 1 | 01 | 0 1100 | - |
+| 45 | 0 | 01 | 0 1101 | - |
+| 46 | 0 | 01 | 0 1110 | - |
+| 175 | 1 | 01 | 0 1111 | - |
+| 48 | 0 | 01 | 1 0000 | Number - Unsigned Integer |
+| 177 | 1 | 01 | 1 0001 | Number - Signed Integer |
+| 178 | 1 | 01 | 1 0010 | Number - Float |
+| 51 | 0 | 01 | 1 0011 | - |
+| 180 | 1 | 01 | 1 0100 | - |
+| 53 | 0 | 01 | 1 0101 | - |
+| 54 | 0 | 01 | 1 0110 | - |
+| 183 | 1 | 01 | 1 0111 | - |
+| 184 | 1 | 01 | 1 1000 | - |
+| 57 | 0 | 01 | 1 1001 | - |
+| 58 | 0 | 01 | 1 1010 | - |
+| 187 | 1 | 01 | 1 1011 | - |
+| 60 | 0 | 01 | 1 1100 | - |
+| 189 | 1 | 01 | 1 1101 | - |
+| 190 | 1 | 01 | 1 1110 | - |
+| 63 | 0 | 01 | 1 1111 | - |
+| 192 | 1 | 10 | 0 0000 | Array |
+| 65 | 0 | 10 | 0 0001 | - |
+| 66 | 0 | 10 | 0 0010 | - |
+| 195 | 1 | 10 | 0 0011 | - |
+| 68 | 0 | 10 | 0 0100 | - |
+| 197 | 1 | 10 | 0 0101 | - |
+| 198 | 1 | 10 | 0 0110 | - |
+| 71 | 0 | 10 | 0 0111 | - |
+| 72 | 0 | 10 | 0 1000 | - |
+| 201 | 1 | 10 | 0 1001 | - |
+| 202 | 1 | 10 | 0 1010 | - |
+| 75 | 0 | 10 | 0 1011 | - |
+| 204 | 1 | 10 | 0 1100 | - |
+| 77 | 0 | 10 | 0 1101 | - |
+| 78 | 0 | 10 | 0 1110 | - |
+| 207 | 1 | 10 | 0 1111 | - |
+| 80 | 0 | 10 | 1 0000 | Object |
+| 209 | 1 | 10 | 1 0001 | Ordered Object |
+| 210 | 1 | 10 | 1 0010 | - |
+| 83 | 0 | 10 | 1 0011 | - |
+| 212 | 1 | 10 | 1 0100 | - |
+| 85 | 0 | 10 | 1 0101 | - |
+| 86 | 0 | 10 | 1 0110 | - |
+| 215 | 1 | 10 | 1 0111 | - |
+| 216 | 1 | 10 | 1 1000 | Table |
+| 89 | 0 | 10 | 1 1001 | - |
+| 90 | 0 | 10 | 1 1010 | - |
+| 219 | 1 | 10 | 1 1011 | - |
+| 92 | 0 | 10 | 1 1100 | - |
+| 221 | 1 | 10 | 1 1101 | - |
+| 222 | 1 | 10 | 1 1110 | - |
+| 95 | 0 | 10 | 1 1111 | Metadata |
+| 96 | 0 | 11 | 0 0000 | End of value |
+| 225 | 1 | 11 | 0 0001 | - |
+| 226 | 1 | 11 | 0 0010 | - |
+| 99 | 0 | 11 | 0 0011 | - |
+| 228 | 1 | 11 | 0 0100 | - |
+| 101 | 0 | 11 | 0 0110 | - |
+| 102 | 0 | 11 | 0 0110 | - |
+| 231 | 1 | 11 | 0 0111 | - |
+| 232 | 1 | 11 | 0 1000 | - |
+| 105 | 0 | 11 | 0 1001 | - |
+| 106 | 0 | 11 | 0 1010 | - |
+| 235 | 1 | 11 | 0 1011 | - |
+| 108 | 0 | 11 | 0 1100 | - |
+| 237 | 1 | 11 | 0 1101 | - |
+| 238 | 1 | 11 | 0 1110 | - |
+| 111 | 0 | 11 | 0 1111 | - |
+| 240 | 1 | 11 | 1 0000 | End of medium |
+| 113 | 0 | 11 | 1 0001 | - |
+| 114 | 0 | 11 | 1 0010 | - |
+| 243 | 1 | 11 | 1 0011 | - |
+| 116 | 0 | 11 | 1 0100 | - |
+| 245 | 1 | 11 | 1 0101 | - |
+| 246 | 1 | 11 | 1 0110 | - |
+| 119 | 0 | 11 | 1 0111 | - |
+| 120 | 0 | 11 | 1 1000 | - |
+| 249 | 1 | 11 | 1 1001 | - |
+| 250 | 1 | 11 | 1 1010 | - |
+| 123 | 0 | 11 | 1 1011 | - |
+| 252 | 1 | 11 | 1 1100 | - |
+| 125 | 1 | 11 | 1 1101 | - |
+| 126 | 1 | 11 | 1 1110 | - |
+| 255 | 1 | 11 | 1 1111 | RESERVED (as possible continuation byte) |
+
+---
+
+OLD MUSINGS BELOW (let's call it v3_v1)
+
+---
+
+Started work on spec on 2025-06-19;\
+Continued on 2025-06-24;
+
+`.xff` is a specification for storing structured and unstructured data in a binary format.
+
+`xff` stands for `xqhatres file format`, pronounced `squares file format`.
+
+There are several central pillars that form the foundation of the specification:
+
+1. Keep the complexity low.
+2. Keep the computational overhead to a minimum.
+3. The byte structure needs to be streamable.
+
+Version 3 is a continuation of extending the specification to enable storing of all data.
+This version increases the disk space needed from the previous version, the exact size difference depends on the usage pattern of a user.
+
+Most binary data in a `.xff` file is encoded in a custom [ASCII](xff-byte-encoding.md) variation, using `Windows-1252` as its base. 
+Any mention of [ASCII](xff-byte-encoding.md) is to be understood to be referring to [this](xff-byte-encoding.md) subset specifically. 
+In contrast to version 2, three new entries are added to the [ASCII](xff-byte-encoding.md) character set: 
+
+- `0x06` as `DT` - Date and Time
+- `0x14` as `NAN` - Not a Number
+- `0x15` as `INF` - Infinity
+
+`.xff` is capable of holding any kind of data and any amount of it.
+The `.xff` format itself has no maximum file size.
+
+A `.xff` file can store eight value types:
+
+1. [Strings](#strings)
+2. [Numbers](#numbers)
+3. [Data](#data)
+4. [Arrays](#array)
+5. [Objects](#object)
+6. [Boolean's](#boolean)
+7. [Null](#null)
+8. [Date and Time](#date_and_time)
+
+All values are delimited with an `EV` marker.
+
+A `.xff` file may never contain zero values.
+
+The diagram below shows the composition of a `.xff` file in token form.
+
+In it are two coloured regions, one in a light blue in the center, and on in light green surrounding it. 
+The inner light blue region shows the range of calculation for the value checksum. 
+The outer light green region shows the range of calculation for the file checksum. 
+All data inside these regions is part of the checksum calculation. 
+
+The inner light blue region also represents the range of calculation for the length of a value.
+
+![Chart of the composition of data in token form.](../pictures/xff_v3-data-chart.png)
+
+## Version Encoding
+
+> [!important]
+> Any implemenation of the `.xff` specification should be able to read and write all versions of the specification.
+> All implementations may choose any set of versions or a single version and may implement either the ability to read or write, or both.
+
+The version encoding has not changed from version 2 in any way.
+
+The way the version is encoded is similar to the way the length is encoded in LEB128.
+Just as in LEB128, the encoding is variable length and the most significant bit is used as a `continuation bit`.
+
+In contrast to most uses of LEB128, the version is encoded not as a binary number, but as a chain of bits.
+The order of the bits is in from least significant to most significant.
+The first bit is always part of the version, thus `0` is an acceptable bit and denotes version 0.
+All bits set to `1` are added together to form the version.
+
+The last version byte is always padded to a full width byte with `0`.
+
+| Hex | Binary | Version |
+| -------------- | -------------- | --------------- |
+| 00 | 0000 0000 | 0 |
+| 01 | 0000 0001 | 1 |
+| 03 | 0000 0011 | 2 |
+| 07 | 0000 0111 | 3 |
+| 0F | 0000 1111 | 4 |
+
+This means that in practice, the largest version number that can be encoded in one byte is 7 (`0111 1111` in binary). To encode version number 8, two bytes are needed: `0000 0001` and `1111 1111`.
+
+![Chart of the composition of the version in token form.](../pictures/xff_v3-ver-chart.png)
+
+> [!note]
+> Instead of parsing the version from the file, a simple number match may be used to determine the version.
+
+## Checksum
+> [!important]
+> Any implementation of this specification should read anc check the correctness of the checksum of the entire file, as well as the checksums for each value contained in it.
+> If it implements the ability to write, it must be able to generate the correct file and value checksums.
+
+To increase security, and to make corruptions easily detectable all values that have a `length` attribute also have a checksum. This means that only `Null` along with the `Booleans` do not need a checksum.
+
+The checkusm is a 32-bit unsigned integer that is little endian encoded. It is calculated with the CRC-32 algorithm, specifically the ISO-HDLC variant. 
+It is always 4 bytes long and is delimited fom the value with a `CHK` marker. 
+This marker must always preced the checksum.
+
+The checksum of single values is not part of the lenght stored in the `length` field of a value.
+
+A checksum is calculated by using the data of the value, excluding the `length` field, but including the byte markers used in `Array` and `Object` values.
+
+The file checksum is calculated over all bytes inside the `body` of the file. The head and trailing `CHK` and `EV` are excluded.
+
+![Chart of the composition of the checksum in token form.](../pictures/xff_v3-chk-chart.png)
+
+### Checksums for zero length arrays and objects
+As there is no data to calculate a checksum with, the 4 bytes occupied by the checksum are all set to `0`.
+
+## Length
+The length describes the amount of bytes the data of the value takes up.
+It is an unsigned integer, encoded using LEB-128.
+
+This means that the most significant bit is reserved as a `continuation bit` and if set to `1`, the next byte continues the length encoding.
+The `continuation bit` shortens the maximum value that can be encoded in a single byte from 255 to 127. The value 255 would thus be encoded as `0000 0001` and `1111 1111`.
+
+The length may be 0 for empty values.
+
+![Chart of the composition of the length in token form.](../pictures/xff_v3-len-chart.png)
+
+## Values
+
+New in this version of the specification is the addition of a value version.
+The value version is encoded the same way as the file version.
+
+The previous iterations of this specification are now also valid values, as long as they are marked with the correct value version.
+
+# Musings about a future version 3
+
+## TO-DO
+
+- [ ] rework the entirety of the xpec
+- [ ] add a note about keeping the complexity and overhead of the file format low
+- [ ] add streaming considerations to spec
+- [ ] split complete chart
+
+- [ ] add file length
+- [ ] add version field to values
+    - [ ] new `Number` type
+    - [ ] new `Text` type
+    - [ ] new `Object` type
+- [ ] new `DateTime` type
+- [ ] add file metadata field to head
+
+## Musings
+
+I should rework the entirety of the xpec with the release of v3.
+Also, there should be a note about keeping the complexity and overhead of the file format low.
+I like to imagine that one can implement the file format for any hardware, no matter the capabilities.
+
+### Wild Idea 1
+Split the xff-byte-encoding. ASCII could be moved out entirely from it, the spec makes it clear when the bytes are ASCII encoded. This would open up around 230 bytes for markers.
+
+But what would I do with all that byte space? Increase the complexity enormously!
+
+NACK
+I do not think that this is a good idea.
+
+### Add streaming considerations to spec
+`.xff` files should be easily parsed in a streaming fashion. The byte-structure allows for easy tracking of the current position in the file.
+
+As I understand it: They work with a stream of data (who would have thought) and can start decoding it before the entire stream has to be received.
+
+This is possible with `xff` because of the structure of the file - Value markers, delimiters, even the checksum.
+
+ACK
+`xff` is a streaming format, I am sure of it.
+
+### Split complete chart
+With the rise in complexity of v3, it would make sense to split complete chart into two parts:
+
+1. As it is now (literally all possible bytes)
+2. A meta-level higher (all possible value type versions - but high level (e.g. `Metadata` in the header for the `file-metadata` field))
+
+ACK
+Makes the doc nicer, I hope.
+
+### Add file length
+Add a `length` field to the file header. Because of symmetry.
+Sure, it may also be nice to have for different reasons, but I am only considering it for symmetry.
+It would be the last field of the header and exclude the length of the header and itself.
+
+ACK
+Symmetry!
+
+### Error correction
+V2 added error detection, this would be the next logical step.
+
+NACK
+This would add a lot of unwanted complexity to the specification.
+
+### Make value checksums optional
+I could save a lot of space, especially if checksums are not needed for a use-case, if they are optional.
+I do not think that removing the file checksum would be prudent, I want at least some kind of error detection inherent to the file.
+
+NACK
+Too much complexity, too little gain.
+
+### Add version to Values
+Add a version byte to each value except for `Null` and `Boolean`.
+
+Value versions:
+- Version 0: Most values did not yet exist - Also, the still existing Values have changed enormously -> Skip v0.
+- Version 1: The same as in the v1 spec. (V1 length, no checksum, only `EV` marker)
+- Version 2: The same as in the v2 spec. (V2 length, checksum and `EV` marker)
+- Version 3: The newly defined value encodings.
+
+There is the possibility to add sub-versions, like for `Integer` and `Float` for example.
+Somehow I really dislike the idea of adding sub-versions in general.
+
+Any implementation may impose arbitrary limits on value versions.
+
+ACK
+No-brainer, I like it. But no sub-versions.
+Also, keep in mind this increases the complexity a lot!
+
+#### `Number`
+Add `Number` version 3 that accepts `Float` and `Integer` to encode them in binary directly.
+Add `NaN` and `Infinity` as xff byte values. 14 & 15 would fit nicely.
+
+| Version | Description |
+| -------------- | --------------- |
+| 1 | v1 spec length, no checksum, EV marker |
+| 2 | v2 spec length, checksum, EV marker |
+| 3 | no length, checksum only for `Integer` & `Float`, EV marker |
+
+For binary representation it seems to be easiest to split `Number` into `Integer` and `Float`.
+
+`Integer` will be stored LEB128 encoded.
+`Float` would need to be IEEE-754 and could then also store `NaN` and `Infinity`.
+
+All whole numbers are stored as `Integer` with the first byte denoting the sign (`+` or `-`).
+
+- `+` = 0
+- `-` = 255
+
+`Float` should not be used to store `Nan` or `Infinity`, but it should be allowed in the spec.
+
+Number v3 would lose the `length` field - there really is no need for it with LEB128.
+
+Update:
+
+The byte-structure of `float` as stipulated by IEEE-754 and `integer` are similar enough that there are byte-sequences that are shared.
+Maybe pivot back to an early idea of two `LEB128` encoded values divided by some signal-byte. That would make the byte-structure unique.
+Also adds some more flair.
+
+Using `SUB` (Substitute) as the marker byte for `Float` would be a good idea. It's not in use at all right now, and I honestly forgot why I kept it from ASCII.
+I am substituting it for a decimal separator, so the name fits. (There may still be better options like `US` or `RS`)
+
+| Value | Byte-structure |
+| --------------- | --------------- |
+| 1.0 | `+`, 1 LEB-128 encoded, `SUB`, 0 LEB-128 encoded | 
+| -1.0 | `-`, 1 LEB-128 encoded, `SUB`, 0 LEB-128 encoded | 
+| 1 | `+`, 1 LEB-128 encoded |
+| -1 | `-`, 1 LEB-128 encoded |
+
+However, the idea of implementing IEEE-754 has merit, and the easiest way I see is to push it to v4 and introduce it with a new `Number` version.
+(Added it to musings about v4)
+
+Move away from the entire byte to denote positivity or negativity and use LEB-128 signed encoding. 
+There are possible drawbacks:
+2 bits of the first byte are always used as signal bits, reducing the overall xpace from 2^8 to 2^6 -> meaning at most 65 values, including 0.
+It would make it easier to decode though.
+I would need to stipulate that no negative value may be used to represent the decimal places.
+
+##### `NaN` and the `Infinity`s
+Storing `NaN` and `Infinity` as they are in floating point representation seems like a storage xpace waste.
+In a `f32` they still take up 4 bytes. I can reduce this.
+
+`NaN` would take 1 byte, the `NaN` marker.
+
+`Infinity` would take 1 byte, the `Infinity` marker. 
+`NegInfinity` would take 2 bytes, the `-` minus sign and the `Infinity` marker.
+The `-` sign is stored last, this way `NegInfinity` still clearly differs in byte structure from a normal negative `Integer`.
+
+This way I save space and can add a bit more flair.
+
+They do not need a checksum nor length, they are at most 2 bytes long.
+However, for simplicity of the file format and keeping the same byte-structure for all `NUM` values, I would still like to have a checksum and length.
+If I remove the `checksum` field, I need to keep the `length` field at all costs - it would then be the only way to detect any corruption, just as in the v1 spec.
+
+Negative infinity is flipped in its byte structure - This is to make parsing easier.
+
+| Value | Representation | Byte-structure |
+| --------------- | --------------- | --------------- |
+| Not a number | `NaN` | Single byte (probably: 14) |
+| Infinity | `Infinity` | Single byte (probably: 15) |
+| Negative infinity | `-Infinity` | Byte sequence: `Infinity` and `-` minus sign |
+
+ACK
+This has cooked for long enough I think.
+
+#### `Text`
+Add `Text` version 3 that encodes in `UTF-8`.
+
+ACK
+With the removal of `UTF-16` I think this is a no-brainer, and I actually look forward to finally tackle implementing unicode.
+Paves the road for my own `unicode-segmentation` crate. Why not my own `encode_utf8` and `decode_utf8` inside my own `utf8` crate?
+But, the crate is not needed for this, as a rust `String` is already `utf8` encoded and supports all the features I need.
+
+#### Data stores
+Any data store should be able to host any version of any value as long as the version of the value is not larger than the version of the data store it is contained in.
+
+ACK
+Absolutely needed if sub-versions are added.
+
+##### Remove the usage of `RS` completely
+I can save bytes by removing `RS` from the xpec entirely.
+It is not strictly needed for decoding an array nor an object.
+
+NACK
+While a good Idea, I do not think it is really needed. It does not impact file size in any appreciable way, and I think it will complicate the other type changes for data stores.
+
+##### `Array`
+
+###### Dedicated typed arrays
+Introduce dedicated typed arrays. This can again save space by removing the `Value Type` marker along with the `EV` marker. Only a check for 2 checksums right behind each other is needed to detect the end of the array.
+
+The length or the checksum of the values would still be needed for decoding the values.
+
+NACK
+This does add complexity, and it does not really save a lot of space nor is it really useful for anything.
+
+##### `Object`
+For `Object` changes could be made:
+
+1. String / Key Deduplication
+2. Allow integer keys
+3. Remove the trailing `GS`
+4. Add `Object` with a `BTreeSet` for keys instead of the current `BTreeMap`
+
+###### 1. String / Key Deduplication
+Especially in nested objects, it is often the case that the same key is used multiple times.
+E.g. `metadata` can be used multiple times inside the same `xff` file.
+```
+{
+    "files": {
+        {
+            "metadata": {}
+        },
+        {
+            "metadata": {}
+        }
+    }
+
+    "files" ["metadata"]: {
+        {
+            "0": {}
+        },
+        {
+            "0": {}
+        }
+    }
+}
+```
+
+Still need to think about this.
+Like how far up the tree the deduplication should go.
+Also adds a lot of complexity.
+
+To be honest, the only right way is to expand the deduplication up the tree entirely.
+
+This will add a lot of overhead.
+
+In the end, implementing this would mean that every object needs to be traversed at least twice for creation. I believe I can keep it at two passes at most, but time will tell.
+I would first call a `frequency` function, that returns all keys and their frequencies.
+Then sort the keys in descending order of frequency and assign a number to each, the more frequent a key is, the lower the number.
+With this information, I can construct a new object using the deduplicated keys.
+
+NACK
+While I do like this, it adds way to much complexity. It would be better suited for `neith`.
+
+###### 2. Allow integer keys
+This is a no-brainer.
+
+I do forsee problems with implementing this, as all objects up until now are String keys only. A mix of both is not possible as far as I know, I fear this is going to end up being solved by trait masturbation.
+
+This could also be solved with an entirely new `Object` subtype - `IntegerObject`.
+```rust
+enum Object {
+    StringObject(BTreeMap<String, XffValue>),
+    IntegerObject(BTreeMap<u64, XffValue>),
+}
+```
+
+And make my musings in v4 about `Object` very easy.
+
+ACK
+Complex, but worth it.
+
+###### 3. Remove the trailing `GS`
+Again, I can save space by removing the trailing `GS`.
+It too, is not strictly needed for decoding an object.
+
+With NACKing the Array changes, this will probably be NACKed too.
+
+NACK
+This does add complexity, and it does not really save a lot of space nor is it really useful for anything.
+
+###### 4. Add `Object` with a `BTreeSet` for keys instead of the current `BTreeMap`
+Would block all other `Object` changes for v3.
+
+NACK
+Move to v4
+
+#### Date/Time type
+Interesting suggestion from Gemini, explore further.
+
+Would basically be an alias for an u64 holding a unix-timestamp.
+
+This proposal is probably the most xane of all discussed in v3 - and its not even from me!
+
+Also, no length or checksum needed.
+
+Leb encode it.
+
+Byte value of the type marker has to be 6.
+
+ACK
+Low complexity, probably useful.
+
+### Data Compression
+Add compression to the entire file, except the header.
+Compression shouldn't be mandatory. If it is used the proposed file metadata field would be required with the key `compression` setting it between Light, Medium and Full.
+
+My Idea right now would be:
+
+1. Run LZW compression on the data
+2. Run the resulting compressed data through Delta encoding
+3. Run the resulting compressed data through Run-Length encoding
+
+Delta and Run-Length encoding can be implemented in a single pass.
+But this still requires the byte data to be traversed at least twice.
+
+Light compression would be `Delta` and `Run-Length`.
+Medium compression would be `Delta` and `LZW`.
+Full compression would be `Delta`, `Run-Length` and `LZW`.
+
+Maybe also allow for custom compression algorithms by setting `compression` to Custom.
+
+This asks for a new crate, but it is not a priority right now.
+
+Update:
+Implemented `LZW` compression along with `Delta` and `Run-Length` in `athena`. Problems:
+1. LZW compression resulted in a 50% increase in file size more often than it actually saved space.
+2. LZW compression is very slow and takes a long time to compress.
+3. Combining the three is even slower and takes up even more space using real life data.
+
+So: No `Delta` and `Run-Length` first pass.
+The only solution is to add a new compression algorithm, but the only option I have left would be huffman encoding and test that.
+However, `LZW` is supposed to be the faster of the two, and somewhat better at compressing `.xff` files in theory.
+
+After some fiddling, I have found `LZW` compression and `LEB` encoding to compress most `xff` files (there are still cases of size inflation) - Still takes 40sec for 100mb.
+
+NAK
+After considering all of the above, this isn't suitable for the xpec because of overhead and complexity. Also, if there ever is a need for compression, users can (and probably will anyway) just zip the file.
+
+### File metadata field
+Add a `metadata` field to the file header, but existence is optional.
+
+Could store:
+
+- creator application - `String`
+- creation date / time - `u64`
+- content description - `String`
+- keywords (for possible indexing) - `Vec<String>`
+- author / creator - `String`
+- license - `String`
+- source - `String`
+- changelog of all CRUD operations (increases the suitability for auditing)
+- changelog of all file operations - `Object`
+- custom metadata - `Object` OR just new key-value pairs that may be ignored by any other implementation
+
+All fields are optional, and their order does not matter.
+
+Partial ACK
+In general I support this idea. But, the idea of the changelog still needs some work before writing v3.
+
+#### Changelog
+I really like the idea, however I am concerned about the impact on the file size and complexity.
+Especially for an optional feature.
+
+If implemented it would need to always fire first, and it needs to be guaranteed that there would be no way to disable it.
+(Which I can't, when keeping possible external implementations of the file format in mind that want to skirt this feature.)
+
+A CRUD-Log would need a lot more info than below to be useful.
+```
+{
+    "crud_log": {
+        "create_YYYY-MM-DD-HH-MM-SS-MS": {
+            "value_type": VALUE-TYPE,
+            "parent_value": VALUE-TYPE,
+            "value_checksum": CRC-32-CHECKSUM
+        },
+        "read_YYYY-MM-DD-HH-MM-SS-MS": {
+            "value_type": VALUE-TYPE,
+            "parent_value": VALUE-TYPE,
+            "value_checksum": CRC-32-CHECKSUM
+        },
+        "update-MM-DD-HH-MM-SS-MS": {
+            "value_type": VALUE-TYPE,
+            "parent_value": VALUE-TYPE,
+            "old_value_checksum": CRC-32-CHECKSUM
+            "new_value_checksum": CRC-32-CHECKSUM
+        },
+        "delete_YYYY-MM-DD-HH-MM-SS-MS": {
+            "value_type": VALUE-TYPE,
+            "parent_value": VALUE-TYPE,
+            "value_checksum": CRC-32-CHECKSUM
+        }
+    }
+}
+```
+
+NAK (CRUD-Log)
+As fun as it is, its overkill, and it adds a lot of complexity to the file format.
+
+Keeping it restricted to file operations would be less complex, smaller and still somewhat useful for auditing.
+There is still the problem of possible malicious external implementations, but for some reason I feel better about this than the CRUD-Log in this respect.
+```
+{
+    "file_log": {
+        "read_UNIX_TIMESTAMP": {
+            "date_time": YYYY-MM-DD HH:MM:SS.MS,
+            "file_checksum": CRC-32-CHECKSUM
+        },
+        "write_UNIX_TIMESTAMP": {
+            "date_time": YYYY-MM-DD HH:MM:SS.MS,
+            "file_checksum": CRC-32-CHECKSUM
+        }
+    }
+}
+```
+
+Still unsure.
+Don't want to add any more fields, and I wouldn't know what to add anyway.
+It would be an optional feature that is rarely used, but it would be a nice feature to have.
+Also, it's not hard to implement, and doesn't add a lot of overhead.
+Seems more suited for a database than a file format.
+
+NACK
+I am adding a lot of complexity already in the v3 xpec, and I don't want to add more.
+
+## General ideas
+After several months have now passed, I have come to the conclusion that the v3 xpec goes against the goal of keeping the complexity low.
+HOWEVER, v3 seems to be moving the project into a more complete and usefull state.
+I now believe that the v2 xpec would be a good place to stop, as I am only adding features in v3 for the sake of keeping development ongoing.
+
+Having considered this, I am now thinkink that a more complex v3 xpec could be a good idea - but it would need even more complexity.
+The reason for this is simple: to give any user or implementation the ability to customize the way the file is formatted and encoded.
+Some may want to keep checksums, as the file size does not matter to them, but the integrity of the data is paramount. Others may want to keep the file size small, by only using a file-checksum.
+
+The v2 xpec is enough for my needs, and implementing the v3 xpec could be a waste of time.
+Almost every extension proposed for the v3 xpec can already be implemented using the v2 xpec - even though one would need to make liberal use of DATA and OBJECT to achive parity. Not impossible but would take some work to get going.
+
+On the other Hand, if I decide that going forward with v3 would be worth it, I think a even more complex xpec would be worth the effort.
+Sure, the goal of simplicity is still there, but I think I could rethink a lot of things proposed in this xpec, and simplify them into a more streamlined format.
+
+### Change over to a new byte structure
+Instead of using the current byte structure, I am thinking of using a new byte structure.
+The reason is simple, I am using the ASCII byte structure right now, and that does not leave me with a lot of values free to use. Instead I could throw out the entire Idea and build a new one from scratch. That would give me 256 values (more than enough for now). Using the MSB as a continuation bit would give me an unlimited amount of values, and give me 128 possible one byte values (still more than enough for my needs, and a lot easier to extent in the future).
+
+This would lead to two byte structures I need to support, one for v0-2 and one moving forward from v3.
+I would move the CHK, EV, EM, SUB, ESC, FS, GS, RS and US bytes to the last positions, remove BS, HT, LF, VT, FF, CORE entirely, and probably restructure the data types into groups.
+I would also need a closing byte for the extended stuff.
+
+This would remove the need for a version of values, as I could just integrate that into the byte sturcture.
+For example I could use a byte with a set continuation byte for that, followed by a ARY.
+
+I could try and keep the structure backwards compatible, that would make it a lot more complex and harder to understand.
+</details>
