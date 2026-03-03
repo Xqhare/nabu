@@ -56,10 +56,10 @@ Control markers and type identifiers are grouped into four categories using bits
 | 33 | 21 | 00100001 | DAT | Data (Binary) | Complex |
 | 34 | 22 | 00100010 | SINT | Signed Integer (LEB128) | Complex |
 | 163 | A3 | 10100011 | FLT | Float (f64) | Complex |
-| 36 | 24 | 00100100 | DT | Date and Time | Complex |
+| 36 | 24 | 00100100 | UINT | Unsigned Integer (LEB128) | Complex |
 | 165 | A5 | 10100101 | DUR | Duration | Complex |
 | 166 | A6 | 10100110 | UUID | UUID | Complex |
-| 39 | 27 | 00100111 | UINT | Unsigned Integer (LEB128) | Complex |
+| 39 | 27 | 00100111 | DT | Date and Time | Complex |
 | 40 | 28 | 00101000 | -- | Unused | Complex |
 | 169 | A9 | 10101001 | -- | Unused | Complex |
 | 170 | AA | 10101010 | -- | Unused | Complex |
