@@ -1,6 +1,6 @@
 use crate::{
-    error::{NabuError, Result},
     XffValue,
+    error::{NabuError, Result},
 };
 
 pub fn serialize_xff_v1(data: Vec<XffValue>) -> Result<Vec<u8>> {
@@ -47,7 +47,6 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                     }
                 }
                 out
-
             };
             // now byte structure and push
             out.push(1);
@@ -65,14 +64,22 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                     let tmp = char as u8;
                     if tmp == 45 {
                         if neg_used {
-                            return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 1));
+                            return Err(NabuError::NumberContainsInvalidCharacter(
+                                tmp,
+                                n.as_string(),
+                                1,
+                            ));
                         } else {
                             out.push(tmp);
                             neg_used = true;
                         }
                     } else if tmp == 44 || tmp == 46 {
                         if sep_used {
-                            return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 1));
+                            return Err(NabuError::NumberContainsInvalidCharacter(
+                                tmp,
+                                n.as_string(),
+                                1,
+                            ));
                         } else {
                             out.push(tmp);
                             sep_used = true;
@@ -80,11 +87,14 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                     } else if tmp >= 48 && tmp <= 57 {
                         out.push(tmp);
                     } else {
-                        return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 1));
+                        return Err(NabuError::NumberContainsInvalidCharacter(
+                            tmp,
+                            n.as_string(),
+                            1,
+                        ));
                     }
                 }
                 out
-
             };
             // now byte structure and push
             out.push(2);

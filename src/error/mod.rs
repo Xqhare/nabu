@@ -184,7 +184,7 @@ pub enum NabuError {
     InvalidXFFVersion(XffValue, u8),
 
     /// Invalid XFF file checksum
-    /// 
+    ///
     /// # Parameters
     /// * `pos` - The position in the file where the invalid checksum was found
     /// * `version` - The XFF version
@@ -254,38 +254,110 @@ impl fmt::Display for NabuError {
             NabuError::MissingOBJ(u) => write!(f, "Missing OBJ at byte position {}", u),
             NabuError::MissingDAT(u) => write!(f, "Missing DAT at byte position {}", u),
             NabuError::MissingEV(u) => write!(f, "Missing EV at byte position {}", u),
-            NabuError::InvalidNumber(i, n, v) => write!(f, "Invalid XFF version {} number: {} at byte position {}", v, n, i),
-            NabuError::InvalidArray(a, i, v) => write!(f, "Invalid XFF version {} array structure byte: {} at byte position {}. Expected an array separator", v, a, i),
-            NabuError::InvalidObject(o, i, v) => write!(f, "Invalid XFF version {} object structure byte: {} at byte position {}. Expected an object separator", v, o, i),
-            NabuError::InvalidKey(p, val, ver) => write!(f, "Invalid XFF version {} non string key: {} at byte position {}", ver, val, p),
-            NabuError::InvalidXFFValueLength(len, v) => write!(f, "Invalid XFF version {} value length: {}", v, len),
+            NabuError::InvalidNumber(i, n, v) => write!(
+                f,
+                "Invalid XFF version {} number: {} at byte position {}",
+                v, n, i
+            ),
+            NabuError::InvalidArray(a, i, v) => write!(
+                f,
+                "Invalid XFF version {} array structure byte: {} at byte position {}. Expected an array separator",
+                v, a, i
+            ),
+            NabuError::InvalidObject(o, i, v) => write!(
+                f,
+                "Invalid XFF version {} object structure byte: {} at byte position {}. Expected an object separator",
+                v, o, i
+            ),
+            NabuError::InvalidKey(p, val, ver) => write!(
+                f,
+                "Invalid XFF version {} non string key: {} at byte position {}",
+                ver, val, p
+            ),
+            NabuError::InvalidXFFValueLength(len, v) => {
+                write!(f, "Invalid XFF version {} value length: {}", v, len)
+            }
 
             // Xff general serde errors
-            NabuError::InvalidASCIIString(b, i, v) => write!(f, "Invalid ASCII character for XFF version{}: {} at byte position {}", v, b, i),
-            NabuError::InvalidXFFExtension(ext, err) => write!(f, "Invalid {} extension, {}", ext, err),
-            NabuError::InvalidXFFByte(b, i, v) => write!(f, "Invalid XFF byte: {} for Xff Version {} at byte position {}", b, v, i),
-            NabuError::InvalidXFFValueForVersion(value, ver) => write!(f, "Invalid XffValue for xff specification version {}: {:?}", ver, value),
+            NabuError::InvalidASCIIString(b, i, v) => write!(
+                f,
+                "Invalid ASCII character for XFF version{}: {} at byte position {}",
+                v, b, i
+            ),
+            NabuError::InvalidXFFExtension(ext, err) => {
+                write!(f, "Invalid {} extension, {}", ext, err)
+            }
+            NabuError::InvalidXFFByte(b, i, v) => write!(
+                f,
+                "Invalid XFF byte: {} for Xff Version {} at byte position {}",
+                b, v, i
+            ),
+            NabuError::InvalidXFFValueForVersion(value, ver) => write!(
+                f,
+                "Invalid XffValue for xff specification version {}: {:?}",
+                ver, value
+            ),
 
             // Xff v0 serde errors
-            NabuError::InvalidASCIICommandCharacter(b, i) => write!(f, "Invalid ASCII command character: {} at byte position {}", b, i),
+            NabuError::InvalidASCIICommandCharacter(b, i) => write!(
+                f,
+                "Invalid ASCII command character: {} at byte position {}",
+                b, i
+            ),
 
             // Xff file errors
-            NabuError::MissingEM(u) => write!(f, "Missing End of File marker EM, end of file, at expected byte position {}.", u),
+            NabuError::MissingEM(u) => write!(
+                f,
+                "Missing End of File marker EM, end of file, at expected byte position {}.",
+                u
+            ),
             NabuError::EmpthyXFF => write!(f, "Empthy XFF"),
-            NabuError::TruncatedXFF(u, v) => write!(f, "Truncated XFF version {} at byte position {}", v, u),
+            NabuError::TruncatedXFF(u, v) => {
+                write!(f, "Truncated XFF version {} at byte position {}", v, u)
+            }
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {}", ver),
-            NabuError::InvalidXFFVersion(val, ver) => write!(f, "Invalid XffValue for XFF version {}. Value {};", ver, val),
-            NabuError::TruncatedXFFValue(u, v) => write!(f, "Truncated XFF version {} value at byte position {}; ", v, u),
-            NabuError::TruncatedXFFValueChecksum(u, v) => write!(f, "Truncated XFF version {} value checksum at byte position {}", v, u),
+            NabuError::InvalidXFFVersion(val, ver) => write!(
+                f,
+                "Invalid XffValue for XFF version {}. Value {};",
+                ver, val
+            ),
+            NabuError::TruncatedXFFValue(u, v) => write!(
+                f,
+                "Truncated XFF version {} value at byte position {}; ",
+                v, u
+            ),
+            NabuError::TruncatedXFFValueChecksum(u, v) => write!(
+                f,
+                "Truncated XFF version {} value checksum at byte position {}",
+                v, u
+            ),
 
             // checksum errors
-            NabuError::InvalidFileChecksum(c, v) => write!(f, "Invalid XFF version {} file checksum: {}", v, c),
-            NabuError::InvalidXFFValueChecksum(u, v) => write!(f, "Invalid XFF version {} value checksum at byte position {}", v, u),
+            NabuError::InvalidFileChecksum(c, v) => {
+                write!(f, "Invalid XFF version {} file checksum: {}", v, c)
+            }
+            NabuError::InvalidXFFValueChecksum(u, v) => write!(
+                f,
+                "Invalid XFF version {} value checksum at byte position {}",
+                v, u
+            ),
 
             // other errors
-            NabuError::StringContainsNonASCII(s, v) => write!(f, "Invalid XFF version {} string contains non-ASCII characters: {}", v, s),
-            NabuError::NumberContainsInvalidCharacter(c, n, v) => write!(f, "Invalid XFF version {} number contains invalid character: {} in number: {}", v, c, n),
-            NabuError::XFFValueLengthTooLong(l, u, v) => write!(f, "Invalid XFF version {} value length too long: {} at byte position {}", v, l, u),
+            NabuError::StringContainsNonASCII(s, v) => write!(
+                f,
+                "Invalid XFF version {} string contains non-ASCII characters: {}",
+                v, s
+            ),
+            NabuError::NumberContainsInvalidCharacter(c, n, v) => write!(
+                f,
+                "Invalid XFF version {} number contains invalid character: {} in number: {}",
+                v, c, n
+            ),
+            NabuError::XFFValueLengthTooLong(l, u, v) => write!(
+                f,
+                "Invalid XFF version {} value length too long: {} at byte position {}",
+                v, l, u
+            ),
         }
     }
 }

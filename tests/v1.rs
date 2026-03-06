@@ -44,7 +44,10 @@ mod v1 {
 
         object.insert("Array", XffValue::from(array));
 
-        object.insert("Data", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+        object.insert(
+            "Data",
+            XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])),
+        );
 
         let value = XffValue::from(object);
 
@@ -82,7 +85,10 @@ mod v1 {
         assert!(read.is_ok());
         let read = read.unwrap();
         assert!(read.is_object());
-        assert_eq!(read.into_object().unwrap().get("").unwrap(), &XffValue::from("tmp"));
+        assert_eq!(
+            read.into_object().unwrap().get("").unwrap(),
+            &XffValue::from("tmp")
+        );
     }
 
     #[test]
@@ -237,8 +243,12 @@ mod v1 {
         let t_bool = XffValue::from(true);
         let f_bool = XffValue::from(false);
         let non = XffValue::Null;
-        let lorem_short = XffValue::from("Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.");
-        let lorem_long = XffValue::from("Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.");
+        let lorem_short = XffValue::from(
+            "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.",
+        );
+        let lorem_long = XffValue::from(
+            "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.",
+        );
         let xff_val = XffValue::from(vec![
             string,
             u_num,
@@ -251,7 +261,11 @@ mod v1 {
             lorem_long,
         ]);
         assert!(xff_val.is_array());
-        let write = serde::write_legacy("xff-example-data/v1_primitive_values.xff", xff_val.clone(), 1);
+        let write = serde::write_legacy(
+            "xff-example-data/v1_primitive_values.xff",
+            xff_val.clone(),
+            1,
+        );
         assert!(write.is_ok());
 
         let read = serde::read("xff-example-data/v1_primitive_values.xff");
@@ -338,17 +352,41 @@ mod v1 {
             ("key5", XffValue::from(42.69)),
             ("key6", XffValue::from(true)),
             ("key7", XffValue::from(false)),
-            ("key8", XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)])),
+            (
+                "key8",
+                XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]),
+            ),
             ("key9", XffValue::Null),
             ("key10", XffValue::from(54642.69)),
             ("key11", XffValue::from("lorem ipsum")),
-            ("key12", XffValue::from("Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.")),
-            ("key13", XffValue::from("Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.")),
-            ("key14", XffValue::from("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.")),
+            (
+                "key12",
+                XffValue::from(
+                    "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.",
+                ),
+            ),
+            (
+                "key13",
+                XffValue::from(
+                    "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.",
+                ),
+            ),
+            (
+                "key14",
+                XffValue::from(
+                    "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.",
+                ),
+            ),
             ("key15", XffValue::from(true)),
             ("key16", XffValue::from(false)),
-            ("key17", XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)])),
-            ("key18", XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))])),),
+            (
+                "key17",
+                XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]),
+            ),
+            (
+                "key18",
+                XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))])),
+            ),
             ("key19", XffValue::from(42.69)),
         ]));
         let xff_val = XffValue::from(BTreeMap::from([("key0", map_small), ("key1", map_medium)]));
@@ -370,18 +408,30 @@ mod v1 {
         let xff_array = XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]);
         let xff_object = XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))]));
 
-        let write_string = serde::write_legacy("xff-example-data/v1_string.xff", xff_string.clone(), 1);
-        let write_number_f = serde::write_legacy("xff-example-data/v1_number_f.xff", xff_number_f.clone(), 1);
-        let write_number_i = serde::write_legacy("xff-example-data/v1_number_i.xff", xff_number_i.clone(), 1);
-        let write_number_u = serde::write_legacy("xff-example-data/v1_number_u.xff", xff_number_u.clone(), 1);
-        let write_boolean_t =
-            serde::write_legacy("xff-example-data/v1_boolean_t.xff", xff_boolean_t.clone(), 1);
-        let write_boolean_f =
-            serde::write_legacy("xff-example-data/v1_boolean_f.xff", xff_boolean_f.clone(), 1);
+        let write_string =
+            serde::write_legacy("xff-example-data/v1_string.xff", xff_string.clone(), 1);
+        let write_number_f =
+            serde::write_legacy("xff-example-data/v1_number_f.xff", xff_number_f.clone(), 1);
+        let write_number_i =
+            serde::write_legacy("xff-example-data/v1_number_i.xff", xff_number_i.clone(), 1);
+        let write_number_u =
+            serde::write_legacy("xff-example-data/v1_number_u.xff", xff_number_u.clone(), 1);
+        let write_boolean_t = serde::write_legacy(
+            "xff-example-data/v1_boolean_t.xff",
+            xff_boolean_t.clone(),
+            1,
+        );
+        let write_boolean_f = serde::write_legacy(
+            "xff-example-data/v1_boolean_f.xff",
+            xff_boolean_f.clone(),
+            1,
+        );
         let write_null = serde::write_legacy("xff-example-data/v1_null.xff", xff_null.clone(), 1);
         let write_data = serde::write_legacy("xff-example-data/v1_data.xff", xff_data.clone(), 1);
-        let write_array = serde::write_legacy("xff-example-data/v1_array.xff", xff_array.clone(), 1);
-        let write_object = serde::write_legacy("xff-example-data/v1_object.xff", xff_object.clone(), 1);
+        let write_array =
+            serde::write_legacy("xff-example-data/v1_array.xff", xff_array.clone(), 1);
+        let write_object =
+            serde::write_legacy("xff-example-data/v1_object.xff", xff_object.clone(), 1);
 
         assert!(write_string.is_ok());
         assert!(write_number_f.is_ok());
@@ -459,7 +509,8 @@ mod v1 {
 
         let write = serde::write_legacy(
             "xff-example-data/v1_complete_array.xff",
-            XffValue::from(values.clone()), 1,
+            XffValue::from(values.clone()),
+            1,
         );
         assert!(write.is_ok());
 
@@ -494,7 +545,8 @@ mod v1 {
             }
             let write = serde::write_legacy(
                 "xff-example-data/v1_simulated_data.xff",
-                XffValue::from(data), 1,
+                XffValue::from(data),
+                1,
             );
             assert!(write.is_ok());
             println!("gen done");

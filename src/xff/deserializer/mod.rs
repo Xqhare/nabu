@@ -4,12 +4,12 @@ use std::path::Path;
 use std::usize;
 
 use athena::byte_bit::byte_bit_decoder;
-use athena::checksum::{generate_crc32_lookuptable, Crc32Table};
+use athena::checksum::{Crc32Table, generate_crc32_lookuptable};
 use v1::deserialize_xff_v1_value;
 use v2::deserialize_xff_v2_value;
 
 use crate::{Data, Number};
-use crate::{error::NabuError, XffValue};
+use crate::{XffValue, error::NabuError};
 
 pub mod v0;
 use crate::xff::deserializer::v0::deserialize_xff_v0;
@@ -129,24 +129,29 @@ fn deserialize_xff_key_value(
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 1);
 
-                return Ok((
-                    key_bind.into_string().expect("Checked for String!"),
-                    value,
-                ));
+                return Ok((key_bind.into_string().expect("Checked for String!"), value));
             }
         }
     }
 }
 
 #[inline]
-fn deserialize_xff_data(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, len: usize) -> Result<XffValue, NabuError> {
+fn deserialize_xff_data(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    len: usize,
+) -> Result<XffValue, NabuError> {
     //DAT
     let data = content.drain(0..len).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len);
     return Ok(XffValue::from(Data::from(data)));
 }
 
-fn deserialize_xff_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, ver: u8) -> Result<XffValue, NabuError> {
+fn deserialize_xff_number(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    ver: u8,
+) -> Result<XffValue, NabuError> {
     let mut signed = false;
     let mut float = false;
     let mut num_store: Vec<u8> = Default::default();
@@ -166,7 +171,7 @@ fn deserialize_xff_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, ve
                 return Err(NabuError::InvalidNumber(
                     byte_pos.get(),
                     "Multiple decimal points".to_string(),
-                    2
+                    2,
                 ));
             } else {
                 float = true;
@@ -175,11 +180,10 @@ fn deserialize_xff_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, ve
             return Err(NabuError::InvalidNumber(
                 byte_pos.get(),
                 format!("Unexpected character: {}", content.front().unwrap()),
-                ver
+                ver,
             ));
         }
     }
-
 
     let num_as_str = num_store.iter().map(|x| *x as char).collect::<String>();
     if signed && !float {
@@ -212,8 +216,11 @@ fn deserialize_xff_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, ve
     }
 }
 
-fn deserialize_xff_text(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, ver: u8) -> Result<XffValue, NabuError> {
-
+fn deserialize_xff_text(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    ver: u8,
+) -> Result<XffValue, NabuError> {
     let mut str_out: String = Default::default();
     while content.front().is_some() {
         let current_char = content.pop_front().unwrap();

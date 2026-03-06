@@ -1,12 +1,15 @@
 use std::{
-    borrow::Borrow, cell::Cell, collections::{BTreeMap, VecDeque},
+    borrow::Borrow,
+    cell::Cell,
+    collections::{BTreeMap, VecDeque},
 };
 
-use athena::{checksum::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, encoding_and_decoding::deserialize_leb128_unsigned};
-
-use crate::{
-    error::NabuError, XffValue, Data
+use athena::{
+    checksum::{Crc32Table, crc32_with_table, generate_crc32_lookuptable},
+    encoding_and_decoding::deserialize_leb128_unsigned,
 };
+
+use crate::{Data, XffValue, error::NabuError};
 
 use super::{deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};
 
@@ -20,7 +23,10 @@ pub fn deserialize_xff_v2(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
     // check file checksum
     if !check_file_checksum(content, &table) {
         // byte_pos should point to last byte of checksum
-        return Err(NabuError::InvalidFileChecksum(content.len().saturating_sub(1), 2));
+        return Err(NabuError::InvalidFileChecksum(
+            content.len().saturating_sub(1),
+            2,
+        ));
     }
 
     let out = deserialize_xff_v2_value(content, byte_pos.borrow(), &table)?;
@@ -69,13 +75,18 @@ fn check_file_checksum(content: &mut VecDeque<u8>, crc_table: &Crc32Table) -> bo
 }
 
 #[inline]
-fn deserialize_xff_v2_value_checksum(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<u32, NabuError> {
+fn deserialize_xff_v2_value_checksum(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+) -> Result<u32, NabuError> {
     // pop CHK
     if let Some(23) = content.pop_front() {
         byte_pos.set(byte_pos.get() + 1);
         let mut checksum: [u8; 4] = Default::default();
         for i in 0..4 {
-            checksum[i] = content.pop_front().ok_or(NabuError::TruncatedXFFValueChecksum(byte_pos.get(), 2))?;
+            checksum[i] = content
+                .pop_front()
+                .ok_or(NabuError::TruncatedXFFValueChecksum(byte_pos.get(), 2))?;
             byte_pos.set(byte_pos.get() + 1);
         }
         let checksum = u32::from_le_bytes(checksum);
@@ -99,7 +110,11 @@ fn deserialize_xff_v2_value_length(
     }
 }
 
-pub fn deserialize_xff_v2_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
+pub fn deserialize_xff_v2_value(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    table: &Crc32Table,
+) -> Result<XffValue, NabuError> {
     if content.len() == 0 {
         return Err(NabuError::TruncatedXFFValue(byte_pos.get(), 2));
     }
@@ -129,7 +144,11 @@ pub fn deserialize_xff_v2_value(content: &mut VecDeque<u8>, byte_pos: &Cell<usiz
     }
 }
 
-fn deserialize_xff_v2_text(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
+fn deserialize_xff_v2_text(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    table: &Crc32Table,
+) -> Result<XffValue, NabuError> {
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
     let data = content.drain(0..len).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len);
@@ -143,7 +162,10 @@ fn deserialize_xff_v2_text(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, t
     }
     // Return
     if txt_checksum != crc32_with_table(&data, table) {
-        Err(NabuError::InvalidXFFValueChecksum(byte_pos.get().saturating_sub(1), 2))
+        Err(NabuError::InvalidXFFValueChecksum(
+            byte_pos.get().saturating_sub(1),
+            2,
+        ))
     } else {
         // -len
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(6));
@@ -154,7 +176,11 @@ fn deserialize_xff_v2_text(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, t
     }
 }
 
-fn deserialize_xff_v2_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
+fn deserialize_xff_v2_number(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    table: &Crc32Table,
+) -> Result<XffValue, NabuError> {
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
     let mut data = content.drain(0..len).collect::<VecDeque<u8>>();
     byte_pos.set(byte_pos.get() + len);
@@ -168,7 +194,10 @@ fn deserialize_xff_v2_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
     }
     // Return
     if num_checksum != crc32_with_table(data.make_contiguous(), table) {
-        Err(NabuError::InvalidXFFValueChecksum(byte_pos.get().saturating_sub(1), 2))
+        Err(NabuError::InvalidXFFValueChecksum(
+            byte_pos.get().saturating_sub(1),
+            2,
+        ))
     } else {
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(6));
         let out = deserialize_xff_number(&mut data, byte_pos, 2);
@@ -177,7 +206,11 @@ fn deserialize_xff_v2_number(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
     }
 }
 
-fn deserialize_xff_v2_array(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
+fn deserialize_xff_v2_array(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    table: &Crc32Table,
+) -> Result<XffValue, NabuError> {
     //ARY
 
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
@@ -190,7 +223,10 @@ fn deserialize_xff_v2_array(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, 
         let array_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
 
         if crc32_with_table(array_data.make_contiguous(), table) != array_checksum {
-            return Err(NabuError::InvalidXFFValueChecksum(byte_pos.get().saturating_sub(1), 2));
+            return Err(NabuError::InvalidXFFValueChecksum(
+                byte_pos.get().saturating_sub(1),
+                2,
+            ));
         }
         // no EV check -> 5
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(5));
@@ -244,7 +280,11 @@ fn deserialize_xff_v2_array(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, 
     }
 }
 
-fn deserialize_xff_v2_object(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
+fn deserialize_xff_v2_object(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    table: &Crc32Table,
+) -> Result<XffValue, NabuError> {
     //OBJ
 
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
@@ -257,7 +297,10 @@ fn deserialize_xff_v2_object(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
         let obj_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
 
         if crc32_with_table(obj_data.make_contiguous(), table) != obj_checksum {
-            return Err(NabuError::InvalidXFFValueChecksum(byte_pos.get().saturating_sub(1), 2));
+            return Err(NabuError::InvalidXFFValueChecksum(
+                byte_pos.get().saturating_sub(1),
+                2,
+            ));
         }
         byte_pos.set(byte_pos.get().saturating_sub(len));
 
@@ -305,7 +348,11 @@ fn deserialize_xff_v2_object(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>,
     }
 }
 
-fn deserialize_xff_v2_data(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, table: &Crc32Table) -> Result<XffValue, NabuError> {
+fn deserialize_xff_v2_data(
+    content: &mut VecDeque<u8>,
+    byte_pos: &Cell<usize>,
+    table: &Crc32Table,
+) -> Result<XffValue, NabuError> {
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
     let data = content.drain(0..len).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len);
@@ -319,7 +366,10 @@ fn deserialize_xff_v2_data(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>, t
     }
     // Return
     if num_checksum != crc32_with_table(&data, table) {
-        Err(NabuError::InvalidXFFValueChecksum(byte_pos.get().saturating_sub(1), 2))
+        Err(NabuError::InvalidXFFValueChecksum(
+            byte_pos.get().saturating_sub(1),
+            2,
+        ))
     } else {
         let out = XffValue::Data(Data::from(data));
         Ok(out)

@@ -27,7 +27,10 @@ mod v2 {
 
         object.insert("Array", XffValue::from(array));
 
-        object.insert("Data", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+        object.insert(
+            "Data",
+            XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])),
+        );
 
         let value = XffValue::from(object);
 
@@ -57,7 +60,10 @@ mod v2 {
 
         object.insert("Array", XffValue::from(array));
 
-        object.insert("Data", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+        object.insert(
+            "Data",
+            XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])),
+        );
         let value = XffValue::from(object.clone());
         let write = write(path, value.clone());
         assert!(write.is_ok());
@@ -88,7 +94,10 @@ mod v2 {
 
         object.insert("Array", XffValue::from(array));
 
-        object.insert("Data", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
+        object.insert(
+            "Data",
+            XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])),
+        );
         let value = XffValue::from(object.clone());
         object.insert("Object", value.clone());
         let write = write(path, value.clone());
@@ -99,7 +108,6 @@ mod v2 {
         assert_eq!(ok, value);
         let remove = remove_file(path);
         assert!(remove.is_ok());
-
     }
 
     #[test]
@@ -193,7 +201,7 @@ mod v2 {
         let remove = remove_file("xff-example-data/v2_nested_vector.xff");
         assert!(remove.is_ok());
     }
-    
+
     #[test]
     fn actual_data() {
         let path = "xff-example-data/v2_actual_data.xff";
@@ -359,8 +367,12 @@ mod v2 {
         let t_bool = XffValue::from(true);
         let f_bool = XffValue::from(false);
         let non = XffValue::Null;
-        let lorem_short = XffValue::from("Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.");
-        let lorem_long = XffValue::from("Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.");
+        let lorem_short = XffValue::from(
+            "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.",
+        );
+        let lorem_long = XffValue::from(
+            "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.",
+        );
         let xff_val = XffValue::from(vec![
             string,
             u_num,
@@ -460,17 +472,41 @@ mod v2 {
             ("key5", XffValue::from(42.69)),
             ("key6", XffValue::from(true)),
             ("key7", XffValue::from(false)),
-            ("key8", XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)])),
+            (
+                "key8",
+                XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]),
+            ),
             ("key9", XffValue::Null),
             ("key10", XffValue::from(54642.69)),
             ("key11", XffValue::from("lorem ipsum")),
-            ("key12", XffValue::from("Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.")),
-            ("key13", XffValue::from("Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.")),
-            ("key14", XffValue::from("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.")),
+            (
+                "key12",
+                XffValue::from(
+                    "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.",
+                ),
+            ),
+            (
+                "key13",
+                XffValue::from(
+                    "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet. Nisi anim cupidatat excepteur officia. Reprehenderit nostrud nostrud ipsum Lorem est aliquip amet voluptate voluptate dolor minim nulla est proident. Nostrud officia pariatur ut officia. Sit irure elit esse ea nulla sunt ex occaecat reprehenderit commodo officia dolor Lorem duis laboris cupidatat officia voluptate. Culpa proident adipisicing id nulla nisi laboris ex in Lorem sunt duis officia eiusmod. Aliqua reprehenderit commodo ex non excepteur duis sunt velit enim. Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis.",
+                ),
+            ),
+            (
+                "key14",
+                XffValue::from(
+                    "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.",
+                ),
+            ),
             ("key15", XffValue::from(true)),
             ("key16", XffValue::from(false)),
-            ("key17", XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)])),
-            ("key18", XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))])),),
+            (
+                "key17",
+                XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]),
+            ),
+            (
+                "key18",
+                XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))])),
+            ),
             ("key19", XffValue::from(42.69)),
         ]));
         let xff_val = XffValue::from(BTreeMap::from([("key0", map_small), ("key1", map_medium)]));
@@ -628,7 +664,7 @@ mod v2 {
 
         // 100MB file
         //let path = "tests/v2_simulated_data_100-ignore.xff";
-        
+
         let path = "xff-example-data/v2_simulated_data_10.xff";
         let read = serde::read(path);
         assert!(read.is_ok());
@@ -653,7 +689,10 @@ mod v2 {
         let seed = random_from_range(1, 1_000).unwrap();
         for _n in 0..seed {
             //println!("object k-v pair: {}", n);
-            out.insert(make_random_string().into_string().unwrap(), make_random_value(5));
+            out.insert(
+                make_random_string().into_string().unwrap(),
+                make_random_value(5),
+            );
         }
         //println!("obj made");
         XffValue::from(out)

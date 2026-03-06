@@ -1,6 +1,13 @@
-use athena::{byte_bit::byte_bit_encoder, checksum::{crc32_with_table, generate_crc32_lookuptable, Crc32Table}, encoding_and_decoding::serialize_leb128_unsigned};
+use athena::{
+    byte_bit::byte_bit_encoder,
+    checksum::{Crc32Table, crc32_with_table, generate_crc32_lookuptable},
+    encoding_and_decoding::serialize_leb128_unsigned,
+};
 
-use crate::{error::{NabuError, Result}, Array, Data, Number, Object, XffValue};
+use crate::{
+    Array, Data, Number, Object, XffValue,
+    error::{NabuError, Result},
+};
 
 pub fn serialize_xff_v2(data: Vec<XffValue>) -> Result<Vec<u8>> {
     let table: Crc32Table = generate_crc32_lookuptable();
@@ -27,13 +34,13 @@ fn serialize_xff_v2_value(data: &XffValue, table: &Crc32Table) -> Result<Vec<u8>
         XffValue::Data(d) => serialize_xff_v2_data(d, table),
         XffValue::Boolean(b) => {
             if *b {
-                    Ok(vec![16])
-                } else {
-                    Ok(vec![17])
-                }
-        },
+                Ok(vec![16])
+            } else {
+                Ok(vec![17])
+            }
+        }
         XffValue::Null => Ok(vec![0]),
-        _ => Err(NabuError::InvalidXFFVersion(data.clone(), 2))
+        _ => Err(NabuError::InvalidXFFVersion(data.clone(), 2)),
     }
 }
 
@@ -60,7 +67,6 @@ fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Result<Vec<u8>> {
             }
         }
         out
-
     };
     let checksum = crc32_with_table(&tmp, &table);
     // now byte structure and push
@@ -84,14 +90,22 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
             let tmp = char as u8;
             if tmp == 45 {
                 if neg_used {
-                    return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 2));
+                    return Err(NabuError::NumberContainsInvalidCharacter(
+                        tmp,
+                        n.as_string(),
+                        2,
+                    ));
                 } else {
                     out.push(tmp);
                     neg_used = true;
                 }
             } else if tmp == 44 || tmp == 46 {
                 if sep_used {
-                    return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 2));
+                    return Err(NabuError::NumberContainsInvalidCharacter(
+                        tmp,
+                        n.as_string(),
+                        2,
+                    ));
                 } else {
                     out.push(tmp);
                     sep_used = true;
@@ -99,11 +113,14 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
             } else if tmp >= 48 && tmp <= 57 {
                 out.push(tmp);
             } else {
-                return Err(NabuError::NumberContainsInvalidCharacter(tmp, n.as_string(), 2));
+                return Err(NabuError::NumberContainsInvalidCharacter(
+                    tmp,
+                    n.as_string(),
+                    2,
+                ));
             }
         }
         out
-
     };
     let checksum = crc32_with_table(&tmp, &table);
     // now byte structure and push - over allocate for length
@@ -147,7 +164,10 @@ fn serialize_xff_v2_object(o: &Object, table: &Crc32Table) -> Result<Vec<u8>> {
         // GS
         object_bytes.push(29);
         // key
-        object_bytes.extend(serialize_xff_v2_value(&XffValue::from(key.as_str()), table)?);
+        object_bytes.extend(serialize_xff_v2_value(
+            &XffValue::from(key.as_str()),
+            table,
+        )?);
         // US
         object_bytes.push(31);
         // value

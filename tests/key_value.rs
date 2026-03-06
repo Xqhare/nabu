@@ -2,8 +2,8 @@
 #[cfg(feature = "key_value_core")]
 mod legacy_core {
     use nabu::{
-        key_value_core::{new_core_store, read, write},
         CommandCharacter, Data, Number, XffValue,
+        key_value_core::{new_core_store, read, write},
     };
     use std::path::Path;
 
@@ -222,8 +222,8 @@ mod legacy_core {
 #[cfg(feature = "key_value_store")]
 mod legacy_store {
     use nabu::{
-        features::key_value::store::NabuDB, key_value_store::new_nabudb, CommandCharacter, Data,
-        Number, XffValue,
+        CommandCharacter, Data, Number, XffValue, features::key_value::store::NabuDB,
+        key_value_store::new_nabudb,
     };
 
     #[test]

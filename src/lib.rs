@@ -5,7 +5,7 @@ mod error;
 mod xff;
 
 // Re-exported types - XffValue was moved out of Nabu and into Athena
-pub use athena::{XffValue, Array, CommandCharacter, Data, Number, Object};
+pub use athena::{Array, CommandCharacter, Data, Number, Object, XffValue};
 
 /// Most recent finalised version of XFF specification
 const XFF_VERSION: u8 = 2;
@@ -74,11 +74,11 @@ macro_rules! tvec_to_xff_value {
 /// remove_file(path_2).unwrap();
 /// ```
 pub mod serde {
+    use crate::XFF_VERSION;
+    use crate::XffValue;
     use crate::error::NabuError;
     use crate::xff::deserializer::deserialize_xff;
     use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
-    use crate::XffValue;
-    use crate::XFF_VERSION;
 
     /// Reads the content of a XFF file and returns a XffValue
     ///
@@ -202,4 +202,3 @@ pub mod serde {
         Ok(std::fs::remove_file(path_with_xff_extension)?)
     }
 }
-

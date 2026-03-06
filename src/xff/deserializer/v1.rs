@@ -5,15 +5,14 @@ use std::{
     usize,
 };
 
-use crate::{
-    error::NabuError,
-    XffValue,
+use crate::{XffValue, error::NabuError};
+
+use super::{
+    deserialize_xff_data, deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text,
 };
 
-use super::{deserialize_xff_data, deserialize_xff_number, deserialize_xff_text, deserialize_xff_key_value};
-
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
-    // version is byte 0; 
+    // version is byte 0;
     let byte_pos: Cell<usize> = Cell::new(1);
     let out = deserialize_xff_v1_value(contents, byte_pos.borrow())?;
     if contents.len() > 0 {
@@ -23,7 +22,7 @@ pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuE
             Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
         }
     } else {
-        Err(NabuError::TruncatedXFF(byte_pos.get(),1 ))
+        Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
     }
 }
 
@@ -37,24 +36,12 @@ pub fn deserialize_xff_v1_value(
     let cur = content.pop_front().unwrap();
     byte_pos.set(byte_pos.get() + 1);
     match cur {
-        0 => {
-            Ok(XffValue::Null)
-        }
-        1 => {
-            deserialize_xff_v1_text(content, byte_pos)
-        }
-        2 => {
-            deserialize_xff_v1_number(content, byte_pos)
-        }
-        3 => {
-            deserialize_xff_v1_array(content, byte_pos)
-        }
-        4 => {
-            deserialize_xff_v1_object(content, byte_pos)
-        }
-        5 => {
-            deserialize_xff_v1_data(content, byte_pos)
-        }
+        0 => Ok(XffValue::Null),
+        1 => deserialize_xff_v1_text(content, byte_pos),
+        2 => deserialize_xff_v1_number(content, byte_pos),
+        3 => deserialize_xff_v1_array(content, byte_pos),
+        4 => deserialize_xff_v1_object(content, byte_pos),
+        5 => deserialize_xff_v1_data(content, byte_pos),
         16 => {
             //TRU
             return Ok(XffValue::Boolean(true));
@@ -228,7 +215,11 @@ fn deserialize_xff_v1_value_length(
     if len_of_len > 8 {
         return Err(NabuError::InvalidXFFValueLength(len_of_len.into(), 1));
     } else if content.len() < len_of_len as usize {
-        return Err(NabuError::XFFValueLengthTooLong(len_of_len.into(), byte_pos.get(), 1));
+        return Err(NabuError::XFFValueLengthTooLong(
+            len_of_len.into(),
+            byte_pos.get(),
+            1,
+        ));
     }
     let mut len_bytes = content.drain(0..len_of_len as usize).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len_of_len as usize);
