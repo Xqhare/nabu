@@ -16,135 +16,145 @@ Control markers and type identifiers are grouped into four categories using bits
     - `11`: Internal / Control
 - **Value Bits (Bits 4-0)**: 5-bit unique identifier for the marker.
 
+- **More detail: The first Hex value & their relation to the groups**:
+    - `0`, `8`, `1`, `9` - Simple values
+    - `2`, `A`, `3`, `B` - Complex values
+    - `4`, `C`, `5`, `D` - Parent values
+    - `6`, `E`, `7`, `F` - Internal values
+
 ## Marker Table
 
-| DEC | HEX | BIN | Symbol | Description | Group |
-| :---: | :---: | :--------: | :---: | :-- | :---: |
-| 0 | 00 | 00000000 | NUL | Null | Simple |
-| 129 | 81 | 10000001 | INF | Infinity | Simple |
-| 130 | 82 | 10000010 | NINF | Negative Infinity | Simple |
-| 3 | 03 | 00000011 | -- | Unused | Simple |
-| 132 | 84 | 10000100 | NAN | Not a Number | Simple |
-| 5 | 05 | 00000101 | TRU | True | Simple |
-| 6 | 06 | 00000110 | FAL | False | Simple |
-| 135 | 87 | 10000111 | -- | Unused | Simple |
-| 136 | 88 | 10001000 | -- | Unused | Simple |
-| 9 | 09 | 00001001 | -- | Unused | Simple |
-| 10 | 0A | 00001010 | -- | Unused | Simple |
-| 139 | 8B | 10001011 | -- | Unused | Simple |
-| 12 | 0C | 00001100 | -- | Unused | Simple |
-| 141 | 8D | 10001101 | -- | Unused | Simple |
-| 142 | 8E | 10001110 | -- | Unused | Simple |
-| 15 | 0F | 00001111 | -- | Unused | Simple |
-| 144 | 90 | 10010000 | -- | Unused | Simple |
-| 17 | 11 | 00010001 | -- | Unused | Simple |
-| 18 | 12 | 00010010 | -- | Unused | Simple |
-| 147 | 93 | 10010011 | -- | Unused | Simple |
-| 20 | 14 | 00010100 | -- | Unused | Simple |
-| 149 | 95 | 10010101 | -- | Unused | Simple |
-| 150 | 96 | 10010110 | -- | Unused | Simple |
-| 23 | 17 | 00010111 | -- | Unused | Simple |
-| 24 | 18 | 00011000 | -- | Unused | Simple |
-| 153 | 99 | 10011001 | -- | Unused | Simple |
-| 154 | 9A | 10011010 | -- | Unused | Simple |
-| 27 | 1B | 00011011 | -- | Unused | Simple |
-| 156 | 9C | 10011100 | -- | Unused | Simple |
-| 29 | 1D | 00011101 | -- | Unused | Simple |
-| 30 | 1E | 00011110 | -- | Unused | Simple |
-| 159 | 9F | 10011111 | -- | Unused | Simple |
-| 160 | A0 | 10100000 | TXT | Text (UTF-8) | Complex |
-| 33 | 21 | 00100001 | DAT | Data (Binary) | Complex |
-| 34 | 22 | 00100010 | SINT | Signed Integer (LEB128) | Complex |
-| 163 | A3 | 10100011 | FLT | Float (f64) | Complex |
-| 36 | 24 | 00100100 | UINT | Unsigned Integer (LEB128) | Complex |
-| 165 | A5 | 10100101 | DUR | Duration | Complex |
-| 166 | A6 | 10100110 | UUID | UUID | Complex |
-| 39 | 27 | 00100111 | DT | Date and Time | Complex |
-| 40 | 28 | 00101000 | -- | Unused | Complex |
-| 169 | A9 | 10101001 | -- | Unused | Complex |
-| 170 | AA | 10101010 | -- | Unused | Complex |
-| 43 | 2B | 00101011 | -- | Unused | Complex |
-| 172 | AC | 10101100 | -- | Unused | Complex |
-| 45 | 2D | 00101101 | -- | Unused | Complex |
-| 46 | 2E | 00101110 | -- | Unused | Complex |
-| 175 | AF | 10101111 | -- | Unused | Complex |
-| 48 | 30 | 00110000 | -- | Unused | Complex |
-| 177 | B1 | 10110001 | -- | Unused | Complex |
-| 178 | B2 | 10110010 | -- | Unused | Complex |
-| 51 | 33 | 00110011 | -- | Unused | Complex |
-| 180 | B4 | 10110100 | -- | Unused | Complex |
-| 53 | 35 | 00110101 | -- | Unused | Complex |
-| 54 | 36 | 00110110 | -- | Unused | Complex |
-| 183 | B7 | 10110111 | -- | Unused | Complex |
-| 184 | B8 | 10111000 | -- | Unused | Complex |
-| 57 | 39 | 00111001 | -- | Unused | Complex |
-| 58 | 3A | 00111010 | -- | Unused | Complex |
-| 187 | BB | 10111011 | -- | Unused | Complex |
-| 60 | 3C | 00111100 | -- | Unused | Complex |
-| 189 | BD | 10111101 | -- | Unused | Complex |
-| 190 | BE | 10111110 | -- | Unused | Complex |
-| 63 | 3F | 00111111 | -- | Unused | Complex |
-| 192 | C0 | 11000000 | ARY | Array | Parent |
-| 65 | 41 | 01000001 | OBJ | Object | Parent |
-| 66 | 42 | 01000010 | OOBJ | Ordered Object | Parent |
-| 195 | C3 | 11000011 | TBL | Table | Parent |
-| 68 | 44 | 01000100 | -- | Unused | Parent |
-| 197 | C5 | 11000101 | -- | Unused | Parent |
-| 198 | C6 | 11000110 | -- | Unused | Parent |
-| 71 | 47 | 01000111 | -- | Unused | Parent |
-| 72 | 48 | 01001000 | -- | Unused | Parent |
-| 201 | C9 | 11001001 | -- | Unused | Parent |
-| 202 | CA | 11001010 | -- | Unused | Parent |
-| 75 | 4B | 01001011 | -- | Unused | Parent |
-| 204 | CC | 11001100 | -- | Unused | Parent |
-| 77 | 4D | 01001101 | -- | Unused | Parent |
-| 78 | 4E | 01001110 | -- | Unused | Parent |
-| 207 | CF | 11001111 | -- | Unused | Parent |
-| 80 | 50 | 01010000 | -- | Unused | Parent |
-| 209 | D1 | 11010001 | -- | Unused | Parent |
-| 210 | D2 | 11010010 | -- | Unused | Parent |
-| 83 | 53 | 01010011 | -- | Unused | Parent |
-| 212 | D4 | 11010100 | -- | Unused | Parent |
-| 85 | 55 | 01010101 | -- | Unused | Parent |
-| 86 | 56 | 01010110 | -- | Unused | Parent |
-| 215 | D7 | 11010111 | -- | Unused | Parent |
-| 216 | D8 | 11011000 | -- | Unused | Parent |
-| 89 | 59 | 01011001 | -- | Unused | Parent |
-| 90 | 5A | 01011010 | -- | Unused | Parent |
-| 219 | DB | 11011011 | -- | Unused | Parent |
-| 92 | 5C | 01011100 | -- | Unused | Parent |
-| 221 | DD | 11011101 | -- | Unused | Parent |
-| 222 | DE | 11011110 | -- | Unused | Parent |
-| 95 | 5F | 01011111 | META | Metadata | Parent |
-| 96 | 60 | 01100000 | EV | End of Value | Internal |
-| 225 | E1 | 11100001 | -- | Unused | Internal |
-| 226 | E2 | 11100010 | -- | Unused | Internal |
-| 99 | 63 | 01100011 | -- | Unused | Internal |
-| 228 | E4 | 11100100 | -- | Unused | Internal |
-| 101 | 65 | 01100101 | -- | Unused | Internal |
-| 102 | 66 | 01100110 | -- | Unused | Internal |
-| 231 | E7 | 11100111 | -- | Unused | Internal |
-| 232 | E8 | 11101000 | -- | Unused | Internal |
-| 105 | 69 | 01101001 | -- | Unused | Internal |
-| 106 | 6A | 01101010 | -- | Unused | Internal |
-| 235 | EB | 11101011 | -- | Unused | Internal |
-| 108 | 6C | 01101100 | -- | Unused | Internal |
-| 237 | ED | 11101101 | -- | Unused | Internal |
-| 238 | EE | 11101110 | -- | Unused | Internal |
-| 111 | 6F | 01101111 | -- | Unused | Internal |
-| 240 | F0 | 11110000 | EM | End of Medium | Internal |
-| 113 | 71 | 01110001 | -- | Unused | Internal |
-| 114 | 72 | 01110010 | -- | Unused | Internal |
-| 243 | F3 | 11110011 | -- | Unused | Internal |
-| 116 | 74 | 01110100 | -- | Unused | Internal |
-| 245 | F5 | 11110101 | -- | Unused | Internal |
-| 246 | F6 | 11110110 | -- | Unused | Internal |
-| 119 | 77 | 01110111 | -- | Unused | Internal |
-| 120 | 78 | 01111000 | -- | Unused | Internal |
-| 249 | F9 | 11111001 | -- | Unused | Internal |
-| 250 | FA | 11111010 | -- | Unused | Internal |
-| 123 | 7B | 01111011 | -- | Unused | Internal |
-| 252 | FC | 11111100 | -- | Unused | Internal |
-| 125 | 7D | 01111101 | -- | Unused | Internal |
-| 126 | 7E | 01111110 | -- | Unused | Internal |
-| 255 | FF | 11111111 | CONT | Continuation Byte | Internal |
+| DEC | HEX | FULL BIN | PARITY | GROUP | VALUE BITS | SYMBOL | DESC | GROUP NAME |
+| :---: | :---: | :--------: | :---: | :---: | :---: | :---: | :-- | :---: |
+| 0 | 00 | 0 00 00000 | 0 | 00 | 00000 | NUL | Null | Simple |
+| 129 | 81 | 1 00 00001 | 1 | 00 | 00001 | INF | Infinity | Simple |
+| 130 | 82 | 1 00 00010 | 1 | 00 | 00010 | NINF | Negative Infinity | Simple |
+| 3 | 03 | 0 00 00011 | 0 | 00 | 00011 | -- | Unused | Simple |
+| 132 | 84 | 1 00 00100 | 1 | 00 | 00100 | NAN | Not a Number | Simple |
+| 5 | 05 | 0 00 00101 | 0 | 00 | 00101 | TRU | True | Simple |
+| 6 | 06 | 0 00 00110 | 0 | 00 | 00110 | FAL | False | Simple |
+| 135 | 87 | 1 00 00111 | 1 | 00 | 00111 | -- | Unused | Simple |
+| 136 | 88 | 1 00 01000 | 1 | 00 | 01000 | -- | Unused | Simple |
+| 9 | 09 | 0 00 01001 | 0 | 00 | 01001 | -- | Unused | Simple |
+| 10 | 0A | 0 00 01010 | 0 | 00 | 01010 | -- | Unused | Simple |
+| 139 | 8B | 1 00 01011 | 1 | 00 | 01011 | -- | Unused | Simple |
+| 12 | 0C | 0 00 01100 | 0 | 00 | 01100 | -- | Unused | Simple |
+| 141 | 8D | 1 00 01101 | 1 | 00 | 01101 | -- | Unused | Simple |
+| 142 | 8E | 1 00 01110 | 1 | 00 | 01110 | -- | Unused | Simple |
+| 15 | 0F | 0 00 01111 | 0 | 00 | 01111 | -- | Unused | Simple |
+| 144 | 90 | 1 00 10000 | 1 | 00 | 10000 | -- | Unused | Simple |
+| 17 | 11 | 0 00 10001 | 0 | 00 | 10001 | -- | Unused | Simple |
+| 18 | 12 | 0 00 10010 | 0 | 00 | 10010 | -- | Unused | Simple |
+| 147 | 93 | 1 00 10011 | 1 | 00 | 10011 | -- | Unused | Simple |
+| 20 | 14 | 0 00 10100 | 0 | 00 | 10100 | -- | Unused | Simple |
+| 149 | 95 | 1 00 10101 | 1 | 00 | 10101 | -- | Unused | Simple |
+| 150 | 96 | 1 00 10110 | 1 | 00 | 10110 | -- | Unused | Simple |
+| 23 | 17 | 0 00 10111 | 0 | 00 | 10111 | -- | Unused | Simple |
+| 24 | 18 | 0 00 11000 | 0 | 00 | 11000 | -- | Unused | Simple |
+| 153 | 99 | 1 00 11001 | 1 | 00 | 11001 | -- | Unused | Simple |
+| 154 | 9A | 1 00 11010 | 1 | 00 | 11010 | -- | Unused | Simple |
+| 27 | 1B | 0 00 11011 | 0 | 00 | 11011 | -- | Unused | Simple |
+| 156 | 9C | 1 00 11100 | 1 | 00 | 11100 | -- | Unused | Simple |
+| 29 | 1D | 0 00 11101 | 0 | 00 | 11101 | -- | Unused | Simple |
+| 30 | 1E | 0 00 11110 | 0 | 00 | 11110 | -- | Unused | Simple |
+| 159 | 9F | 1 00 11111 | 1 | 00 | 11111 | -- | Unused | Simple |
+| | | | | | | | | |
+| 160 | A0 | 1 01 00000 | 1 | 01 | 00000 | TXT | Text (UTF-8) | Complex |
+| 33 | 21 | 0 01 00001 | 0 | 01 | 00001 | DAT | Data (Binary) | Complex |
+| 34 | 22 | 0 01 00010 | 0 | 01 | 00010 | SINT | Signed Integer (LEB128) | Complex |
+| 163 | A3 | 1 01 00011 | 1 | 01 | 00011 | FLT | Float (f64) | Complex |
+| 36 | 24 | 0 01 00100 | 0 | 01 | 00100 | UINT | Unsigned Integer (LEB128) | Complex |
+| 165 | A5 | 1 01 00101 | 1 | 01 | 00101 | DUR | Duration | Complex |
+| 166 | A6 | 1 01 00110 | 1 | 01 | 00110 | UUID | UUID | Complex |
+| 39 | 27 | 0 01 00111 | 0 | 01 | 00111 | DT | Date and Time | Complex |
+| 40 | 28 | 0 01 01000 | 0 | 01 | 01000 | -- | Unused | Complex |
+| 169 | A9 | 1 01 01001 | 1 | 01 | 01001 | -- | Unused | Complex |
+| 170 | AA | 1 01 01010 | 1 | 01 | 01010 | -- | Unused | Complex |
+| 43 | 2B | 0 01 01011 | 0 | 01 | 01011 | -- | Unused | Complex |
+| 172 | AC | 1 01 01100 | 1 | 01 | 01100 | -- | Unused | Complex |
+| 45 | 2D | 0 01 01101 | 0 | 01 | 01101 | -- | Unused | Complex |
+| 46 | 2E | 0 01 01110 | 0 | 01 | 01110 | -- | Unused | Complex |
+| 175 | AF | 1 01 01111 | 1 | 01 | 01111 | -- | Unused | Complex |
+| 48 | 30 | 0 01 10000 | 0 | 01 | 10000 | -- | Unused | Complex |
+| 177 | B1 | 1 01 10001 | 1 | 01 | 10001 | -- | Unused | Complex |
+| 178 | B2 | 1 01 10010 | 1 | 01 | 10010 | -- | Unused | Complex |
+| 51 | 33 | 0 01 10011 | 0 | 01 | 10011 | -- | Unused | Complex |
+| 180 | B4 | 1 01 10100 | 1 | 01 | 10100 | -- | Unused | Complex |
+| 53 | 35 | 0 01 10101 | 0 | 01 | 10101 | -- | Unused | Complex |
+| 54 | 36 | 0 01 10110 | 0 | 01 | 10110 | -- | Unused | Complex |
+| 183 | B7 | 1 01 10111 | 1 | 01 | 10111 | -- | Unused | Complex |
+| 184 | B8 | 1 01 11000 | 1 | 01 | 11000 | -- | Unused | Complex |
+| 57 | 39 | 0 01 11001 | 0 | 01 | 11001 | -- | Unused | Complex |
+| 58 | 3A | 0 01 11010 | 0 | 01 | 11010 | -- | Unused | Complex |
+| 187 | BB | 1 01 11011 | 1 | 01 | 11011 | -- | Unused | Complex |
+| 60 | 3C | 0 01 11100 | 0 | 01 | 11100 | -- | Unused | Complex |
+| 189 | BD | 1 01 11101 | 1 | 01 | 11101 | -- | Unused | Complex |
+| 190 | BE | 1 01 11110 | 1 | 01 | 11110 | -- | Unused | Complex |
+| 63 | 3F | 0 01 11111 | 0 | 01 | 11111 | -- | Unused | Complex |
+| | | | | | | | | |
+| 192 | C0 | 1 10 00000 | 1 | 10 | 00000 | ARY | Array | Parent |
+| 65 | 41 | 0 10 00001 | 0 | 10 | 00001 | OBJ | Object | Parent |
+| 66 | 42 | 0 10 00010 | 0 | 10 | 00010 | OOBJ | Ordered Object | Parent |
+| 195 | C3 | 1 10 00011 | 1 | 10 | 00011 | TBL | Table | Parent |
+| 68 | 44 | 0 10 00100 | 0 | 10 | 00100 | -- | Unused | Parent |
+| 197 | C5 | 1 10 00101 | 1 | 10 | 00101 | -- | Unused | Parent |
+| 198 | C6 | 1 10 00110 | 1 | 10 | 00110 | -- | Unused | Parent |
+| 71 | 47 | 0 10 00111 | 0 | 10 | 00111 | -- | Unused | Parent |
+| 72 | 48 | 0 10 01000 | 0 | 10 | 01000 | -- | Unused | Parent |
+| 201 | C9 | 1 10 01001 | 1 | 10 | 01001 | -- | Unused | Parent |
+| 202 | CA | 1 10 01010 | 1 | 10 | 01010 | -- | Unused | Parent |
+| 75 | 4B | 0 10 01011 | 0 | 10 | 01011 | -- | Unused | Parent |
+| 204 | CC | 1 10 01100 | 1 | 10 | 01100 | -- | Unused | Parent |
+| 77 | 4D | 0 10 01101 | 0 | 10 | 01101 | -- | Unused | Parent |
+| 78 | 4E | 0 10 01110 | 0 | 10 | 01110 | -- | Unused | Parent |
+| 207 | CF | 1 10 01111 | 1 | 10 | 01111 | -- | Unused | Parent |
+| 80 | 50 | 0 10 10000 | 0 | 10 | 10000 | -- | Unused | Parent |
+| 209 | D1 | 1 10 10001 | 1 | 10 | 10001 | -- | Unused | Parent |
+| 210 | D2 | 1 10 10010 | 1 | 10 | 10010 | -- | Unused | Parent |
+| 83 | 53 | 0 10 10011 | 0 | 10 | 10011 | -- | Unused | Parent |
+| 212 | D4 | 1 10 10100 | 1 | 10 | 10100 | -- | Unused | Parent |
+| 85 | 55 | 0 10 10101 | 0 | 10 | 10101 | -- | Unused | Parent |
+| 86 | 56 | 0 10 10110 | 0 | 10 | 10110 | -- | Unused | Parent |
+| 215 | D7 | 1 10 10111 | 1 | 10 | 10111 | -- | Unused | Parent |
+| 216 | D8 | 1 10 11000 | 1 | 10 | 11000 | -- | Unused | Parent |
+| 89 | 59 | 0 10 11001 | 0 | 10 | 11001 | -- | Unused | Parent |
+| 90 | 5A | 0 10 11010 | 0 | 10 | 11010 | -- | Unused | Parent |
+| 219 | DB | 1 10 11011 | 1 | 10 | 11011 | -- | Unused | Parent |
+| 92 | 5C | 0 10 11100 | 0 | 10 | 11100 | -- | Unused | Parent |
+| 221 | DD | 1 10 11101 | 1 | 10 | 11101 | -- | Unused | Parent |
+| 222 | DE | 1 10 11110 | 1 | 10 | 11110 | -- | Unused | Parent |
+| 95 | 5F | 0 10 11111 | 0 | 10 | 11111 | META | Metadata | Parent |
+| | | | | | | | | |
+| 96 | 60 | 0 11 00000 | 0 | 11 | 00000 | EV | End of Value | Internal |
+| 225 | E1 | 1 11 00001 | 1 | 11 | 00001 | -- | Unused | Internal |
+| 226 | E2 | 1 11 00010 | 1 | 11 | 00010 | -- | Unused | Internal |
+| 99 | 63 | 0 11 00011 | 0 | 11 | 00011 | -- | Unused | Internal |
+| 228 | E4 | 1 11 00100 | 1 | 11 | 00100 | -- | Unused | Internal |
+| 101 | 65 | 0 11 00101 | 0 | 11 | 00101 | -- | Unused | Internal |
+| 102 | 66 | 0 11 00110 | 0 | 11 | 00110 | -- | Unused | Internal |
+| 231 | E7 | 1 11 00111 | 1 | 11 | 00111 | -- | Unused | Internal |
+| 232 | E8 | 1 11 01000 | 1 | 11 | 01000 | -- | Unused | Internal |
+| 105 | 69 | 0 11 01001 | 0 | 11 | 01001 | -- | Unused | Internal |
+| 106 | 6A | 0 11 01010 | 0 | 11 | 01010 | -- | Unused | Internal |
+| 235 | EB | 1 11 01011 | 1 | 11 | 01011 | -- | Unused | Internal |
+| 108 | 6C | 0 11 01100 | 0 | 11 | 01100 | -- | Unused | Internal |
+| 237 | ED | 1 11 01101 | 1 | 11 | 01101 | -- | Unused | Internal |
+| 238 | EE | 1 11 01110 | 1 | 11 | 01110 | -- | Unused | Internal |
+| 111 | 6F | 0 11 01111 | 0 | 11 | 01111 | -- | Unused | Internal |
+| 240 | F0 | 1 11 10000 | 1 | 11 | 10000 | EM | End of Medium | Internal |
+| 113 | 71 | 0 11 10001 | 0 | 11 | 10001 | -- | Unused | Internal |
+| 114 | 72 | 0 11 10010 | 0 | 11 | 10010 | -- | Unused | Internal |
+| 243 | F3 | 1 11 10011 | 1 | 11 | 10011 | -- | Unused | Internal |
+| 116 | 74 | 0 11 10100 | 0 | 11 | 10100 | -- | Unused | Internal |
+| 245 | F5 | 1 11 10101 | 1 | 11 | 10101 | -- | Unused | Internal |
+| 246 | F6 | 1 11 10110 | 1 | 11 | 10110 | -- | Unused | Internal |
+| 119 | 77 | 0 11 10111 | 0 | 11 | 10111 | -- | Unused | Internal |
+| 120 | 78 | 0 11 11000 | 0 | 11 | 11000 | -- | Unused | Internal |
+| 249 | F9 | 1 11 11001 | 1 | 11 | 11001 | -- | Unused | Internal |
+| 250 | FA | 1 11 11010 | 1 | 11 | 11010 | -- | Unused | Internal |
+| 123 | 7B | 0 11 11011 | 0 | 11 | 11011 | -- | Unused | Internal |
+| 252 | FC | 1 11 11100 | 1 | 11 | 11100 | -- | Unused | Internal |
+| 125 | 7D | 0 11 11101 | 0 | 11 | 11101 | -- | Unused | Internal |
+| 126 | 7E | 0 11 11110 | 0 | 11 | 11110 | -- | Unused | Internal |
+| 255 | FF | 1 11 11111 | 1 | 11 | 11111 | CONT | Continuation Byte | Internal |
+| | | | | | | | | |
