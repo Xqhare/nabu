@@ -16,25 +16,16 @@ Control markers and type identifiers are grouped into four categories using bits
     - `11`: Internal / Control
 - **Value Bits (Bits 4-0)**: 5-bit unique identifier for the marker.
 
-- **More detail: The first Hex value & their relation to the groups**:
-    - `0`, `8`, `1`, `9` - Simple values
-    - `2`, `A`, `3`, `B` - Complex values
-    - `4`, `C`, `5`, `D` - Parent values
-    - `6`, `E`, `7`, `F` - Internal values
-    - **Note**: The values, in the order they are written inside the list above, can be used to further 'subdivide' the groups logically.
+### Group Subdivisions
 
-- Simple
-    - `0` `8`: Logical
-    - `1` `9`: Maths
-- Complex
-    - `2` `A`: Normal
-    - `3` `B`: Maths
-- Parent
-    - `4` `C`: Normal
-    - `5` `D`: Special
-- Internal
-    - `6` `E`: Structural
-    - `7` `F`: Foundational
+The high-nibble of the marker’s HEX value can be used to quickly identify each group and the logical subdivisions within that group:
+
+- **Simple Values (Group 00)**: Logical (`0`/`8`) vs. Maths (`1`/`9`)
+- **Complex Values (Group 01)**: Normal (`2`/`A`) vs. Maths (`3`/`B`)
+- **Parent Values (Group 10)**: Normal (`4`/`C`) vs. Special (`5`/`D`)
+- **Internal / Control (Group 11)**: Structural (`6`/`E`) vs. Foundational (`7`/`F`)
+
+This taxonomy allows for bit-level optimization and easy expansion within each category.
 
 ## Marker Table
 
