@@ -68,7 +68,7 @@ This taxonomy allows for bit-level optimization and easy expansion within each c
 | 33 | 21 | 0 01 00001 | 0 | 01 | 00001 | DAT | Data (Binary) | Complex |
 | 34 | 22 | 0 01 00010 | 0 | 01 | 00010 | DUR | Duration | Complex |
 | 163 | A3 | 1 01 00011 | 1 | 01 | 00011 | UUID | UUID | Complex |
-| 36 | 24 | 0 01 00100 | 0 | 01 | 00100 | DT | Date and Time | Complex |
+| 36 | 24 | 0 01 00100 | 0 | 01 | 00100 | DT | DateTime | Complex |
 | 165 | A5 | 1 01 00101 | 1 | 01 | 00101 | -- | Unused | Complex |
 | 166 | A6 | 1 01 00110 | 1 | 01 | 00110 | -- | Unused | Complex |
 | 39 | 27 | 0 01 00111 | 0 | 01 | 00111 | -- | Unused | Complex |
