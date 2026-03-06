@@ -7,33 +7,43 @@ def get_group_name(group_bits):
 
 markers = {
     # (Group, Value): (Symbol, Description)
+    
+    # --- Group 00: Simple ---
+    # Logical (0/8)
     (0, 0): ("NUL", "Null"),
-    (0, 1): ("INF", "Infinity"),
-    (0, 2): ("NINF", "Negative Infinity"),
-    (0, 4): ("NAN", "Not a Number"),
     (0, 5): ("TRU", "True"),
     (0, 6): ("FAL", "False"),
+    # Maths (1/9)
+    (0, 17): ("INF", "Infinity"),
+    (0, 18): ("NINF", "Negative Infinity"),
+    (0, 20): ("NAN", "Not a Number"),
 
-    # Complex - General (Top)
+    # --- Group 01: Complex ---
+    # Normal (2/A)
     (1, 0): ("TXT", "Text (UTF-8)"),
     (1, 1): ("DAT", "Data (Binary)"),
     (1, 2): ("DUR", "Duration"),
     (1, 3): ("UUID", "UUID"),
-    
-    # Complex - Mathematical (Bottom)
-    (1, 28): ("SINT", "Signed Integer (LEB128)"),
-    (1, 29): ("UINT", "Unsigned Integer (LEB128)"),
-    (1, 30): ("FLT", "Float (f64)"),
-    (1, 31): ("DT", "Date and Time"),
+    (1, 4): ("DT", "DateTime"),
+    # Maths (3/B)
+    (1, 29): ("SINT", "Signed Integer (LEB128)"),
+    (1, 30): ("UINT", "Unsigned Integer (LEB128)"),
+    (1, 31): ("FLT", "Float (f64)"),
 
+    # --- Group 10: Parent ---
+    # Normal (4/C)
     (2, 0): ("ARY", "Array"),
     (2, 1): ("OBJ", "Object"),
     (2, 2): ("OOBJ", "Ordered Object"),
     (2, 3): ("TBL", "Table"),
+    # Special (5/D)
     (2, 31): ("META", "Metadata"),
 
+    # --- Group 11: Internal ---
+    # Structural (6/E)
     (3, 0): ("EV", "End of Value"),
     (3, 16): ("EM", "End of Medium"),
+    # Foundational (7/F)
     (3, 31): ("CONT", "Continuation Byte"),
 }
 
