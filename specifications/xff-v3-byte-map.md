@@ -3,7 +3,7 @@
 This document provides the complete 8-bit byte mapping for all markers and type identifiers in the `.xff` version 3 specification.
 
 ## Overview
-The XFF v3 byte-map is designed with a two-tier integrity system. Every marker byte defined below maintains **even parity** via its most significant bit (MSB).
+The XFF v3 byte-map is a part of the two-tier integrity system. Every marker byte defined below maintains **even parity** via its most significant bit (MSB).
 
 Control markers and type identifiers are grouped into four categories using bits 6 and 5 (the "Group Bits").
 
@@ -21,16 +21,30 @@ Control markers and type identifiers are grouped into four categories using bits
     - `2`, `A`, `3`, `B` - Complex values
     - `4`, `C`, `5`, `D` - Parent values
     - `6`, `E`, `7`, `F` - Internal values
+    - **Note**: The values, in the order they are written inside the list above, can be used to further 'subdivide' the groups logically.
+
+- Simple
+    - `0` `8`: Logical
+    - `1` `9`: Maths
+- Complex
+    - `2` `A`: Normal
+    - `3` `B`: Maths
+- Parent
+    - `4` `C`: Normal
+    - `5` `D`: Special
+- Internal
+    - `6` `E`: Structural
+    - `7` `F`: Foundational
 
 ## Marker Table
 
 | DEC | HEX | FULL BIN | PARITY | GROUP | VALUE BITS | SYMBOL | DESC | GROUP NAME |
 | :---: | :---: | :--------: | :---: | :---: | :---: | :---: | :-- | :---: |
 | 0 | 00 | 0 00 00000 | 0 | 00 | 00000 | NUL | Null | Simple |
-| 129 | 81 | 1 00 00001 | 1 | 00 | 00001 | INF | Infinity | Simple |
-| 130 | 82 | 1 00 00010 | 1 | 00 | 00010 | NINF | Negative Infinity | Simple |
+| 129 | 81 | 1 00 00001 | 1 | 00 | 00001 | -- | Unused | Simple |
+| 130 | 82 | 1 00 00010 | 1 | 00 | 00010 | -- | Unused | Simple |
 | 3 | 03 | 0 00 00011 | 0 | 00 | 00011 | -- | Unused | Simple |
-| 132 | 84 | 1 00 00100 | 1 | 00 | 00100 | NAN | Not a Number | Simple |
+| 132 | 84 | 1 00 00100 | 1 | 00 | 00100 | -- | Unused | Simple |
 | 5 | 05 | 0 00 00101 | 0 | 00 | 00101 | TRU | True | Simple |
 | 6 | 06 | 0 00 00110 | 0 | 00 | 00110 | FAL | False | Simple |
 | 135 | 87 | 1 00 00111 | 1 | 00 | 00111 | -- | Unused | Simple |
@@ -43,10 +57,10 @@ Control markers and type identifiers are grouped into four categories using bits
 | 142 | 8E | 1 00 01110 | 1 | 00 | 01110 | -- | Unused | Simple |
 | 15 | 0F | 0 00 01111 | 0 | 00 | 01111 | -- | Unused | Simple |
 | 144 | 90 | 1 00 10000 | 1 | 00 | 10000 | -- | Unused | Simple |
-| 17 | 11 | 0 00 10001 | 0 | 00 | 10001 | -- | Unused | Simple |
-| 18 | 12 | 0 00 10010 | 0 | 00 | 10010 | -- | Unused | Simple |
+| 17 | 11 | 0 00 10001 | 0 | 00 | 10001 | INF | Infinity | Simple |
+| 18 | 12 | 0 00 10010 | 0 | 00 | 10010 | NINF | Negative Infinity | Simple |
 | 147 | 93 | 1 00 10011 | 1 | 00 | 10011 | -- | Unused | Simple |
-| 20 | 14 | 0 00 10100 | 0 | 00 | 10100 | -- | Unused | Simple |
+| 20 | 14 | 0 00 10100 | 0 | 00 | 10100 | NAN | Not a Number | Simple |
 | 149 | 95 | 1 00 10101 | 1 | 00 | 10101 | -- | Unused | Simple |
 | 150 | 96 | 1 00 10110 | 1 | 00 | 10110 | -- | Unused | Simple |
 | 23 | 17 | 0 00 10111 | 0 | 00 | 10111 | -- | Unused | Simple |
@@ -61,12 +75,12 @@ Control markers and type identifiers are grouped into four categories using bits
 | | | | | | | | | |
 | 160 | A0 | 1 01 00000 | 1 | 01 | 00000 | TXT | Text (UTF-8) | Complex |
 | 33 | 21 | 0 01 00001 | 0 | 01 | 00001 | DAT | Data (Binary) | Complex |
-| 34 | 22 | 0 01 00010 | 0 | 01 | 00010 | SINT | Signed Integer (LEB128) | Complex |
-| 163 | A3 | 1 01 00011 | 1 | 01 | 00011 | FLT | Float (f64) | Complex |
-| 36 | 24 | 0 01 00100 | 0 | 01 | 00100 | UINT | Unsigned Integer (LEB128) | Complex |
-| 165 | A5 | 1 01 00101 | 1 | 01 | 00101 | DUR | Duration | Complex |
-| 166 | A6 | 1 01 00110 | 1 | 01 | 00110 | UUID | UUID | Complex |
-| 39 | 27 | 0 01 00111 | 0 | 01 | 00111 | DT | Date and Time | Complex |
+| 34 | 22 | 0 01 00010 | 0 | 01 | 00010 | DUR | Duration | Complex |
+| 163 | A3 | 1 01 00011 | 1 | 01 | 00011 | UUID | UUID | Complex |
+| 36 | 24 | 0 01 00100 | 0 | 01 | 00100 | DT | Date and Time | Complex |
+| 165 | A5 | 1 01 00101 | 1 | 01 | 00101 | -- | Unused | Complex |
+| 166 | A6 | 1 01 00110 | 1 | 01 | 00110 | -- | Unused | Complex |
+| 39 | 27 | 0 01 00111 | 0 | 01 | 00111 | -- | Unused | Complex |
 | 40 | 28 | 0 01 01000 | 0 | 01 | 01000 | -- | Unused | Complex |
 | 169 | A9 | 1 01 01001 | 1 | 01 | 01001 | -- | Unused | Complex |
 | 170 | AA | 1 01 01010 | 1 | 01 | 01010 | -- | Unused | Complex |
@@ -87,10 +101,10 @@ Control markers and type identifiers are grouped into four categories using bits
 | 57 | 39 | 0 01 11001 | 0 | 01 | 11001 | -- | Unused | Complex |
 | 58 | 3A | 0 01 11010 | 0 | 01 | 11010 | -- | Unused | Complex |
 | 187 | BB | 1 01 11011 | 1 | 01 | 11011 | -- | Unused | Complex |
-| 60 | 3C | 0 01 11100 | 0 | 01 | 11100 | -- | Unused | Complex |
-| 189 | BD | 1 01 11101 | 1 | 01 | 11101 | -- | Unused | Complex |
-| 190 | BE | 1 01 11110 | 1 | 01 | 11110 | -- | Unused | Complex |
-| 63 | 3F | 0 01 11111 | 0 | 01 | 11111 | -- | Unused | Complex |
+| 60 | 3C | 0 01 11100 | 0 | 01 | 11100 | --- | Unused | Complex |
+| 189 | BD | 1 01 11101 | 1 | 01 | 11101 | SINT | Signed Integer (LEB128) | Complex |
+| 190 | BE | 1 01 11110 | 1 | 01 | 11110 | UINT | Unsigned Integer (LEB128) | Complex |
+| 63 | 3F | 0 01 11111 | 0 | 01 | 11111 | FLT | Float (f64) | Complex |
 | | | | | | | | | |
 | 192 | C0 | 1 10 00000 | 1 | 10 | 00000 | ARY | Array | Parent |
 | 65 | 41 | 0 10 00001 | 0 | 10 | 00001 | OBJ | Object | Parent |
