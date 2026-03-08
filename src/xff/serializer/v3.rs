@@ -10,13 +10,13 @@ use crate::xff::v3_markers::{ARY, DAT, DT, DUR, EM, EV, FAL, FLT, INF, MAGIC, ME
 ///
 /// # Errors
 /// Errors if serialization fails or if metadata is invalid.
-pub fn serialize_xff_v3(data: Vec<XffValue>) -> Result<Vec<u8>> {
+pub fn serialize_xff_v3(data: &[XffValue]) -> Result<Vec<u8>> {
     // If the first value is Metadata, move it to the head
     if let Some(XffValue::Metadata(meta)) = data.first() {
         let body = data.get(1).cloned().unwrap_or(XffValue::Null);
         serialize_xff_v3_with_metadata(&[body], Some(meta.clone().map))
     } else {
-        serialize_xff_v3_with_metadata(&data, None)
+        serialize_xff_v3_with_metadata(data, None)
     }
 }
 

@@ -14,39 +14,36 @@ use crate::xff::serializer::v2::serialize_xff_v2;
 pub mod v3;
 use crate::xff::serializer::v3::serialize_xff_v3;
 
-/// Takes in a Vec of XffValues and serializes it into a byte vector
+/// Takes in a Vec of `XffValues` and serializes it into a byte vector
 ///
 /// Determines the XFF version to use and calls the appropriate serializer
 ///
-/// Because of version 0, the data argument has to be a vector, even if only one XffElement is
+/// Because of version 0, the data argument has to be a vector, even if only one `XffElement` is
 /// permissable as with version 1. In this case just "wrap" it in a vector, only the first element
 /// is used.
 ///
 /// # Arguments
-/// * `path` - The path to the file to write
-/// * `data` - The Vec of XffValues to write
-/// * `ver` - The XFF version to use
+/// * `data` - The Vec of `XffValues` to write
+/// * `version` - The XFF version to use
 ///
 /// # Errors
-/// Returns IO errors when issues with reading the file from disk occur
+/// Returns `NabuError` when serialization fails or version is unknown.
 pub fn serialize_xff(data: Vec<XffValue>, version: u8) -> Result<Vec<u8>> {
     match version {
         0 => serialize_xff_v0(data),
         1 => {
-            if data.len() != 1 {
-                let pos = 1;
-                return Err(NabuError::TruncatedXFF(pos, version));
+            if data.is_empty() {
+                return Err(NabuError::TruncatedXFF(1, version));
             }
-            serialize_xff_v1(data)
+            serialize_xff_v1(&data)
         }
         2 => {
-            if data.len() != 1 {
-                let pos = 1;
-                return Err(NabuError::TruncatedXFF(pos, version));
+            if data.is_empty() {
+                return Err(NabuError::TruncatedXFF(1, version));
             }
-            serialize_xff_v2(data)
+            serialize_xff_v2(&data)
         }
-        3 => serialize_xff_v3(data),
+        3 => serialize_xff_v3(&data),
         _ => Err(NabuError::UnknownXFFVersion(version)),
     }
 }
