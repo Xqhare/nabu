@@ -9,9 +9,14 @@ use crate::{
 //                      LEGACY CODE
 // ---------------------------------------------------
 
+/// Deserializes XFF version 0 content.
+///
+/// # Errors
+/// Errors if the content is malformed or truncated according to v0 specification.
+#[allow(clippy::too_many_lines)]
 pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
     let xff_ver = 0;
-    let mut out: Vec<XffValue> = Default::default();
+    let mut out: Vec<XffValue> = Vec::default();
     // version is byte 0;
     let mut byte_pos: usize = 1;
 
@@ -28,7 +33,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
     let mut cmd_amount = usize::MIN;
     let mut cmd_time_sum: std::time::Duration = std::time::Duration::ZERO;
 
-    while content.len() > 0 {
+    while !content.is_empty() {
         let now_main = std::time::Instant::now();
         if debug {
             if print_details {
@@ -42,7 +47,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                 byte_pos += 1;
                 b
             } else {
-                Err(NabuError::TruncatedXFF(byte_pos, 0))?
+                return Err(NabuError::TruncatedXFF(byte_pos, 0));
             }
         };
         byte_pos += 1;
@@ -57,36 +62,36 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                             byte_pos += 1;
                             b
                         } else {
-                            Err(NabuError::TruncatedXFF(byte_pos, 0))?
+                            return Err(NabuError::TruncatedXFF(byte_pos, 0));
                         }
                     };
                     byte_pos += 1;
-                    if current_char >= 8 && current_char <= 13 {
+                    if (8..=13).contains(&current_char) {
                         // command characters
                         match current_char {
                             8 => {
                                 // Backspace
-                                tmp_string_binding.push('\x08')
+                                tmp_string_binding.push('\x08');
                             }
                             9 => {
                                 // Horizontal Tab
-                                tmp_string_binding.push('\t')
+                                tmp_string_binding.push('\t');
                             }
                             10 => {
                                 // Line Feed
-                                tmp_string_binding.push('\n')
+                                tmp_string_binding.push('\n');
                             }
                             11 => {
                                 // Vertical Tab
-                                tmp_string_binding.push('\x0b')
+                                tmp_string_binding.push('\x0b');
                             }
                             12 => {
                                 // Form Feed
-                                tmp_string_binding.push('\x0c')
+                                tmp_string_binding.push('\x0c');
                             }
                             13 => {
                                 // Carriage Return
-                                tmp_string_binding.push('\r')
+                                tmp_string_binding.push('\r');
                             }
                             _ => {
                                 unreachable!()
@@ -94,14 +99,14 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                         }
                     }
                     // All valid ASCII string characters
-                    if current_char >= 32 && current_char <= 126
+                    if (32..=126).contains(&current_char)
                         || current_char == 128
-                        || current_char >= 130 && current_char <= 140
+                        || (130..=140).contains(&current_char)
                         || current_char == 142
-                        || current_char >= 145 && current_char <= 156
+                        || (145..=156).contains(&current_char)
                         || current_char >= 158
                     {
-                        tmp_string_binding.push(char::from_u32(current_char as u32).unwrap());
+                        tmp_string_binding.push(char::from_u32(u32::from(current_char)).unwrap());
                     } else {
                         return Err(NabuError::InvalidASCIIString(current_char, byte_pos, 0));
                     }
@@ -116,7 +121,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                 if debug {
                     let elapsed = now.elapsed();
                     if print_details {
-                        println!("STX Elapsed: {:.2?}", elapsed);
+                        println!("STX Elapsed: {elapsed:.2?}");
                     }
                     stx_amount += 1;
                     stx_time_sum += elapsed;
@@ -130,12 +135,15 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                     content[0], content[1], content[2], content[3], content[4], 0, 0, 0,
                 ]);
                 let _ = content.drain(0..5);
+                #[allow(clippy::cast_possible_truncation)]
                 let data = content.drain(0..data_length as usize).collect::<Vec<u8>>();
-                byte_pos += data_length as usize + 5;
+                #[allow(clippy::cast_possible_truncation)]
+                { byte_pos += data_length as usize + 5; }
 
                 if content[0] == 16 {
                     let _ = content.pop_front();
                     byte_pos += 1;
+                    #[allow(clippy::cast_possible_truncation)]
                     out.push(XffValue::Data(Data {
                         len: data_length as usize,
                         data,
@@ -143,71 +151,68 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                     if debug {
                         let elapsed = now.elapsed();
                         if print_details {
-                            println!("DLE Elapsed: {:.2?}", elapsed);
+                            println!("DLE Elapsed: {elapsed:.2?}");
                         }
                         dle_amount += 1;
                         dle_time_sum += elapsed;
                     }
                     continue;
-                } else {
-                    return Err(NabuError::MissingDLE(byte_pos));
                 }
+                return Err(NabuError::MissingDLE(byte_pos));
             }
             25 => {
                 // EM
                 if debug {
                     let elapsed = now_main.elapsed();
                     if print_details {
-                        println!("Loop Elapsed: {:.2?}", elapsed);
+                        println!("Loop Elapsed: {elapsed:.2?}");
                     }
                     loop_time_sum += elapsed;
-                    if print_details || true {
-                        if stx_amount > 0 {
-                            println!("------------------------------------");
-                            println!("STX Amount: {}", stx_amount);
-                            println!("STX Time Sum: {:.2?}", stx_time_sum);
-                            println!(
-                                "STX Time Average: {:.2?}",
-                                stx_time_sum / stx_amount.try_into().unwrap()
-                            );
-                        }
-                        if dle_amount > 0 {
-                            println!("------------------------------------");
-                            println!("DLE Amount: {}", dle_amount);
-                            println!("DLE Time Sum: {:.2?}", dle_time_sum);
-                            println!(
-                                "DLE Time Average: {:.2?}",
-                                dle_time_sum / dle_amount.try_into().unwrap()
-                            );
-                        }
-                        if cmd_amount > 0 {
-                            println!("------------------------------------");
-                            println!("CMD Amount: {}", cmd_amount);
-                            println!("CMD Time Sum: {:.2?}", cmd_time_sum);
-                            println!(
-                                "CMD Time Average: {:.2?}",
-                                cmd_time_sum / cmd_amount.try_into().unwrap()
-                            );
-                        }
-                        if loop_amount > 0 {
-                            println!("------------------------------------");
-                            println!("Loop Amount: {}", loop_amount);
-                            println!("Loop Time Sum: {:.2?}", loop_time_sum);
-                            println!(
-                                "Loop Time Average: {:.2?}",
-                                loop_time_sum / loop_amount.try_into().unwrap()
-                            );
-                            println!("------------------------------------");
-                        }
+                    if stx_amount > 0 {
+                        println!("------------------------------------");
+                        println!("STX Amount: {stx_amount}");
+                        println!("STX Time Sum: {stx_time_sum:.2?}");
+                        println!(
+                            "STX Time Average: {:.2?}",
+                            stx_time_sum / stx_amount.try_into().unwrap()
+                        );
+                    }
+                    if dle_amount > 0 {
+                        println!("------------------------------------");
+                        println!("DLE Amount: {dle_amount}");
+                        println!("DLE Time Sum: {dle_time_sum:.2?}");
+                        println!(
+                            "DLE Time Average: {:.2?}",
+                            dle_time_sum / dle_amount.try_into().unwrap()
+                        );
+                    }
+                    if cmd_amount > 0 {
+                        println!("------------------------------------");
+                        println!("CMD Amount: {cmd_amount}");
+                        println!("CMD Time Sum: {cmd_time_sum:.2?}");
+                        println!(
+                            "CMD Time Average: {:.2?}",
+                            cmd_time_sum / cmd_amount.try_into().unwrap()
+                        );
+                    }
+                    if loop_amount > 0 {
+                        println!("------------------------------------");
+                        println!("Loop Amount: {loop_amount}");
+                        println!("Loop Time Sum: {loop_time_sum:.2?}");
+                        println!(
+                            "Loop Time Average: {:.2?}",
+                            loop_time_sum / loop_amount.try_into().unwrap()
+                        );
+                        println!("------------------------------------");
                     }
                     println!("------------------------------------");
                     println!("TOTALS:");
                     let t_time = stx_time_sum + dle_time_sum + cmd_time_sum + loop_time_sum;
                     let t_amount = stx_amount + dle_amount + cmd_amount + loop_amount;
                     let t_time_o_val = t_time / t_amount.try_into().unwrap();
-                    println!("Total Time: {:.2?}", t_time);
-                    println!("Total Values: {}", t_amount);
-                    println!("Total Time over Values: {:.2?}", t_time_o_val);
+                    println!("Total Time: {t_time:.2?}");
+                    println!("Total Values: {t_amount}");
+                    println!("Total Time over Values: {t_time_o_val:.2?}");
                     println!("------------------------------------");
                 }
                 return Ok(out.into());
@@ -221,14 +226,14 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                         // ESC inverse check
                         if current_cmd_char != 27 {
                             let val = CommandCharacter::from_u8_checked(current_cmd_char);
-                            if val.is_none() {
-                                return Err(NabuError::InvalidASCIICommandCharacter(
-                                    current_cmd_char,
-                                    byte_pos,
-                                ));
+                            if let Some(v) = val {
+                                out.push(XffValue::CommandCharacter(v));
+                                continue;
                             }
-                            out.push(XffValue::CommandCharacter(val.unwrap()));
-                            continue;
+                            return Err(NabuError::InvalidASCIICommandCharacter(
+                                current_cmd_char,
+                                byte_pos,
+                            ));
                         }
                         // Ending ESC
                         if content[0] != 27 {
@@ -240,12 +245,12 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                     } else {
                         // pop front returned None, truncation!
                         return Err(NabuError::TruncatedXFF(byte_pos, 0));
-                    };
+                    }
                 }
                 if debug {
                     let elapsed = now.elapsed();
                     if print_details {
-                        println!("ESC Elapsed: {:.2?}", elapsed);
+                        println!("ESC Elapsed: {elapsed:.2?}");
                     }
                     cmd_amount += 1;
                     cmd_time_sum += elapsed;
@@ -258,7 +263,7 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
         if debug {
             let elapsed = now_main.elapsed();
             if print_details {
-                println!("Loop Elapsed: {:.2?}", elapsed);
+                println!("Loop Elapsed: {elapsed:.2?}");
             }
             loop_time_sum += elapsed;
         }
