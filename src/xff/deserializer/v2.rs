@@ -11,7 +11,7 @@ use athena::{
 
 use crate::{Data, XffValue, error::NabuError};
 
-use super::{deserialize_xff_data, deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};
+use super::{deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};
 
 /// Deserializes XFF version 2 content.
 ///
@@ -40,14 +40,11 @@ pub fn deserialize_xff_v2(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
 
     // EM check
     if content.is_empty() {
-        Err(NabuError::TruncatedXFF(byte_pos.get(), 2))
-    } else {
-        if content[0] == 25 && content.len() == 1 {
-            Ok(out)
-        } else {
-            Err(NabuError::TruncatedXFF(byte_pos.get(), 2))
-        }
+        return Err(NabuError::TruncatedXFF(byte_pos.get(), 2));
+    } else if content[0] == 25 && content.len() == 1 {
+        return Ok(out);
     }
+    Err(NabuError::TruncatedXFF(byte_pos.get(), 2))
 }
 
 fn check_file_checksum(content: &mut VecDeque<u8>, crc_table: &Crc32Table) -> bool {
@@ -249,13 +246,12 @@ fn deserialize_xff_v2_array(
                     return Ok(XffValue::from(ary_bind));
                 }
                 return Err(NabuError::MissingEV(byte_pos.get()));
-            } else {
-                if array_data[0] != 30 {
-                    return Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2));
-                }
-                let _ = array_data.pop_front();
-                byte_pos.set(byte_pos.get() + 1);
             }
+            if array_data[0] != 30 {
+                return Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2));
+            }
+            let _ = array_data.pop_front();
+            byte_pos.set(byte_pos.get() + 1);
         }
         Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2))
     } else {
