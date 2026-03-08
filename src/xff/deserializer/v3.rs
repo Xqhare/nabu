@@ -36,6 +36,7 @@ pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> Result<XffValue
 }
 
 /// Internal recursive deserializer for XFF v3 values.
+#[allow(clippy::too_many_lines)]
 fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     let marker_pos = *cursor;
     let marker = read_byte(content, cursor)?;
