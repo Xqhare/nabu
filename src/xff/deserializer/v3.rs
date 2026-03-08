@@ -14,7 +14,7 @@ use crate::xff::v3_markers::{ARY, DAT, DT, DUR, EM, EV, FAL, FLT, INF, META, NAN
 pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     // 1. Check for Head Metadata (optional)
     let mut head_metadata = None;
-    if *cursor < content.len() && content[*cursor] == ensure_parity(META) {
+    if *cursor < content.len() && content[*cursor] == META {
         head_metadata = Some(deserialize_v3_value(content, cursor)?);
     }
 
@@ -23,7 +23,7 @@ pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> Result<XffValue
 
     // 3. Terminator: EM
     let em_marker = read_byte(content, cursor)?;
-    if em_marker != ensure_parity(EM) {
+    if em_marker != EM {
         return Err(NabuError::MissingEM(*cursor));
     }
 
@@ -45,14 +45,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
 
     match marker {
-        m if m == ensure_parity(NUL) => Ok(XffValue::Null),
-        m if m == ensure_parity(TRU) => Ok(XffValue::Boolean(true)),
-        m if m == ensure_parity(FAL) => Ok(XffValue::Boolean(false)),
-        m if m == ensure_parity(NAN) => Ok(XffValue::NaN),
-        m if m == ensure_parity(INF) => Ok(XffValue::Infinity),
-        m if m == ensure_parity(NINF) => Ok(XffValue::NegInfinity),
+        NUL => Ok(XffValue::Null),
+        TRU => Ok(XffValue::Boolean(true)),
+        FAL => Ok(XffValue::Boolean(false)),
+        NAN => Ok(XffValue::NaN),
+        INF => Ok(XffValue::Infinity),
+        NINF => Ok(XffValue::NegInfinity),
         
-        m if m == ensure_parity(TXT) => {
+        TXT => {
             let start = *cursor;
             let (len, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
@@ -68,7 +68,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) {
+            if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
             
@@ -78,7 +78,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             Ok(XffValue::String(s))
         }
 
-        m if m == ensure_parity(UINT) => {
+        UINT => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
@@ -91,13 +91,13 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) {
+            if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
             Ok(XffValue::Number(Number::from(val)))
         }
 
-        m if m == ensure_parity(SINT) => {
+        SINT => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_signed_v3(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
@@ -110,7 +110,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) {
+            if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
             #[allow(clippy::cast_possible_truncation)]
@@ -118,7 +118,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             Ok(XffValue::Number(num))
         }
 
-        m if m == ensure_parity(FLT) => {
+        FLT => {
             let start = *cursor;
             let val = read_f64_le(content, cursor)?;
             let checksum_start = *cursor;
@@ -129,13 +129,13 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) {
+            if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
             Ok(XffValue::Number(Number::from(val)))
         }
 
-        m if m == ensure_parity(DAT) => {
+        DAT => {
             let start = *cursor;
             let (len, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
@@ -151,14 +151,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) {
+            if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
             
             Ok(XffValue::Data(Data::from(content[data_start..checksum_start].to_vec())))
         }
 
-        m if m == ensure_parity(DT) => {
+        DT => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
@@ -169,11 +169,11 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
             }
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) { return Err(NabuError::MissingEV(*cursor - 1)); }
+            if ev != EV { return Err(NabuError::MissingEV(*cursor - 1)); }
             Ok(XffValue::DateTime(val as u64))
         }
 
-        m if m == ensure_parity(DUR) => {
+        DUR => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
@@ -184,11 +184,11 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
             }
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) { return Err(NabuError::MissingEV(*cursor - 1)); }
+            if ev != EV { return Err(NabuError::MissingEV(*cursor - 1)); }
             Ok(XffValue::Duration(val as u64))
         }
 
-        m if m == ensure_parity(UUID) => {
+        UUID => {
             let start = *cursor;
             if *cursor + 16 > content.len() { return Err(NabuError::TruncatedXFFValue(*cursor, 3)); }
             let uuid_bytes = &content[*cursor..*cursor + 16];
@@ -199,16 +199,16 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
             }
             let ev = read_byte(content, cursor)?;
-            if ev != ensure_parity(EV) { return Err(NabuError::MissingEV(*cursor - 1)); }
+            if ev != EV { return Err(NabuError::MissingEV(*cursor - 1)); }
             Ok(XffValue::Uuid(Uuid::new(uuid_bytes.try_into().unwrap())))
         }
 
-        m if m == ensure_parity(ARY) => {
+        ARY => {
             let elements = deserialize_v3_parent_elements(content, cursor)?;
             Ok(XffValue::Array(Array::from(elements)))
         }
 
-        m if m == ensure_parity(OBJ) || m == ensure_parity(OOBJ) => {
+        OBJ | OOBJ => {
             let elements = deserialize_v3_parent_elements(content, cursor)?;
             if elements.len() % 2 != 0 {
                 return Err(NabuError::InvalidObject(*cursor, 0, 3));
@@ -218,18 +218,18 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 let key = elements[i].as_string().cloned().ok_or(NabuError::InvalidKey(*cursor, elements[i].clone(), 3))?;
                 pairs.push((key, elements[i+1].clone()));
             }
-            if marker == ensure_parity(OBJ) {
+            if marker == OBJ {
                 Ok(XffValue::Object(Object::from(pairs)))
             } else {
                 Ok(XffValue::OrderedObject(pairs))
             }
         }
 
-        m if m == ensure_parity(TBL) => {
+        TBL => {
             deserialize_v3_table(content, cursor)
         }
 
-        m if m == ensure_parity(META) => {
+        META => {
             let elements = deserialize_v3_parent_elements(content, cursor)?;
             if elements.len() % 2 != 0 {
                 return Err(NabuError::InvalidObject(*cursor, 0, 3));
@@ -272,7 +272,7 @@ fn deserialize_v3_parent_elements(content: &[u8], cursor: &mut usize) -> Result<
     }
     
     let ev = read_byte(content, cursor)?;
-    if ev != ensure_parity(EV) {
+    if ev != EV {
         return Err(NabuError::MissingEV(*cursor - 1));
     }
     
@@ -344,7 +344,7 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
 
     let ev = read_byte(content, cursor)?;
-    if ev != ensure_parity(EV) {
+    if ev != EV {
         return Err(NabuError::MissingEV(*cursor - 1));
     }
 
@@ -379,9 +379,4 @@ fn read_f64_le(content: &[u8], cursor: &mut usize) -> Result<f64> {
     let bytes = &content[*cursor..*cursor + 8];
     *cursor += 8;
     Ok(f64::from_le_bytes(bytes.try_into().unwrap()))
-}
-
-/// Simple proxy for athena's parity utility.
-fn ensure_parity(marker: u8) -> u8 {
-    athena::byte_bit::ensure_even_parity(marker)
 }
