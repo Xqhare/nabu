@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
+#![warn(clippy::pedantic)]
 
 mod error;
 
@@ -80,12 +81,12 @@ pub mod serde {
     use crate::xff::deserializer::deserialize_xff;
     use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
 
-    /// Reads the content of a XFF file and returns a XffValue
+    /// Reads the content of a XFF file and returns a `XffValue`
     ///
     /// # Arguments
     /// * `path` - The path to the file to read
     ///
-    /// # Error
+    /// # Errors
     /// Errors if the file is not a valid XFF file or if an IO error occurs
     ///
     /// # Example
@@ -106,17 +107,17 @@ pub mod serde {
         deserialize_xff(&path_with_xff_extension)
     }
 
-    /// Writes XffValues to a XFF file
+    /// Writes `XffValues` to a XFF file
     ///
     /// Uses the most up to date version of the XFF specification.
     /// To write legacy versions, please refer to `write_legacy`.
     ///
     /// # Arguments
     /// * `path` - The path to the file to write
-    /// * `data` - The XffValue to write
+    /// * `data` - The `XffValue` to write
     ///
-    /// # Error
-    /// Only errors if an IO error occurs
+    /// # Errors
+    /// Errors if an IO error occurs or if serialization fails.
     ///
     /// # Example
     /// ```rust
@@ -137,7 +138,7 @@ pub mod serde {
         write_bytes_to_file(&path_with_xff_extension, byte_data)
     }
 
-    /// Writes a Vec of XffValues to a XFF file with a specific XFF version
+    /// Writes a Vec of `XffValues` to a XFF file with a specific XFF version
     /// Provided for backwards compatibility and convenience
     ///
     /// Only use a Vector with more than one element if using version 0.
@@ -147,8 +148,8 @@ pub mod serde {
     /// * `data` - The data to write
     /// * `xff_version` - The XFF version to use
     ///
-    /// # Error
-    /// Only errors if an IO error occurs
+    /// # Errors
+    /// Errors if an IO error occurs or if serialization fails.
     ///
     /// # Example
     /// ```rust
@@ -179,8 +180,8 @@ pub mod serde {
     /// # Arguments
     /// * `path` - The path to the file to remove
     ///
-    /// # Error
-    /// Only errors if an IO error occurs
+    /// # Errors
+    /// Errors if an IO error occurs.
     ///
     /// # Example
     /// ```rust
