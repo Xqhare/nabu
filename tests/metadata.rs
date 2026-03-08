@@ -1,6 +1,6 @@
-use nabu::XffValue;
-use nabu::serde::{read, write, remove_file};
 use athena::Metadata;
+use nabu::XffValue;
+use nabu::serde::{read, remove_file, write};
 
 #[test]
 fn test_metadata_basic() {
@@ -19,25 +19,25 @@ fn test_metadata_basic() {
 #[test]
 fn test_v3_roundtrip_with_metadata() {
     let path = "test_meta_roundtrip.xff";
-    
+
     let mut meta = Metadata::new();
     meta.set_creator("Gemini".to_string());
-    
+
     let body = XffValue::from("The Body Content");
-    
+
     // In our new API, if the first value is Metadata, it's moved to the head
     let data = vec![XffValue::Metadata(meta.clone()), body.clone()];
-    
+
     write(path, data).unwrap();
-    
+
     let read_val = read(path).unwrap();
-    
+
     // Deserializer returns [Metadata, Body] if head metadata was present
     if let XffValue::Array(ary) = read_val {
         assert_eq!(ary.len(), 2);
         assert!(ary[0].is_metadata());
         assert_eq!(ary[1], body);
-        
+
         let read_meta = ary[0].as_metadata().expect("Should be metadata");
         assert_eq!(read_meta.get_creator(), Some("Gemini".to_string()));
     } else {
@@ -51,9 +51,9 @@ fn test_v3_roundtrip_with_metadata() {
 fn test_v3_roundtrip_no_metadata() {
     let path = "test_no_meta.xff";
     let body = XffValue::from("Just the body");
-    
+
     write(path, body.clone()).unwrap();
-    
+
     let read_val = read(path).unwrap();
     assert_eq!(read_val, body); // No metadata, so just returns the body
 
@@ -63,7 +63,7 @@ fn test_v3_roundtrip_no_metadata() {
 #[test]
 fn test_v3_strict_metadata_enforcement() {
     let path = "test_strict_meta.xff";
-    
+
     // 1. Array of primitives SHOULD be allowed now
     let mut meta = Metadata::new();
     meta.set_custom("valid_array", vec![XffValue::from(1), XffValue::from(2)]);
@@ -76,10 +76,13 @@ fn test_v3_strict_metadata_enforcement() {
     let nested_array = vec![XffValue::from(vec![XffValue::from(1)])];
     meta.set_custom("invalid_nested", nested_array);
     let data = vec![XffValue::Metadata(meta), XffValue::Null];
-    
+
     let result = write(path, data);
     assert!(result.is_err());
     if let Err(e) = result {
-        assert!(e.to_string().contains("Metadata must not contain nested parent types"));
+        assert!(
+            e.to_string()
+                .contains("Metadata must not contain nested parent types")
+        );
     }
 }

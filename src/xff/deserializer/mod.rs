@@ -42,8 +42,9 @@ pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
     // Check for v3 Magic Number
     if content.starts_with(&[0x58, 0x46, 0x46, 0x56]) {
         let mut cursor = 4;
-        let (ver, len) = athena::encoding_and_decoding::deserialize_version_bit_chain(&content[cursor..])
-            .map_err(|_| NabuError::UnknownXFFVersion(0))?;
+        let (ver, len) =
+            athena::encoding_and_decoding::deserialize_version_bit_chain(&content[cursor..])
+                .map_err(|_| NabuError::UnknownXFFVersion(0))?;
         cursor += len as usize;
 
         if ver == 3 {

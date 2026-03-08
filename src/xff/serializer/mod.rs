@@ -38,14 +38,14 @@ pub fn serialize_xff(data: Vec<XffValue>, version: u8) -> Result<Vec<u8>> {
                 return Err(NabuError::TruncatedXFF(pos, version));
             }
             serialize_xff_v1(data)
-        },
+        }
         2 => {
             if data.len() != 1 {
                 let pos = 1;
                 return Err(NabuError::TruncatedXFF(pos, version));
             }
             serialize_xff_v2(data)
-        },
+        }
         3 => serialize_xff_v3(data),
         _ => Err(NabuError::UnknownXFFVersion(version)),
     }

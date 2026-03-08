@@ -401,7 +401,11 @@ impl fmt::Display for NabuError {
                 i
             ),
             NabuError::InvalidTableSchema(i) => {
-                write!(f, "XFF version 3 invalid table schema at byte position {}", i)
+                write!(
+                    f,
+                    "XFF version 3 invalid table schema at byte position {}",
+                    i
+                )
             }
             NabuError::UnsupportedParentType(i) => write!(
                 f,

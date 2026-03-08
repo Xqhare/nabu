@@ -1,7 +1,9 @@
-use athena::{XffValue, Metadata};
-use athena::encoding_and_decoding::{serialize_version_bit_chain, serialize_leb128_unsigned, serialize_leb128_signed_v3};
 use athena::byte_bit::ensure_even_parity;
 use athena::checksum::crc32;
+use athena::encoding_and_decoding::{
+    serialize_leb128_signed_v3, serialize_leb128_unsigned, serialize_version_bit_chain,
+};
+use athena::{Metadata, XffValue};
 
 use crate::error::Result;
 use crate::xff::v3_markers::*;
@@ -18,7 +20,10 @@ pub fn serialize_xff_v3(data: Vec<XffValue>) -> Result<Vec<u8>> {
 }
 
 /// Serializes XFF values with optional metadata into a byte vector using the v3 specification.
-pub fn serialize_xff_v3_with_metadata(data: Vec<XffValue>, metadata: Option<athena::Object>) -> Result<Vec<u8>> {
+pub fn serialize_xff_v3_with_metadata(
+    data: Vec<XffValue>,
+    metadata: Option<athena::Object>,
+) -> Result<Vec<u8>> {
     let mut out = Vec::with_capacity(1024); // Start with a reasonable baseline
 
     // 1. File Signature
@@ -31,9 +36,11 @@ pub fn serialize_xff_v3_with_metadata(data: Vec<XffValue>, metadata: Option<athe
     if let Some(meta) = metadata {
         let metadata_wrapped = Metadata::from(meta);
         if !metadata_wrapped.is_strict_v3_compliant() {
-            return Err(crate::error::NabuError::InvalidMetadata("Metadata must not contain nested parent types".to_string()));
+            return Err(crate::error::NabuError::InvalidMetadata(
+                "Metadata must not contain nested parent types".to_string(),
+            ));
         }
-        
+
         let mut pairs: Vec<XffValue> = Vec::with_capacity(metadata_wrapped.len() * 2);
         for (k, v) in &metadata_wrapped.map.map {
             pairs.push(XffValue::String(k.clone()));
@@ -66,27 +73,27 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::String(s) => {
             let utf8_bytes = s.as_bytes();
             let len_bytes = serialize_leb128_unsigned(utf8_bytes.len());
-            
+
             // Pre-allocate: Marker (1) + Len + Data + Checksum (4) + EV (1)
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + utf8_bytes.len());
             buf.push(ensure_even_parity(TXT));
-            
+
             let mut payload = len_bytes;
             payload.extend_from_slice(utf8_bytes);
-            
+
             let checksum = crc32(&payload);
-            
+
             buf.extend(payload);
             buf.extend_from_slice(&checksum.to_le_bytes());
             buf.push(ensure_even_parity(EV));
             Ok(buf)
         }
-        XffValue::Number(n) => {
-            serialize_v3_number(n)
-        }
+        XffValue::Number(n) => serialize_v3_number(n),
         XffValue::Metadata(meta) => {
             if !meta.is_strict_v3_compliant() {
-                return Err(crate::error::NabuError::InvalidMetadata("Metadata must not contain nested parent types".to_string()));
+                return Err(crate::error::NabuError::InvalidMetadata(
+                    "Metadata must not contain nested parent types".to_string(),
+                ));
             }
             let mut pairs: Vec<XffValue> = Vec::with_capacity(meta.len() * 2);
             for (k, v) in &meta.map.map {
@@ -98,15 +105,15 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::Data(d) => {
             let raw_bytes = &d.data;
             let len_bytes = serialize_leb128_unsigned(raw_bytes.len());
-            
+
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + raw_bytes.len());
             buf.push(ensure_even_parity(DAT));
-            
+
             let mut payload = len_bytes;
             payload.extend_from_slice(raw_bytes);
-            
+
             let checksum = crc32(&payload);
-            
+
             buf.extend(payload);
             buf.extend_from_slice(&checksum.to_le_bytes());
             buf.push(ensure_even_parity(EV));
@@ -142,9 +149,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             buf.push(ensure_even_parity(EV));
             Ok(buf)
         }
-        XffValue::Array(a) => {
-            serialize_v3_parent(ARY, &a.values)
-        }
+        XffValue::Array(a) => serialize_v3_parent(ARY, &a.values),
         XffValue::Object(o) => {
             let mut pairs = Vec::with_capacity(o.len() * 2);
             for (k, v) in &o.map {
@@ -161,21 +166,17 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             }
             serialize_v3_parent(OOBJ, &pairs)
         }
-        XffValue::Table(t) => {
-            serialize_v3_table(t)
-        }
+        XffValue::Table(t) => serialize_v3_table(t),
         XffValue::NaN => Ok(vec![ensure_even_parity(NAN)]),
         XffValue::Infinity => Ok(vec![ensure_even_parity(INF)]),
         XffValue::NegInfinity => Ok(vec![ensure_even_parity(NINF)]),
-        _ => {
-            Ok(Vec::new())
-        }
+        _ => Ok(Vec::new()),
     }
 }
 
 fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
     let element_count_bytes = serialize_leb128_unsigned(elements.len());
-    
+
     let mut serialized_elements = Vec::with_capacity(elements.len());
     let mut offsets = Vec::with_capacity(elements.len());
     let mut current_offset = 0;
@@ -196,13 +197,13 @@ fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
     }
 
     let checksum = crc32(&index_data);
-    
+
     // Final buffer pre-allocation
     let mut buf = Vec::with_capacity(1 + index_data.len() + 4 + total_child_size + 1);
     buf.push(ensure_even_parity(marker));
     buf.extend(index_data);
     buf.extend_from_slice(&checksum.to_le_bytes());
-    
+
     for ser in serialized_elements {
         buf.extend(ser);
     }
@@ -214,7 +215,7 @@ fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
 fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
     let col_count = t.columns.len();
     let col_count_bytes = serialize_leb128_unsigned(col_count);
-    
+
     let mut col_names_ser = Vec::with_capacity(col_count);
     let mut col_offsets = Vec::with_capacity(col_count);
     let mut current_col_offset = 0;
@@ -269,11 +270,13 @@ fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
     let element_checksum = crc32(&element_index_data);
 
     // Final buffer pre-allocation
-    let total_size = 1 + (col_index_data.len() + 4 + total_col_names_size) 
-                       + (row_index_data.len() + 4) 
-                       + (element_index_data.len() + 4) 
-                       + total_row_data_size + 1;
-    
+    let total_size = 1
+        + (col_index_data.len() + 4 + total_col_names_size)
+        + (row_index_data.len() + 4)
+        + (element_index_data.len() + 4)
+        + total_row_data_size
+        + 1;
+
     let mut buf = Vec::with_capacity(total_size);
     buf.push(ensure_even_parity(TBL));
 

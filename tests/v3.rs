@@ -1,6 +1,6 @@
+use athena::{Object, Table, Uuid};
 use nabu::XffValue;
-use nabu::serde::{read, write, remove_file};
-use athena::{Table, Object, Uuid};
+use nabu::serde::{read, remove_file, write};
 
 #[test]
 fn test_v3_roundtrip_simple() {
@@ -56,7 +56,7 @@ fn test_v3_roundtrip_complex() {
 #[test]
 fn test_v3_roundtrip_specialized() {
     let path = "test_special.xff";
-    
+
     let val = XffValue::DateTime(1700000000000);
     write(path, val.clone()).unwrap();
     assert_eq!(val, read(path).unwrap());
@@ -75,12 +75,12 @@ fn test_v3_roundtrip_specialized() {
 #[test]
 fn test_v3_roundtrip_parent() {
     let path = "test_parent.xff";
-    
+
     // Array
     let val = XffValue::from(vec![
         XffValue::from("nested"),
         XffValue::from(42),
-        XffValue::from(true)
+        XffValue::from(true),
     ]);
     write(path, val.clone()).unwrap();
     assert_eq!(val, read(path).unwrap());
@@ -95,8 +95,12 @@ fn test_v3_roundtrip_parent() {
 
     // Table
     let mut table = Table::with_columns(vec!["name".to_string(), "age".to_string()]);
-    table.add_row(vec![XffValue::from("Alice"), XffValue::from(30)]).unwrap();
-    table.add_row(vec![XffValue::from("Bob"), XffValue::from(25)]).unwrap();
+    table
+        .add_row(vec![XffValue::from("Alice"), XffValue::from(30)])
+        .unwrap();
+    table
+        .add_row(vec![XffValue::from("Bob"), XffValue::from(25)])
+        .unwrap();
     let val = XffValue::Table(table);
     write(path, val.clone()).unwrap();
     assert_eq!(val, read(path).unwrap());
