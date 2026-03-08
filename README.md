@@ -14,11 +14,9 @@ The overarching goal of this project is to create a rust library that can be use
 
 As with all my projects, this documentation contains everything you never wanted to know about `.xff` files or Nabu.
 
-This README documents the usage of the most recent version of `.xff`: Version 2.
+This README documents the usage of the most recent version of `.xff`: Version 3.
 
-If you would like to use version 0 or 1, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
-
-All features present in the codebase are used in version 0 only.
+If you would like to use version 0, 1 or 2, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
 ## License
 
@@ -34,6 +32,7 @@ Nabu was written to satiate my want of being able to embed binary data inside a 
 I also tried to make it easy to detect malformed data, and to make it slightly harder to manipulate the file by hand.
 
 In version 2, I wanted to play with single bits and bit operations.
+In version 3, I introduced universal integrity via parity and checksums, and improved performance with index-based parent types.
 
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
@@ -65,7 +64,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     - [A Hello World of sorts](#a-hello-world-of-sorts)
     - [Serde](#serde)
         - [Usage of serde](#usage-of-serde)
-    - [XffValue](#xffvalue)
+    - [`XffValue`](#xffvalue)
         - [From](#from)
         - [Associated Functions](#associated-functions)
         - [Notes on value types](#notes-on-value-types)
@@ -73,7 +72,7 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
             - [Array](#array)
 - [Errors](#errors)
     - [IO Errors](#ioerror)
-    - [InternalError](#internalerror)
+    - [`InternalError`](#internalerror)
 - [Testing](#testing)
     
 ## Roadmap
@@ -83,11 +82,12 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
 - Storage of a variety of data types
     - Basic data types
         - Strings, Numbers, Boolean's, Null
-    - Arrays, Objects
+    - Arrays, Objects, Tables, Metadata
     - Arbitrary data
 - Performant
-    - 100MB are read in approximately 3 seconds
-- Somewhat meaningful errors
+    - 100MB are read in approximately 200ms
+- Strong integrity (v3)
+    - CRC-32 checksums and even-parity marker bytes
 - Fully documented
 - High test coverage
 - Macros
@@ -100,8 +100,7 @@ All specifications are in the `specifications` directory.
 - [V0](specifications/v0.md).
 - [V1](specifications/v1.md).
 - [V2](specifications/v2.md).
-
-V3 is not yet finalized, but my musings about it can be found [here](specifications/v3.md).
+- [V3](specifications/v3.md).
 
 ## Usage
 
@@ -122,7 +121,7 @@ A quick overview:
 use nabu::serde::{read, write, remove_file};
 // All types needed to store and manipulate entries stored in `.xff` files
 use nabu::XffValue;
-use nabu::{Array, Object, Data, Number};
+use nabu::{Array, Object, Data, Number, Metadata};
 ```
 
 ### A Hello World of sorts
@@ -130,7 +129,7 @@ While I highly recommend reading the rest of the documentation, here is a exampl
 ```rust
 use nabu::serde::{read, write, remove_file};
 use nabu::XffValue;
-use nabu::{Array, Object, Data, Number};
+use nabu::{Array, Object, Data, Number, Metadata};
 
 let path = "xff-example-data/hello-world.xff";
 
@@ -151,14 +150,17 @@ object.insert("Array", XffValue::from(array));
 
 object.insert("Data", XffValue::from(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])));
 
-let value = XffValue::from(object);
+let mut meta = Metadata::new();
+meta.set_creator("Nabu".to_string());
+let data = vec![XffValue::Metadata(meta), XffValue::from(object)];
 
-let write = write(path, value.clone());
+let write = write(path, data);
 assert!(write.is_ok());
 let read = read(path);
 assert!(read.is_ok());
 let ok = read.unwrap();
-assert_eq!(ok, value);
+// Returns [Metadata, Body] if head metadata was present
+assert!(ok.is_array());
 let remove = remove_file(path);
 assert!(remove.is_ok());
 ```
@@ -189,9 +191,9 @@ assert_eq!(ok, data);
 # remove_file(path_2).unwrap();
 ```
 
-### XffValue
-A XffValue is the type used by Nabu to store and manipulate data.
-There are basic types such as `String`, `Number`, `Boolean`, `Null` and `Data`, along with the `Array` and `Object` types.
+### `XffValue`
+A `XffValue` is the type used by Nabu to store and manipulate data.
+There are basic types such as `String`, `Number`, `Boolean`, `Null` and `Data`, along with the `Array`, `Object`, `Table` and `Metadata` types.
 
 An `Array` is a list of `XffValue`s, and an `Object` is a list of key-value pairs of `String`s and `XffValue`s.
 
@@ -220,6 +222,8 @@ There are many implementations of the `From` trait for the `XffValue` enum, this
     - `Array` -> `XffValue::Array`
     - `HashMap<S, V>`, `BTreeMap<S, V>` or `Vec<(S, V)>` where `S` can be converted to `String` and `V` to `XffValue` -> `XffValue::Object`
     - `Object` -> `XffValue::Object`
+    - `Metadata` -> `XffValue::Metadata`
+    - `Table` -> `XffValue::Table`
 
 Along with a comprehensive example:
 ```rust
