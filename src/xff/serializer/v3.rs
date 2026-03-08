@@ -1,4 +1,4 @@
-use athena::XffValue;
+use athena::{XffValue, Metadata};
 use athena::encoding_and_decoding::{serialize_version_bit_chain, serialize_leb128_unsigned, serialize_leb128_signed_v3};
 use athena::byte_bit::ensure_even_parity;
 use athena::checksum::crc32;
@@ -31,10 +31,10 @@ pub fn serialize_xff_v3_with_metadata(data: Vec<XffValue>, metadata: Option<athe
     if let Some(meta) = metadata {
         let metadata_wrapped = Metadata::from(meta);
         if !metadata_wrapped.is_strict_v3_compliant() {
-            return Err(crate::error::NabuError::InvalidMetadata("Head metadata must be a flat object".to_string()));
+            return Err(crate::error::NabuError::InvalidMetadata("Metadata must not contain nested parent types".to_string()));
         }
         
-        let mut pairs = Vec::with_capacity(metadata_wrapped.len() * 2);
+        let mut pairs: Vec<XffValue> = Vec::with_capacity(metadata_wrapped.len() * 2);
         for (k, v) in &metadata_wrapped.map.map {
             pairs.push(XffValue::String(k.clone()));
             pairs.push(v.clone());
@@ -86,9 +86,9 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Metadata(meta) => {
             if !meta.is_strict_v3_compliant() {
-                return Err(crate::error::NabuError::InvalidMetadata("Metadata must be a flat object".to_string()));
+                return Err(crate::error::NabuError::InvalidMetadata("Metadata must not contain nested parent types".to_string()));
             }
-            let mut pairs = Vec::with_capacity(meta.len() * 2);
+            let mut pairs: Vec<XffValue> = Vec::with_capacity(meta.len() * 2);
             for (k, v) in &meta.map.map {
                 pairs.push(XffValue::String(k.clone()));
                 pairs.push(v.clone());

@@ -64,16 +64,22 @@ fn test_v3_roundtrip_no_metadata() {
 fn test_v3_strict_metadata_enforcement() {
     let path = "test_strict_meta.xff";
     
+    // 1. Array of primitives SHOULD be allowed now
     let mut meta = Metadata::new();
-    // Try to put an array inside metadata (violates "flat" requirement)
-    meta.set_custom("invalid", vec![XffValue::from(1)]);
-    
-    let body = XffValue::from("Body");
-    let data = vec![XffValue::Metadata(meta), body];
+    meta.set_custom("valid_array", vec![XffValue::from(1), XffValue::from(2)]);
+    let data = vec![XffValue::Metadata(meta), XffValue::Null];
+    assert!(write(path, data).is_ok());
+    remove_file(path).unwrap();
+
+    // 2. Nested Array (Array inside Array) SHOULD fail
+    let mut meta = Metadata::new();
+    let nested_array = vec![XffValue::from(vec![XffValue::from(1)])];
+    meta.set_custom("invalid_nested", nested_array);
+    let data = vec![XffValue::Metadata(meta), XffValue::Null];
     
     let result = write(path, data);
     assert!(result.is_err());
     if let Err(e) = result {
-        assert!(e.to_string().contains("Head metadata must be a flat object"));
+        assert!(e.to_string().contains("Metadata must not contain nested parent types"));
     }
 }
