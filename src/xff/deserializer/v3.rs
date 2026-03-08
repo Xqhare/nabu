@@ -2,17 +2,17 @@ use athena::XffValue;
 use athena::encoding_and_decoding::{deserialize_leb128_unsigned, deserialize_leb128_signed_v3};
 use athena::byte_bit::is_even_parity;
 use athena::checksum::crc32;
-use athena::{Data, Number, Uuid, Array, Object, Table};
+use athena::{Data, Number, Uuid, Array, Object, Table, Metadata};
 
 use crate::error::{NabuError, Result};
 use crate::xff::v3_markers::*;
 
+/// Deserializes a complete XFF v3 file from a byte slice.
 pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     // 1. Check for Head Metadata (optional)
+    let mut head_metadata = None;
     if *cursor < content.len() && content[*cursor] == ensure_parity(META) {
-        let _metadata = deserialize_v3_value(content, cursor)?;
-        // We currently just skip the metadata in the head and return the body value
-        // unless we want to return a tuple or attach it to the body value somehow.
+        head_metadata = Some(deserialize_v3_value(content, cursor)?);
     }
 
     // 2. Body: Exactly one single XFF Value
@@ -24,13 +24,20 @@ pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> Result<XffValue
         return Err(NabuError::MissingEM(*cursor));
     }
 
-    Ok(value)
+    // If metadata was present, return [Metadata, Value] to keep the API unified
+    if let Some(meta) = head_metadata {
+        Ok(XffValue::Array(Array::from(vec![meta, value])))
+    } else {
+        Ok(value)
+    }
 }
 
+/// Internal recursive deserializer for XFF v3 values.
 fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
+    let marker_pos = *cursor;
     let marker = read_byte(content, cursor)?;
     if !is_even_parity(marker) {
-        return Err(NabuError::InvalidMarkerParity(marker, *cursor - 1));
+        return Err(NabuError::InvalidMarkerParity(marker, marker_pos));
     }
 
     match marker {
@@ -42,9 +49,9 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         m if m == ensure_parity(NINF) => Ok(XffValue::NegInfinity),
         
         m if m == ensure_parity(TXT) => {
-            let (len, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
             let start = *cursor;
+            let (len, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
+                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let data_start = *cursor;
             *cursor += len;
@@ -52,7 +59,6 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             
-            // Verify checksum over [Length] + [Payload]
             if crc32(&content[start..checksum_start]) != checksum {
                 return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
             }
@@ -62,15 +68,16 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
             
-            let s = String::from_utf8(content[data_start..checksum_start].to_vec())
-                .map_err(|_| NabuError::StringContainsNonASCII(String::new(), 3))?;
+            let s = std::str::from_utf8(&content[data_start..checksum_start])
+                .map_err(|_| NabuError::StringContainsNonASCII(String::new(), 3))?
+                .to_string();
             Ok(XffValue::String(s))
         }
 
         m if m == ensure_parity(UINT) => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
@@ -89,7 +96,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         m if m == ensure_parity(SINT) => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_signed_v3(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
@@ -123,9 +130,9 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         }
 
         m if m == ensure_parity(DAT) => {
-            let (len, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
             let start = *cursor;
+            let (len, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
+                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let data_start = *cursor;
             *cursor += len;
@@ -148,7 +155,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         m if m == ensure_parity(DT) => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
@@ -163,7 +170,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         m if m == ensure_parity(DUR) => {
             let start = *cursor;
             let (val, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
@@ -216,21 +223,34 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             deserialize_v3_table(content, cursor)
         }
 
-        _ => Err(NabuError::InvalidXFFByte(marker, *cursor - 1, 3)),
+        m if m == ensure_parity(META) => {
+            let elements = deserialize_v3_parent_elements(content, cursor)?;
+            if elements.len() % 2 != 0 {
+                return Err(NabuError::InvalidObject(*cursor, 0, 3));
+            }
+            let mut pairs = Vec::with_capacity(elements.len() / 2);
+            for i in (0..elements.len()).step_by(2) {
+                let key = elements[i].into_string().ok_or(NabuError::InvalidKey(*cursor, elements[i].clone(), 3))?;
+                pairs.push((key, elements[i+1].clone()));
+            }
+            Ok(XffValue::Metadata(Metadata::from(Object::from(pairs))))
+        }
+
+        _ => Err(NabuError::InvalidXFFByte(marker, marker_pos, 3)),
     }
 }
 
+/// Parses child elements for parent types using the index.
 fn deserialize_v3_parent_elements(content: &[u8], cursor: &mut usize) -> Result<Vec<XffValue>> {
     let index_start = *cursor;
     let (element_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-        .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+        .map_err(|_| NabuError::InvalidXFFValueLength(index_start, 3))?;
     *cursor += leb_len as usize;
     
-    let mut offsets = Vec::with_capacity(element_count);
+    // Read and skip offsets (index-based jumping not strictly required for sequential read)
     for _ in 0..element_count {
-        let (off, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
-        offsets.push(off);
+        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
+            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 3))?;
         *cursor += leb_len as usize;
     }
     
@@ -245,9 +265,6 @@ fn deserialize_v3_parent_elements(content: &[u8], cursor: &mut usize) -> Result<
         elements.push(deserialize_v3_value(content, cursor)?);
     }
     
-    // Validate offsets (optional but good for boundary safety)
-    // We could use slice-based parsing here more strictly if we wanted.
-
     let ev = read_byte(content, cursor)?;
     if ev != ensure_parity(EV) {
         return Err(NabuError::MissingEV(*cursor - 1));
@@ -256,17 +273,16 @@ fn deserialize_v3_parent_elements(content: &[u8], cursor: &mut usize) -> Result<
     Ok(elements)
 }
 
+/// Parses an optimized XFF v3 Table.
 fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     // 1. Column Index
     let col_index_start = *cursor;
     let (col_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-        .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+        .map_err(|_| NabuError::InvalidXFFValueLength(col_index_start, 3))?;
     *cursor += leb_len as usize;
-    let mut col_offsets = Vec::with_capacity(col_count);
     for _ in 0..col_count {
-        let (off, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
-        col_offsets.push(off);
+        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
+            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 3))?;
         *cursor += leb_len as usize;
     }
     let col_index_end = *cursor;
@@ -285,13 +301,11 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     // 3. Row Index
     let row_index_start = *cursor;
     let (row_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-        .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
+        .map_err(|_| NabuError::InvalidXFFValueLength(row_index_start, 3))?;
     *cursor += leb_len as usize;
-    let mut row_offsets = Vec::with_capacity(row_count);
     for _ in 0..row_count {
-        let (off, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
-        row_offsets.push(off);
+        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
+            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 3))?;
         *cursor += leb_len as usize;
     }
     let row_index_end = *cursor;
@@ -302,11 +316,9 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
 
     // 4. Element Index
     let element_index_start = *cursor;
-    let mut element_offsets = Vec::with_capacity(row_count * col_count);
     for _ in 0..(row_count * col_count) {
-        let (off, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(0, 3))?;
-        element_offsets.push(off);
+        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
+            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 3))?;
         *cursor += leb_len as usize;
     }
     let element_index_end = *cursor;
@@ -333,7 +345,7 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     Ok(XffValue::Table(Table { columns, rows }))
 }
 
-// Helpers
+/// Reads a single byte from the content and advances the cursor.
 fn read_byte(content: &[u8], cursor: &mut usize) -> Result<u8> {
     if *cursor >= content.len() {
         return Err(NabuError::TruncatedXFF(*cursor, 3));
@@ -343,6 +355,7 @@ fn read_byte(content: &[u8], cursor: &mut usize) -> Result<u8> {
     Ok(byte)
 }
 
+/// Reads a 4-byte little-endian unsigned integer.
 fn read_u32_le(content: &[u8], cursor: &mut usize) -> Result<u32> {
     if *cursor + 4 > content.len() {
         return Err(NabuError::TruncatedXFFValueChecksum(*cursor, 3));
@@ -352,6 +365,7 @@ fn read_u32_le(content: &[u8], cursor: &mut usize) -> Result<u32> {
     Ok(u32::from_le_bytes(bytes.try_into().unwrap()))
 }
 
+/// Reads an 8-byte little-endian float.
 fn read_f64_le(content: &[u8], cursor: &mut usize) -> Result<f64> {
     if *cursor + 8 > content.len() {
         return Err(NabuError::TruncatedXFFValue(*cursor, 3));
@@ -361,6 +375,7 @@ fn read_f64_le(content: &[u8], cursor: &mut usize) -> Result<f64> {
     Ok(f64::from_le_bytes(bytes.try_into().unwrap()))
 }
 
+/// Simple proxy for athena's parity utility.
 fn ensure_parity(marker: u8) -> u8 {
     athena::byte_bit::ensure_even_parity(marker)
 }

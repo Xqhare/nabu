@@ -5,7 +5,7 @@ mod error;
 mod xff;
 
 // Re-exported types - XffValue was moved out of Nabu and into Athena
-pub use athena::{Array, CommandCharacter, Data, Number, Object, XffValue};
+pub use athena::{Array, CommandCharacter, Data, Metadata, Number, Object, XffValue};
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
 const XFF_VERSION: u8 = 3;
