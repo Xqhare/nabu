@@ -12,7 +12,7 @@ Nabu is a rust library for reading and writing `.xff` files.
 The overarching goal of this project is to create a rust library that can be used to build, read and write `.xff` files.
 `.xff` is a general purpose file format, with Nabu acting as a serializer and deserializer, as well as an IO abstraction.
 
-As with all my projects, this documentation contains everything you never wanted to know about `.xff` files or Nabu.
+The repository contains the `.xff` standard as well as, what I lovingly call, a reference implementation.
 
 This README documents the usage of the most recent version of `.xff`: Version 3.
 
