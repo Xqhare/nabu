@@ -30,7 +30,6 @@ pub const META: u8 = 0x5F;
 // Internal / Structural
 pub const EV: u8 = 0x60;
 pub const EM: u8 = 0xF0;
-pub const CONT: u8 = 0xFF;
 
 // File Signature
 pub const MAGIC: [u8; 4] = [0x58, 0x46, 0x46, 0x56]; // 'XFFV'
