@@ -1,6 +1,5 @@
 use athena::{XffValue, Metadata};
 use athena::encoding_and_decoding::{serialize_version_bit_chain, serialize_leb128_unsigned, serialize_leb128_signed_v3};
-use athena::byte_bit::ensure_even_parity;
 use athena::checksum::crc32;
 
 use crate::error::Result;
@@ -54,7 +53,7 @@ pub fn serialize_xff_v3_with_metadata(data: &[XffValue], metadata: Option<athena
     }
 
     // 4. Terminator: EM
-    out.push(ensure_even_parity(EM));
+    out.push(EM);
 
     Ok(out)
 }
@@ -62,12 +61,12 @@ pub fn serialize_xff_v3_with_metadata(data: &[XffValue], metadata: Option<athena
 #[allow(clippy::too_many_lines)]
 fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
     match value {
-        XffValue::Null => Ok(vec![ensure_even_parity(NUL)]),
+        XffValue::Null => Ok(vec![NUL]),
         XffValue::Boolean(b) => {
             if *b {
-                Ok(vec![ensure_even_parity(TRU)])
+                Ok(vec![TRU])
             } else {
-                Ok(vec![ensure_even_parity(FAL)])
+                Ok(vec![FAL])
             }
         }
         XffValue::String(s) => {
@@ -76,7 +75,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             
             // Pre-allocate: Marker (1) + Len + Data + Checksum (4) + EV (1)
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + utf8_bytes.len());
-            buf.push(ensure_even_parity(TXT));
+            buf.push(TXT);
             
             let mut payload = len_bytes;
             payload.extend_from_slice(utf8_bytes);
@@ -85,7 +84,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             
             buf.extend(payload);
             buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(ensure_even_parity(EV));
+            buf.push(EV);
             Ok(buf)
         }
         XffValue::Number(n) => {
@@ -107,7 +106,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             let len_bytes = serialize_leb128_unsigned(raw_bytes.len());
             
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + raw_bytes.len());
-            buf.push(ensure_even_parity(DAT));
+            buf.push(DAT);
             
             let mut payload = len_bytes;
             payload.extend_from_slice(raw_bytes);
@@ -116,39 +115,39 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             
             buf.extend(payload);
             buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(ensure_even_parity(EV));
+            buf.push(EV);
             Ok(buf)
         }
         XffValue::DateTime(dt) => {
             #[allow(clippy::cast_possible_truncation)]
             let payload = serialize_leb128_unsigned(*dt as usize);
             let mut buf = Vec::with_capacity(6 + payload.len());
-            buf.push(ensure_even_parity(DT));
+            buf.push(DT);
             let checksum = crc32(&payload);
             buf.extend(payload);
             buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(ensure_even_parity(EV));
+            buf.push(EV);
             Ok(buf)
         }
         XffValue::Duration(d) => {
             #[allow(clippy::cast_possible_truncation)]
             let payload = serialize_leb128_unsigned(*d as usize);
             let mut buf = Vec::with_capacity(6 + payload.len());
-            buf.push(ensure_even_parity(DUR));
+            buf.push(DUR);
             let checksum = crc32(&payload);
             buf.extend(payload);
             buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(ensure_even_parity(EV));
+            buf.push(EV);
             Ok(buf)
         }
         XffValue::Uuid(u) => {
             let bytes = u.as_bytes();
             let mut buf = Vec::with_capacity(22); // 1 + 16 + 4 + 1
-            buf.push(ensure_even_parity(UUID));
+            buf.push(UUID);
             let checksum = crc32(bytes);
             buf.extend_from_slice(bytes);
             buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(ensure_even_parity(EV));
+            buf.push(EV);
             Ok(buf)
         }
         XffValue::Array(a) => {
@@ -173,9 +172,9 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::Table(t) => {
             serialize_v3_table(t)
         }
-        XffValue::NaN => Ok(vec![ensure_even_parity(NAN)]),
-        XffValue::Infinity => Ok(vec![ensure_even_parity(INF)]),
-        XffValue::NegInfinity => Ok(vec![ensure_even_parity(NINF)]),
+        XffValue::NaN => Ok(vec![NAN]),
+        XffValue::Infinity => Ok(vec![INF]),
+        XffValue::NegInfinity => Ok(vec![NINF]),
         _ => {
             Ok(Vec::new())
         }
@@ -208,7 +207,7 @@ fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
     
     // Final buffer pre-allocation
     let mut buf = Vec::with_capacity(1 + index_data.len() + 4 + total_child_size + 1);
-    buf.push(ensure_even_parity(marker));
+    buf.push(marker);
     buf.extend(index_data);
     buf.extend_from_slice(&checksum.to_le_bytes());
     
@@ -216,7 +215,7 @@ fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
         buf.extend(ser);
     }
 
-    buf.push(ensure_even_parity(EV));
+    buf.push(EV);
     Ok(buf)
 }
 
@@ -284,7 +283,7 @@ fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
                        + total_row_data_size + 1;
     
     let mut buf = Vec::with_capacity(total_size);
-    buf.push(ensure_even_parity(TBL));
+    buf.push(TBL);
 
     // Column Index + Names
     buf.extend(col_index_data);
@@ -306,7 +305,7 @@ fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
         buf.extend(ser);
     }
 
-    buf.push(ensure_even_parity(EV));
+    buf.push(EV);
     Ok(buf)
 }
 
@@ -314,42 +313,42 @@ fn serialize_v3_number(n: &athena::Number) -> Vec<u8> {
     if n.is_float() {
         let val = n.into_f64().unwrap();
         if val.is_nan() {
-            vec![ensure_even_parity(NAN)]
+            vec![NAN]
         } else if val.is_infinite() {
             if val.is_sign_positive() {
-                vec![ensure_even_parity(INF)]
+                vec![INF]
             } else {
-                vec![ensure_even_parity(NINF)]
+                vec![NINF]
             }
         } else {
             let mut buf = Vec::with_capacity(14); // 1 + 8 + 4 + 1
-            buf.push(ensure_even_parity(FLT));
+            buf.push(FLT);
             let bytes = val.to_le_bytes();
             let checksum = crc32(&bytes);
             buf.extend_from_slice(&bytes);
             buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(ensure_even_parity(EV));
+            buf.push(EV);
             buf
         }
     } else if n.is_unsigned() {
         let val = n.into_usize().unwrap();
         let payload = serialize_leb128_unsigned(val);
         let mut buf = Vec::with_capacity(6 + payload.len());
-        buf.push(ensure_even_parity(UINT));
+        buf.push(UINT);
         let checksum = crc32(&payload);
         buf.extend(payload);
         buf.extend_from_slice(&checksum.to_le_bytes());
-        buf.push(ensure_even_parity(EV));
+        buf.push(EV);
         buf
     } else {
         let val = n.into_isize().unwrap() as i64;
         let payload = serialize_leb128_signed_v3(val);
         let mut buf = Vec::with_capacity(6 + payload.len());
-        buf.push(ensure_even_parity(SINT));
+        buf.push(SINT);
         let checksum = crc32(&payload);
         buf.extend(payload);
         buf.extend_from_slice(&checksum.to_le_bytes());
-        buf.push(ensure_even_parity(EV));
+        buf.push(EV);
         buf
     }
 }
