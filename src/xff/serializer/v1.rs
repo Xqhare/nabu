@@ -3,8 +3,12 @@ use crate::{
     error::{NabuError, Result},
 };
 
-pub fn serialize_xff_v1(data: Vec<XffValue>) -> Result<Vec<u8>> {
-    let mut out: Vec<u8> = Default::default();
+/// Serializes XFF version 1 data.
+///
+/// # Errors
+/// Errors if the data contains non-ASCII characters or is invalid for v1.
+pub fn serialize_xff_v1(data: &[XffValue]) -> Result<Vec<u8>> {
+    let mut out: Vec<u8> = Vec::default();
     // Version 1
     out.push(1);
     // only one value is permissable
@@ -14,33 +18,23 @@ pub fn serialize_xff_v1(data: Vec<XffValue>) -> Result<Vec<u8>> {
     Ok(out)
 }
 
+#[allow(clippy::too_many_lines)]
 fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
-    let mut out: Vec<u8> = Default::default();
+    let mut out: Vec<u8> = Vec::default();
     match data {
         XffValue::String(s) => {
-            // first create the string
-            /* let tmp_str: Vec<u8> = {
-                if s.len() > 0 {
-                    s.chars().map(|c| c as u8).collect()
-                } else {
-                    vec![]
-                }
-            }; */
             let tmp_str: Vec<u8> = {
                 let mut out = Vec::new();
                 for char in s.chars() {
                     let tmp = char as u8;
-                    if tmp >= 8 && tmp <= 13 {
-                        out.push(tmp);
-                    } else if tmp >= 32 && tmp <= 126 {
-                        out.push(tmp);
-                    } else if tmp == 128 || tmp == 142 {
-                        out.push(tmp);
-                    } else if tmp >= 130 && tmp <= 140 {
-                        out.push(tmp);
-                    } else if tmp >= 145 && tmp <= 156 {
-                        out.push(tmp);
-                    } else if tmp >= 158 {
+                    if (8..=13).contains(&tmp)
+                        || (32..=126).contains(&tmp)
+                        || tmp == 128
+                        || tmp == 142
+                        || (130..=140).contains(&tmp)
+                        || (145..=156).contains(&tmp)
+                        || tmp >= 158
+                    {
                         out.push(tmp);
                     } else {
                         return Err(NabuError::StringContainsNonASCII(s.clone(), 1));
@@ -69,10 +63,9 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                                 n.as_string(),
                                 1,
                             ));
-                        } else {
-                            out.push(tmp);
-                            neg_used = true;
                         }
+                        out.push(tmp);
+                        neg_used = true;
                     } else if tmp == 44 || tmp == 46 {
                         if sep_used {
                             return Err(NabuError::NumberContainsInvalidCharacter(
@@ -80,11 +73,10 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                                 n.as_string(),
                                 1,
                             ));
-                        } else {
-                            out.push(tmp);
-                            sep_used = true;
                         }
-                    } else if tmp >= 48 && tmp <= 57 {
+                        out.push(tmp);
+                        sep_used = true;
+                    } else if (48..=57).contains(&tmp) {
                         out.push(tmp);
                     } else {
                         return Err(NabuError::NumberContainsInvalidCharacter(
@@ -104,7 +96,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Array(a) => {
             // create the array
-            let mut array_bytes: Vec<u8> = Default::default();
+            let mut array_bytes: Vec<u8> = Vec::default();
             for value in &a.values {
                 array_bytes.extend(serialize_xff_v1_value(value)?);
                 // RS separator
@@ -118,8 +110,8 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Object(o) => {
             // create the object
-            let mut object_bytes: Vec<u8> = Default::default();
-            for (key, value) in o.map.iter() {
+            let mut object_bytes: Vec<u8> = Vec::default();
+            for (key, value) in &o.map {
                 // GS
                 object_bytes.push(29);
                 // key
@@ -155,48 +147,48 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         XffValue::Null => {
             out.push(0);
         }
-        _ => Err(NabuError::InvalidXFFVersion(data.clone(), 1))?,
+        _ => return Err(NabuError::InvalidXFFVersion(data.clone(), 1)),
     }
     Ok(out)
 }
 
 fn encode_length(len: usize) -> Vec<u8> {
     if len <= 255 {
-        let mut out: Vec<u8> = u8::from(1).to_le_bytes().to_vec();
-        out.push(len.to_le_bytes().to_vec()[0]);
+        let mut out: Vec<u8> = vec![1];
+        out.push(len.to_le_bytes()[0]);
         return out;
     }
     if len <= 65_535 {
-        let mut out: Vec<u8> = u8::from(2).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec()[0..2].to_vec());
+        let mut out: Vec<u8> = vec![2];
+        out.extend_from_slice(&len.to_le_bytes()[0..2]);
         return out;
     }
     if len <= 16_777_215 {
-        let mut out: Vec<u8> = u8::from(3).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec()[0..3].to_vec());
+        let mut out: Vec<u8> = vec![3];
+        out.extend_from_slice(&len.to_le_bytes()[0..3]);
         return out;
     }
     if len <= 4_294_967_295 {
-        let mut out: Vec<u8> = u8::from(4).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec()[0..4].to_vec());
+        let mut out: Vec<u8> = vec![4];
+        out.extend_from_slice(&len.to_le_bytes()[0..4]);
         return out;
     }
     if len <= 1_099_511_627_775 {
-        let mut out: Vec<u8> = u8::from(5).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec()[0..5].to_vec());
+        let mut out: Vec<u8> = vec![5];
+        out.extend_from_slice(&len.to_le_bytes()[0..5]);
         return out;
     }
     if len <= 281_474_976_710_655 {
-        let mut out: Vec<u8> = u8::from(6).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec()[0..6].to_vec());
-        return out;
-    } else if len <= 72_057_594_037_927_35 {
-        let mut out: Vec<u8> = u8::from(7).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec()[0..7].to_vec());
-        return out;
-    } else {
-        let mut out: Vec<u8> = u8::from(8).to_le_bytes().to_vec();
-        out.extend(len.to_le_bytes().to_vec());
+        let mut out: Vec<u8> = vec![6];
+        out.extend_from_slice(&len.to_le_bytes()[0..6]);
         return out;
     }
+    if len <= 7_205_759_403_792_735 {
+        let mut out: Vec<u8> = vec![7];
+        out.extend_from_slice(&len.to_le_bytes()[0..7]);
+        return out;
+    }
+    let mut out: Vec<u8> = vec![8];
+    out.extend_from_slice(&len.to_le_bytes());
+    out
 }
