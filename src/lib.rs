@@ -7,8 +7,8 @@ mod xff;
 // Re-exported types - XffValue was moved out of Nabu and into Athena
 pub use athena::{Array, CommandCharacter, Data, Number, Object, XffValue};
 
-/// Most recent finalised version of XFF specification
-const XFF_VERSION: u8 = 2;
+/// Most recent finalised version of XFF specification - Used for `write()` exclusively
+const XFF_VERSION: u8 = 3;
 
 // ----------------------------------------------------------
 // Macros
