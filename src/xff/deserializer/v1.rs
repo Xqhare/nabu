@@ -2,7 +2,6 @@ use std::{
     borrow::Borrow,
     cell::Cell,
     collections::{BTreeMap, VecDeque},
-    usize,
 };
 
 use crate::{XffValue, error::NabuError};
@@ -11,27 +10,33 @@ use super::{
     deserialize_xff_data, deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text,
 };
 
+/// Deserializes XFF version 1 content.
+///
+/// # Errors
+/// Errors if the content is malformed or truncated according to v1 specification.
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
     // version is byte 0;
     let byte_pos: Cell<usize> = Cell::new(1);
     let out = deserialize_xff_v1_value(contents, byte_pos.borrow())?;
-    if contents.len() > 0 {
-        if contents[0] == 25 && contents.len() == 1 {
-            Ok(out)
-        } else {
-            Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
-        }
+    if contents.is_empty() {
+        Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
+    } else if contents[0] == 25 && contents.len() == 1 {
+        Ok(out)
     } else {
         Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
     }
 }
 
+/// Deserializes a single XFF v1 value.
+///
+/// # Errors
+/// Errors if the value is malformed or truncated.
 pub fn deserialize_xff_v1_value(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
 ) -> Result<XffValue, NabuError> {
-    if content.len() == 0 {
-        return Err(NabuError::TruncatedXFF(byte_pos.get(), 1));
+    if content.is_empty() {
+        return Err(NabuError::TruncatedXFFValue(byte_pos.get(), 1));
     }
     let cur = content.pop_front().unwrap();
     byte_pos.set(byte_pos.get() + 1);
@@ -42,18 +47,9 @@ pub fn deserialize_xff_v1_value(
         3 => deserialize_xff_v1_array(content, byte_pos),
         4 => deserialize_xff_v1_object(content, byte_pos),
         5 => deserialize_xff_v1_data(content, byte_pos),
-        16 => {
-            //TRU
-            return Ok(XffValue::Boolean(true));
-        }
-        17 => {
-            //FAL
-            return Ok(XffValue::Boolean(false));
-        }
-        _ => {
-            //Error
-            return Err(NabuError::InvalidXFFByte(cur, byte_pos.get(), 1));
-        }
+        16 => Ok(XffValue::Boolean(true)),
+        17 => Ok(XffValue::Boolean(false)),
+        _ => Err(NabuError::InvalidXFFByte(cur, byte_pos.get(), 1)),
     }
 }
 
@@ -74,10 +70,9 @@ fn deserialize_xff_v1_text(
     // check
     if content[0] != 24 {
         return Err(NabuError::MissingEV(byte_pos.get()));
-    } else {
-        let _ = content.pop_front();
-        byte_pos.set(byte_pos.get() + 1);
     }
+    let _ = content.pop_front();
+    byte_pos.set(byte_pos.get() + 1);
     out
 }
 
@@ -89,40 +84,39 @@ fn deserialize_xff_v1_array(
 
     let len = deserialize_xff_v1_value_length(content, byte_pos)?;
 
-    let mut ary_bind: Vec<XffValue> = Default::default();
+    let mut ary_bind: Vec<XffValue> = Vec::default();
 
     if len != 0 {
         ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
     }
 
-    while content[0] != 24 && content.front().is_some() {
+    while content.front().is_some() && content[0] != 24 {
         if content[0] == 30 {
-            if content[1] == 24 {
+            if content.len() > 1 && content[1] == 24 {
                 // closing ARY
                 let _ = content.pop_front();
                 let _ = content.pop_front();
                 byte_pos.set(byte_pos.get() + 2);
                 return Ok(XffValue::from(ary_bind));
-            } else {
-                let _ = content.pop_front();
-                byte_pos.set(byte_pos.get() + 1);
-                // another value
-                ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
             }
+            let _ = content.pop_front();
+            byte_pos.set(byte_pos.get() + 1);
+            // another value
+            ary_bind.push(deserialize_xff_v1_value(content, byte_pos)?);
         } else {
             break;
         }
     }
 
     // no trailing RS
-    if content[0] == 24 {
+    if !content.is_empty() && content[0] == 24 {
         // closing ARY
         let _ = content.pop_front();
         byte_pos.set(byte_pos.get() + 1);
 
-        return Ok(XffValue::from(ary_bind));
+        Ok(XffValue::from(ary_bind))
     } else {
-        return Err(NabuError::InvalidArray(byte_pos.get(), content[0], 1));
+        Err(NabuError::InvalidArray(byte_pos.get(), content[0], 1))
     }
 }
 
@@ -134,40 +128,38 @@ fn deserialize_xff_v1_object(
 
     let len = deserialize_xff_v1_value_length(content, byte_pos)?;
 
-    let mut obj_bind: BTreeMap<String, XffValue> = Default::default();
+    let mut obj_bind: BTreeMap<String, XffValue> = BTreeMap::default();
 
     if len != 0 {
-        while content[0] != 24 && content.front().is_some() {
+        while content.front().is_some() && content[0] != 24 {
             let (key, value) = deserialize_xff_key_value(content, byte_pos, 1)?;
             obj_bind.insert(key, value);
             if content[0] == 30 {
-                if content[1] == 24 {
+                if content.len() > 1 && content[1] == 24 {
                     // closing OBJ
                     let _ = content.pop_front();
                     let _ = content.pop_front();
                     byte_pos.set(byte_pos.get() + 2);
                     return Ok(XffValue::from(obj_bind));
-                } else {
-                    let _ = content.pop_front();
-                    byte_pos.set(byte_pos.get() + 1);
-                    // another key value pair
-                    continue;
                 }
-            } else {
-                break;
+                let _ = content.pop_front();
+                byte_pos.set(byte_pos.get() + 1);
+                // another key value pair
+                continue;
             }
+            break;
         }
     }
 
     // no trailing RS
-    if content[0] == 24 {
+    if !content.is_empty() && content[0] == 24 {
         // closing ARY
         let _ = content.pop_front();
         byte_pos.set(byte_pos.get() + 1);
 
-        return Ok(XffValue::from(obj_bind));
+        Ok(XffValue::from(obj_bind))
     } else {
-        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], 1));
+        Err(NabuError::InvalidObject(byte_pos.get(), content[0], 1))
     }
 }
 
@@ -179,11 +171,10 @@ fn deserialize_xff_v1_data(
     let data = deserialize_xff_data(content, byte_pos, len);
     if content[0] != 24 {
         return Err(NabuError::MissingEV(byte_pos.get()));
-    } else {
-        let _ = content.pop_front();
-        byte_pos.set(byte_pos.get() + 1);
     }
-    data
+    let _ = content.pop_front();
+    byte_pos.set(byte_pos.get() + 1);
+    Ok(data)
 }
 
 fn deserialize_xff_v1_number(
@@ -196,10 +187,9 @@ fn deserialize_xff_v1_number(
     // check
     if content[0] != 24 {
         return Err(NabuError::MissingEV(byte_pos.get()));
-    } else {
-        let _ = content.pop_front();
-        byte_pos.set(byte_pos.get() + 1);
     }
+    let _ = content.pop_front();
+    byte_pos.set(byte_pos.get() + 1);
     deserialize_xff_number(&mut num_bytes, byte_pos, 1)
 }
 
@@ -211,12 +201,12 @@ fn deserialize_xff_v1_value_length(
         .pop_front()
         .ok_or(NabuError::TruncatedXFF(byte_pos.get(), 1))?;
     byte_pos.set(byte_pos.get() + 1);
-    let len_of_len = u8::from_le_bytes([len_of_len_bytes]);
+    let len_of_len = len_of_len_bytes;
     if len_of_len > 8 {
-        return Err(NabuError::InvalidXFFValueLength(len_of_len.into(), 1));
+        return Err(NabuError::InvalidXFFValueLength(usize::from(len_of_len), 1));
     } else if content.len() < len_of_len as usize {
         return Err(NabuError::XFFValueLengthTooLong(
-            len_of_len.into(),
+            usize::from(len_of_len),
             byte_pos.get(),
             1,
         ));
