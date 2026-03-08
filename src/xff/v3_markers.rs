@@ -1,7 +1,6 @@
 /// XFF v3 Marker Constants
 ///
 /// Markers are even-parity bytes. The MSB is the parity bit.
-
 // Simple Values
 pub const NUL: u8 = 0x00;
 pub const TRU: u8 = 0x05;
