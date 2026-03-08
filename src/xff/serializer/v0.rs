@@ -3,8 +3,12 @@ use crate::{
     {CommandCharacter, XffValue},
 };
 
+/// Serializes XFF version 0 data.
+///
+/// # Errors
+/// Errors if the data contains values not supported by v0.
 pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
-    let mut out: Vec<u8> = Default::default();
+    let mut out: Vec<u8> = Vec::default();
     // Only true if the last pushed data was a command character
     let mut escape_open = false;
     // Version 0
@@ -26,9 +30,7 @@ pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
                 // STX
                 out.push(2);
                 let tmp = n.as_string();
-                for entry in tmp.into_bytes() {
-                    out.push(entry);
-                }
+                out.extend_from_slice(tmp.as_bytes());
                 // ETX
                 out.push(3);
             }
@@ -36,36 +38,26 @@ pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
                 escape_open = false;
                 // DLE
                 out.push(16);
-                let len = d.len.to_le_bytes().to_vec();
-                let len_bind: Vec<&u8> = len.iter().take(5).collect();
-                for entry in len_bind {
-                    out.push(*entry);
-                }
-                for entry in d.data.iter() {
-                    out.push(*entry);
-                }
+                let len = d.len.to_le_bytes();
+                out.extend_from_slice(&len[0..5]);
+                out.extend_from_slice(&d.data);
                 // DLE
                 out.push(16);
             }
             XffValue::ArrayCmdChar(a) => {
                 if escape_open {
                     // remove ending ESC
-                    out.remove(out.len() - 1);
+                    out.pop();
                 } else {
                     // put starting ESC
                     out.push(27);
                 }
                 for char in a {
-                    match char {
-                        CommandCharacter::Escape => {
-                            // ESC needs to be ESC escaped
-                            out.push(27);
-                            out.push(char.as_u8());
-                        }
-                        _ => {
-                            out.push(char.as_u8());
-                        }
+                    if let CommandCharacter::Escape = char {
+                        // ESC needs to be ESC escaped
+                        out.push(27);
                     }
+                    out.push(char.as_u8());
                 }
                 // ESC
                 out.push(27);
@@ -74,21 +66,16 @@ pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
             XffValue::CommandCharacter(c) => {
                 if escape_open {
                     // remove ending ESC
-                    out.remove(out.len() - 1);
+                    out.pop();
                 } else {
                     // put starting ESC
                     out.push(27);
                 }
-                match c {
-                    CommandCharacter::Escape => {
-                        // ESC needs to be ESC escaped
-                        out.push(27);
-                        out.push(c.as_u8());
-                    }
-                    _ => {
-                        out.push(c.as_u8());
-                    }
+                if let CommandCharacter::Escape = c {
+                    // ESC needs to be ESC escaped
+                    out.push(27);
                 }
+                out.push(c.as_u8());
                 // ESC
                 out.push(27);
                 escape_open = true;
