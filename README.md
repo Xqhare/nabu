@@ -1,7 +1,8 @@
 # Nabu
 
 > [!note]
-> This is a hobby project. You probably shouldn't use this in production. I am not your dad though.
+> Nabu and its foundational `.xff` specification gurantee the integrity of all data stored.\
+> **The data you put in is exactly the data you get out — or you get a clear, predictable error.**
 
 Nabu is a rust library for reading and writing `.xff` files.
 
