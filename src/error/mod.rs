@@ -253,6 +253,9 @@ pub enum NabuError {
     /// # Parameters
     /// * `pos` - The position in the file where the unsupported type was found
     UnsupportedParentType(usize),
+
+    /// Metadata contains non-flat values (nested parent types) which is forbidden in XFF v3
+    InvalidMetadata(String),
 }
 
 pub type Result<T> = std::result::Result<T, NabuError>;
@@ -405,6 +408,7 @@ impl fmt::Display for NabuError {
                 "XFF version 3 unsupported parent type at byte position {}",
                 i
             ),
+            NabuError::InvalidMetadata(s) => write!(f, "XFF version 3 invalid metadata: {}", s),
         }
     }
 }

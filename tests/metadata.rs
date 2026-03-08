@@ -59,3 +59,21 @@ fn test_v3_roundtrip_no_metadata() {
 
     remove_file(path).unwrap();
 }
+
+#[test]
+fn test_v3_strict_metadata_enforcement() {
+    let path = "test_strict_meta.xff";
+    
+    let mut meta = Metadata::new();
+    // Try to put an array inside metadata (violates "flat" requirement)
+    meta.set_custom("invalid", vec![XffValue::from(1)]);
+    
+    let body = XffValue::from("Body");
+    let data = vec![XffValue::Metadata(meta), body];
+    
+    let result = write(path, data);
+    assert!(result.is_err());
+    if let Err(e) = result {
+        assert!(e.to_string().contains("Head metadata must be a flat object"));
+    }
+}

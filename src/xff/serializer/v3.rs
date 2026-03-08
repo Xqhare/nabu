@@ -29,8 +29,13 @@ pub fn serialize_xff_v3_with_metadata(data: Vec<XffValue>, metadata: Option<athe
 
     // 2.1 Head Metadata (Optional)
     if let Some(meta) = metadata {
-        let mut pairs = Vec::with_capacity(meta.len() * 2);
-        for (k, v) in &meta.map {
+        let metadata_wrapped = Metadata::from(meta);
+        if !metadata_wrapped.is_strict_v3_compliant() {
+            return Err(crate::error::NabuError::InvalidMetadata("Head metadata must be a flat object".to_string()));
+        }
+        
+        let mut pairs = Vec::with_capacity(metadata_wrapped.len() * 2);
+        for (k, v) in &metadata_wrapped.map.map {
             pairs.push(XffValue::String(k.clone()));
             pairs.push(v.clone());
         }
@@ -80,6 +85,9 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             serialize_v3_number(n)
         }
         XffValue::Metadata(meta) => {
+            if !meta.is_strict_v3_compliant() {
+                return Err(crate::error::NabuError::InvalidMetadata("Metadata must be a flat object".to_string()));
+            }
             let mut pairs = Vec::with_capacity(meta.len() * 2);
             for (k, v) in &meta.map.map {
                 pairs.push(XffValue::String(k.clone()));
