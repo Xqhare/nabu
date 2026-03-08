@@ -9,7 +9,11 @@ use crate::{
     error::{NabuError, Result},
 };
 
-pub fn serialize_xff_v2(data: Vec<XffValue>) -> Result<Vec<u8>> {
+/// Serializes XFF version 2 data.
+///
+/// # Errors
+/// Errors if serialization fails.
+pub fn serialize_xff_v2(data: &[XffValue]) -> Result<Vec<u8>> {
     let table: Crc32Table = generate_crc32_lookuptable();
     let file_data = serialize_xff_v2_value(&data[0], &table)?;
     let file_checksum = crc32_with_table(&file_data, &table);
@@ -31,7 +35,7 @@ fn serialize_xff_v2_value(data: &XffValue, table: &Crc32Table) -> Result<Vec<u8>
         XffValue::Number(n) => serialize_xff_v2_number(n, table),
         XffValue::Array(a) => serialize_xff_v2_array(a, table),
         XffValue::Object(o) => serialize_xff_v2_object(o, table),
-        XffValue::Data(d) => serialize_xff_v2_data(d, table),
+        XffValue::Data(d) => Ok(serialize_xff_v2_data(d, table)),
         XffValue::Boolean(b) => {
             if *b {
                 Ok(vec![16])
@@ -50,17 +54,14 @@ fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Result<Vec<u8>> {
         let mut out = Vec::new();
         for char in s.chars() {
             let tmp = char as u8;
-            if tmp >= 8 && tmp <= 13 {
-                out.push(tmp);
-            } else if tmp >= 32 && tmp <= 126 {
-                out.push(tmp);
-            } else if tmp == 128 || tmp == 142 {
-                out.push(tmp);
-            } else if tmp >= 130 && tmp <= 140 {
-                out.push(tmp);
-            } else if tmp >= 145 && tmp <= 156 {
-                out.push(tmp);
-            } else if tmp >= 158 {
+            if (8..=13).contains(&tmp)
+                || (32..=126).contains(&tmp)
+                || tmp == 128
+                || tmp == 142
+                || (130..=140).contains(&tmp)
+                || (145..=156).contains(&tmp)
+                || tmp >= 158
+            {
                 out.push(tmp);
             } else {
                 return Err(NabuError::StringContainsNonASCII(s.to_string(), 2));
@@ -68,9 +69,9 @@ fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Result<Vec<u8>> {
         }
         out
     };
-    let checksum = crc32_with_table(&tmp, &table);
+    let checksum = crc32_with_table(&tmp, table);
     // now byte structure and push
-    let mut out: Vec<u8> = Vec::with_capacity(tmp.len());
+    let mut out: Vec<u8> = Vec::with_capacity(tmp.len() + 10);
     out.push(1);
     out.extend(serialize_leb128_unsigned(tmp.len()));
     out.extend(tmp);
@@ -95,10 +96,9 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
                         n.as_string(),
                         2,
                     ));
-                } else {
-                    out.push(tmp);
-                    neg_used = true;
                 }
+                out.push(tmp);
+                neg_used = true;
             } else if tmp == 44 || tmp == 46 {
                 if sep_used {
                     return Err(NabuError::NumberContainsInvalidCharacter(
@@ -106,11 +106,10 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
                         n.as_string(),
                         2,
                     ));
-                } else {
-                    out.push(tmp);
-                    sep_used = true;
                 }
-            } else if tmp >= 48 && tmp <= 57 {
+                out.push(tmp);
+                sep_used = true;
+            } else if (48..=57).contains(&tmp) {
                 out.push(tmp);
             } else {
                 return Err(NabuError::NumberContainsInvalidCharacter(
@@ -122,7 +121,7 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
         }
         out
     };
-    let checksum = crc32_with_table(&tmp, &table);
+    let checksum = crc32_with_table(&tmp, table);
     // now byte structure and push - over allocate for length
     let mut out: Vec<u8> = Vec::with_capacity(tmp.len() + 10);
     out.push(2);
@@ -144,7 +143,7 @@ fn serialize_xff_v2_array(a: &Array, table: &Crc32Table) -> Result<Vec<u8>> {
         array_bytes.push(30);
     }
     // byte structure and push
-    let checksum = crc32_with_table(&array_bytes, &table);
+    let checksum = crc32_with_table(&array_bytes, table);
     let mut out: Vec<u8> = Vec::with_capacity(array_bytes.len() + 10);
     out.push(3);
     out.extend(serialize_leb128_unsigned(array_bytes.len()));
@@ -160,7 +159,7 @@ fn serialize_xff_v2_object(o: &Object, table: &Crc32Table) -> Result<Vec<u8>> {
     // smallest value is NUL = 1 byte, other values have min sizes around 10
     // also obj itself takes a few bytes
     let mut object_bytes: Vec<u8> = Vec::with_capacity(o.len() * 10);
-    for (key, value) in o.map.iter() {
+    for (key, value) in &o.map {
         // GS
         object_bytes.push(29);
         // key
@@ -178,7 +177,7 @@ fn serialize_xff_v2_object(o: &Object, table: &Crc32Table) -> Result<Vec<u8>> {
         object_bytes.push(30);
     }
     // byte structure and push
-    let checksum = crc32_with_table(&object_bytes, &table);
+    let checksum = crc32_with_table(&object_bytes, table);
     let mut out: Vec<u8> = Vec::with_capacity(object_bytes.len() + 10);
     out.push(4);
     out.extend(serialize_leb128_unsigned(object_bytes.len()));
@@ -189,9 +188,9 @@ fn serialize_xff_v2_object(o: &Object, table: &Crc32Table) -> Result<Vec<u8>> {
     Ok(out)
 }
 
-fn serialize_xff_v2_data(d: &Data, table: &Crc32Table) -> Result<Vec<u8>> {
+fn serialize_xff_v2_data(d: &Data, table: &Crc32Table) -> Vec<u8> {
     // byte structure and push
-    let checksum = crc32_with_table(&d.data, &table);
+    let checksum = crc32_with_table(&d.data, table);
     let mut out: Vec<u8> = Vec::with_capacity(d.data.len() + 10);
     out.push(5);
     out.extend(serialize_leb128_unsigned(d.data.len()));
@@ -199,5 +198,5 @@ fn serialize_xff_v2_data(d: &Data, table: &Crc32Table) -> Result<Vec<u8>> {
     out.push(23);
     out.extend(checksum.to_le_bytes());
     out.push(24);
-    Ok(out)
+    out
 }
