@@ -225,6 +225,34 @@ pub enum NabuError {
     /// * `value` - The invalid number
     /// * `version` - The XFF version
     NumberContainsInvalidCharacter(u8, String, u8),
+
+    // -----------------------------------------------
+    //                   Xff v3 errors
+    // -----------------------------------------------
+    /// Invalid marker parity at the wrapped position
+    ///
+    /// # Parameters
+    /// * `byte` - The invalid byte
+    /// * `pos` - The position in the file where the invalid parity was found
+    InvalidMarkerParity(u8, usize),
+
+    /// Index checksum mismatch for a parent type
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the index checksum was found
+    IndexChecksumMismatch(usize),
+
+    /// Invalid table schema (mismatch between column count and row data)
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the invalid schema was found
+    InvalidTableSchema(usize),
+
+    /// Unsupported parent type encountered during parsing
+    ///
+    /// # Parameters
+    /// * `pos` - The position in the file where the unsupported type was found
+    UnsupportedParentType(usize),
 }
 
 pub type Result<T> = std::result::Result<T, NabuError>;
@@ -357,6 +385,25 @@ impl fmt::Display for NabuError {
                 f,
                 "Invalid XFF version {} value length too long: {} at byte position {}",
                 v, l, u
+            ),
+            // Xff v3 errors
+            NabuError::InvalidMarkerParity(b, i) => write!(
+                f,
+                "Invalid XFF version 3 marker parity: {} at byte position {}",
+                b, i
+            ),
+            NabuError::IndexChecksumMismatch(i) => write!(
+                f,
+                "XFF version 3 index checksum mismatch at byte position {}",
+                i
+            ),
+            NabuError::InvalidTableSchema(i) => {
+                write!(f, "XFF version 3 invalid table schema at byte position {}", i)
+            }
+            NabuError::UnsupportedParentType(i) => write!(
+                f,
+                "XFF version 3 unsupported parent type at byte position {}",
+                i
             ),
         }
     }
