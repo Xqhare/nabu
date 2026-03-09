@@ -19,6 +19,8 @@ This README documents the usage of the most recent version of `.xff`: Version 3.
 
 If you would like to use version 0, 1 or 2, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
+This library is designed for interoperability with [Mawu](https://github.com/Xqhare/mawu), a library for working with `.json` and `.csv` files in rust; Enabling easy data interchange between them.
+
 ## License
 
 All files in this repository are doubly licensed under the [MIT License](LICENSE-MIT) and [EPL-2.0 License](LICENSE).
