@@ -15,19 +15,10 @@ pub enum NabuError {
     //                   Xff v0 errors
     // -----------------------------------------------
     /// The file is missing the End of Text marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing ETX was found
     MissingETX(usize),
     /// The file is missing the Data Link Escape marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing DLE was found
     MissingDLE(usize),
     /// The file is missing the Escape marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing ESC was found
     MissingESC(usize),
     /// A missing command character was encountered
     MissingCommandCharacter,
@@ -36,222 +27,131 @@ pub enum NabuError {
     //                   Xff v1 errors
     // -----------------------------------------------
     /// The file is missing the Text marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing TXT was found
     MissingTXT(usize),
     /// The file is missing the Number marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing NUM was found
     MissingNUM(usize),
     /// The file is missing the Array marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing ARY was found
     MissingARY(usize),
     /// The file is missing the Object marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing OBJ was found
     MissingOBJ(usize),
     /// The file is missing the Data marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing DAT was found
     MissingDAT(usize),
     /// The file is missing the End of Value marker at the wrapped position
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing EV was found
     MissingEV(usize),
 
     /// The wrapped byte is not a valid number
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid number was found
-    /// * `String` - The invalid number
-    /// * `version` - The XFF version
     InvalidNumber(usize, String, u8),
     /// The wrapped byte is not a valid array separator, making the array invalid
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid array was found
-    /// * `byte` - The invalid byte
-    /// * `version` - The XFF version
     InvalidArray(usize, u8, u8),
     /// The wrapped byte is not a valid object separator, making the object invalid
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid object was found
-    /// * `byte` - The invalid byte
-    /// * `version` - The XFF version
     InvalidObject(usize, u8, u8),
 
     /// The wrapped value is not a valid string. The invalid string ends at the wrapped position.
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid key was found
-    /// * `key` - The invalid key
-    /// * `version` - The XFF version
     InvalidKey(usize, XffValue, u8),
 
-    /// # Parameters
-    /// * `len` - The length of the value
-    /// * `version` - The XFF version
+    /// Invalid value length
     InvalidXFFValueLength(usize, u8),
 
-    /// # Parameters
-    /// * `len` - The length of the value
-    /// * `pos` - The position in the file where the invalid value was found
-    /// * `version` - The XFF version
+    /// Value length too long
     XFFValueLengthTooLong(usize, usize, u8),
 
     // -----------------------------------------------
     //             Xff general serde errors
     // -----------------------------------------------
     /// Invalid, wrapped, ASCII character encountered at the wrapped position
-    /// Has to be a valid String character
-    ///
-    /// # Parameters
-    /// * `char` - The invalid character
-    /// * `pos` - The position in the file where the invalid character was found
-    /// * `version` - The XFF version
     InvalidASCIIString(u8, usize, u8),
     /// Invalid, wrapped Extension encountered
-    /// The file is valid XFF, but not the correct extension
-    ///
-    /// ONLY USED IN SOME V0 CODE - DEPRECATED
-    ///
-    /// # Parameters
-    /// * `ext` - The invalid extension
-    /// * `err` - A more descriptive error message
     InvalidXFFExtension(String, String),
     /// Invalid Byte according to the XFF specification of the file version
-    ///
-    /// # Parameters
-    /// * `byte` - The invalid byte
-    /// * `pos` - The position in the file where the invalid byte was found
-    /// * `version` - The XFF version
     InvalidXFFByte(u8, usize, u8),
     /// Invalid XFF value for the current XFF version
-    ///
-    /// # Parameters
-    /// * `value` - The invalid value
-    /// * `version` - The XFF version
     InvalidXFFValueForVersion(XffValue, u8),
 
     // -----------------------------------------------
     //                Xff v0 serde errors
     // -----------------------------------------------
     /// Invalid, wrapped, ASCII command character encountered at the wrapped position
-    ///
-    /// # Parameters
-    /// * `char` - The invalid character
-    /// * `pos` - The position in the file where the invalid character was found
     InvalidASCIICommandCharacter(u8, usize),
 
     // -----------------------------------------------
     //                   Xff file errors
     // -----------------------------------------------
     /// The file is missing the End of File marker
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing EM was found
     MissingEM(usize),
 
     /// Completely empty file, missing both version and end of file bytes
     EmptyXFF,
 
     /// Truncated file, missing end of file byte
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the missing EM was found
-    /// * `version` - The XFF version
     TruncatedXFF(usize, u8),
 
     /// Unknown XFF version
-    ///
-    /// # Parameters
-    /// * `version` - The unknown version
     UnknownXFFVersion(u8),
 
     /// Invalid XFF version, the value is not for the correct version
-    ///
-    /// # Parameters
-    /// * `value` - The invalid value
-    /// * `version` - The invalid version
     InvalidXFFVersion(XffValue, u8),
 
     /// Invalid XFF file checksum
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid checksum was found
-    /// * `version` - The XFF version
     InvalidFileChecksum(usize, u8),
 
     /// Truncated XFF value
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the truncated value was found
-    /// * `version` - The XFF version
     TruncatedXFFValue(usize, u8),
 
     /// Truncated XFF value checksum
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the truncated checksum was found
-    /// * `version` - The XFF version
     TruncatedXFFValueChecksum(usize, u8),
 
     /// Invalid XFF value checksum
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid checksum was found
-    /// * `version` - The XFF version
-    InvalidXFFValueChecksum(usize, u8),
+    InvalidXFFValueChecksum {
+        /// The checksum that was expected
+        expected: u32,
+        /// The actual checksum that was calculated
+        actual: u32,
+        /// The byte position where the checksum was found
+        pos: usize,
+        /// The XFF version
+        version: u8,
+    },
 
     /// String contains non-ASCII characters
-    ///
-    /// # Parameters
-    /// * `value` - The invalid String
-    /// * `version` - The XFF version
     StringContainsNonASCII(String, u8),
 
     /// Number contains invalid character
-    ///
-    /// # Parameters
-    /// * `char` - The invalid character
-    /// * `value` - The invalid number
-    /// * `version` - The XFF version
     NumberContainsInvalidCharacter(u8, String, u8),
 
     // -----------------------------------------------
     //                   Xff v3 errors
     // -----------------------------------------------
     /// Invalid marker parity at the wrapped position
-    ///
-    /// # Parameters
-    /// * `byte` - The invalid byte
-    /// * `pos` - The position in the file where the invalid parity was found
-    InvalidMarkerParity(u8, usize),
+    InvalidMarkerParity {
+        /// The byte with invalid parity
+        actual: u8,
+        /// The position in the file
+        pos: usize,
+    },
 
     /// Index checksum mismatch for a parent type
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the index checksum was found
-    IndexChecksumMismatch(usize),
+    IndexChecksumMismatch {
+        /// The checksum that was expected
+        expected: u32,
+        /// The actual checksum that was calculated
+        actual: u32,
+        /// The byte position where the checksum was found
+        pos: usize,
+    },
 
-    /// Invalid table schema (mismatch between column count and row data)
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the invalid schema was found
-    InvalidTableSchema(usize),
+    /// Invalid table schema
+    InvalidTableSchema {
+        /// The row index where the mismatch occurred
+        row_index: usize,
+        /// How many columns were expected
+        expected_cols: usize,
+        /// How many columns were actually found
+        actual_cols: usize,
+        /// The byte position
+        pos: usize,
+    },
 
     /// Unsupported parent type encountered during parsing
-    ///
-    /// # Parameters
-    /// * `pos` - The position in the file where the unsupported type was found
     UnsupportedParentType(usize),
 
     /// Metadata contains non-flat values (nested parent types) which is forbidden in XFF v3
@@ -333,7 +233,7 @@ impl fmt::Display for NabuError {
             // Xff file errors
             NabuError::MissingEM(u) => write!(
                 f,
-                "Missing End of File marker EM, end of file, at expected byte position {u}.",
+                "Missing End of File marker EM at expected byte position {u}.",
             ),
             NabuError::EmptyXFF => write!(f, "Empty XFF"),
             NabuError::TruncatedXFF(u, v) => {
@@ -357,9 +257,9 @@ impl fmt::Display for NabuError {
             NabuError::InvalidFileChecksum(c, v) => {
                 write!(f, "Invalid XFF version {v} file checksum: {c}")
             }
-            NabuError::InvalidXFFValueChecksum(u, v) => write!(
+            NabuError::InvalidXFFValueChecksum { expected, actual, pos, version } => write!(
                 f,
-                "Invalid XFF version {v} value checksum at byte position {u}",
+                "Invalid XFF version {version} value checksum at byte position {pos}. Expected: {expected:08X}, Actual: {actual:08X}",
             ),
 
             // other errors
@@ -376,18 +276,18 @@ impl fmt::Display for NabuError {
                 "Invalid XFF version {v} value length too long: {l} at byte position {u}",
             ),
             // Xff v3 errors
-            NabuError::InvalidMarkerParity(b, i) => write!(
+            NabuError::InvalidMarkerParity { actual, pos } => write!(
                 f,
-                "Invalid XFF version 3 marker parity: {b} at byte position {i}",
+                "Invalid XFF version 3 marker parity: {actual:02X} at byte position {pos}",
             ),
-            NabuError::IndexChecksumMismatch(i) => write!(
+            NabuError::IndexChecksumMismatch { expected, actual, pos } => write!(
                 f,
-                "XFF version 3 index checksum mismatch at byte position {i}",
+                "XFF version 3 index checksum mismatch at byte position {pos}. Expected: {expected:08X}, Actual: {actual:08X}",
             ),
-            NabuError::InvalidTableSchema(i) => {
+            NabuError::InvalidTableSchema { row_index, expected_cols, actual_cols, pos } => {
                 write!(
                     f,
-                    "XFF version 3 invalid table schema at byte position {i}",
+                    "XFF version 3 invalid table schema at byte position {pos}. Row {row_index} expected {expected_cols} columns but found {actual_cols}",
                 )
             }
             NabuError::UnsupportedParentType(i) => write!(

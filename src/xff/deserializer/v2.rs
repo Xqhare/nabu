@@ -154,7 +154,8 @@ fn deserialize_xff_v2_text(
     byte_pos.set(byte_pos.get() + 1);
     
     // Return
-    if txt_checksum == crc32_with_table(&data, table) {
+    let actual_crc = crc32_with_table(&data, table);
+    if txt_checksum == actual_crc {
         // -len
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(6));
         let out = deserialize_xff_text(&mut data.into(), byte_pos, 2);
@@ -162,10 +163,12 @@ fn deserialize_xff_v2_text(
         byte_pos.set(byte_pos.get() + 6);
         out
     } else {
-        Err(NabuError::InvalidXFFValueChecksum(
-            byte_pos.get().saturating_sub(1),
-            2,
-        ))
+        Err(NabuError::InvalidXFFValueChecksum {
+            expected: txt_checksum,
+            actual: actual_crc,
+            pos: byte_pos.get().saturating_sub(1),
+            version: 2,
+        })
     }
 }
 
@@ -186,16 +189,19 @@ fn deserialize_xff_v2_number(
     byte_pos.set(byte_pos.get() + 1);
     
     // Return
-    if num_checksum == crc32_with_table(data.make_contiguous(), table) {
+    let actual_crc = crc32_with_table(data.make_contiguous(), table);
+    if num_checksum == actual_crc {
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(6));
         let out = deserialize_xff_number(&mut data, byte_pos, 2);
         byte_pos.set(byte_pos.get() + 6);
         out
     } else {
-        Err(NabuError::InvalidXFFValueChecksum(
-            byte_pos.get().saturating_sub(1),
-            2,
-        ))
+        Err(NabuError::InvalidXFFValueChecksum {
+            expected: num_checksum,
+            actual: actual_crc,
+            pos: byte_pos.get().saturating_sub(1),
+            version: 2,
+        })
     }
 }
 
@@ -215,11 +221,14 @@ fn deserialize_xff_v2_array(
         byte_pos.set(byte_pos.get() + len);
         let array_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
 
-        if crc32_with_table(array_data.make_contiguous(), table) != array_checksum {
-            return Err(NabuError::InvalidXFFValueChecksum(
-                byte_pos.get().saturating_sub(1),
-                2,
-            ));
+        let actual_crc = crc32_with_table(array_data.make_contiguous(), table);
+        if actual_crc != array_checksum {
+            return Err(NabuError::InvalidXFFValueChecksum {
+                expected: array_checksum,
+                actual: actual_crc,
+                pos: byte_pos.get().saturating_sub(1),
+                version: 2,
+            });
         }
         // no EV check -> 5
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(5));
@@ -284,11 +293,14 @@ fn deserialize_xff_v2_object(
         byte_pos.set(byte_pos.get() + len);
         let obj_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
 
-        if crc32_with_table(obj_data.make_contiguous(), table) != obj_checksum {
-            return Err(NabuError::InvalidXFFValueChecksum(
-                byte_pos.get().saturating_sub(1),
-                2,
-            ));
+        let actual_crc = crc32_with_table(obj_data.make_contiguous(), table);
+        if actual_crc != obj_checksum {
+            return Err(NabuError::InvalidXFFValueChecksum {
+                expected: obj_checksum,
+                actual: actual_crc,
+                pos: byte_pos.get().saturating_sub(1),
+                version: 2,
+            });
         }
         byte_pos.set(byte_pos.get().saturating_sub(len));
 
@@ -350,13 +362,16 @@ fn deserialize_xff_v2_data(
     byte_pos.set(byte_pos.get() + 1);
     
     // Return
-    if num_checksum == crc32_with_table(&data, table) {
+    let actual_crc = crc32_with_table(&data, table);
+    if num_checksum == actual_crc {
         let out = XffValue::Data(Data::from(data));
         Ok(out)
     } else {
-        Err(NabuError::InvalidXFFValueChecksum(
-            byte_pos.get().saturating_sub(1),
-            2,
-        ))
+        Err(NabuError::InvalidXFFValueChecksum {
+            expected: num_checksum,
+            actual: actual_crc,
+            pos: byte_pos.get().saturating_sub(1),
+            version: 2,
+        })
     }
 }

@@ -41,7 +41,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     let marker_pos = *cursor;
     let marker = read_byte(content, cursor)?;
     if !is_even_parity(marker) {
-        return Err(NabuError::InvalidMarkerParity(marker, marker_pos));
+        return Err(NabuError::InvalidMarkerParity { actual: marker, pos: marker_pos });
     }
 
     match marker {
@@ -63,8 +63,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             
             let ev = read_byte(content, cursor)?;
@@ -86,8 +92,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             
             let ev = read_byte(content, cursor)?;
@@ -105,8 +117,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             
             let ev = read_byte(content, cursor)?;
@@ -124,8 +142,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             
             let ev = read_byte(content, cursor)?;
@@ -146,8 +170,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             
             let ev = read_byte(content, cursor)?;
@@ -165,8 +195,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             *cursor += leb_len as usize;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             let ev = read_byte(content, cursor)?;
             if ev != EV { return Err(NabuError::MissingEV(*cursor - 1)); }
@@ -180,8 +216,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             *cursor += leb_len as usize;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             let ev = read_byte(content, cursor)?;
             if ev != EV { return Err(NabuError::MissingEV(*cursor - 1)); }
@@ -195,8 +237,14 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             *cursor += 16;
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
-            if crc32(&content[start..checksum_start]) != checksum {
-                return Err(NabuError::InvalidXFFValueChecksum(checksum_start, 3));
+            let actual_crc = crc32(&content[start..checksum_start]);
+            if actual_crc != checksum {
+                return Err(NabuError::InvalidXFFValueChecksum {
+                    expected: checksum,
+                    actual: actual_crc,
+                    pos: checksum_start,
+                    version: 3,
+                });
             }
             let ev = read_byte(content, cursor)?;
             if ev != EV { return Err(NabuError::MissingEV(*cursor - 1)); }
@@ -262,8 +310,13 @@ fn deserialize_v3_parent_elements(content: &[u8], cursor: &mut usize) -> Result<
     
     let index_end = *cursor;
     let checksum = read_u32_le(content, cursor)?;
-    if crc32(&content[index_start..index_end]) != checksum {
-        return Err(NabuError::IndexChecksumMismatch(index_end));
+    let actual_crc = crc32(&content[index_start..index_end]);
+    if actual_crc != checksum {
+        return Err(NabuError::IndexChecksumMismatch {
+            expected: checksum,
+            actual: actual_crc,
+            pos: index_end,
+        });
     }
     
     let mut elements = Vec::with_capacity(element_count);
@@ -293,15 +346,25 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
     let col_index_end = *cursor;
     let col_checksum = read_u32_le(content, cursor)?;
-    if crc32(&content[col_index_start..col_index_end]) != col_checksum {
-        return Err(NabuError::IndexChecksumMismatch(col_index_end));
+    let col_actual_crc = crc32(&content[col_index_start..col_index_end]);
+    if col_actual_crc != col_checksum {
+        return Err(NabuError::IndexChecksumMismatch {
+            expected: col_checksum,
+            actual: col_actual_crc,
+            pos: col_index_end,
+        });
     }
 
     // 2. Column Names
     let mut columns = Vec::with_capacity(col_count);
     for _ in 0..col_count {
         let val = deserialize_v3_value(content, cursor)?;
-        columns.push(val.into_string().ok_or(NabuError::InvalidTableSchema(*cursor))?);
+        columns.push(val.into_string().ok_or(NabuError::InvalidTableSchema {
+            row_index: 0,
+            expected_cols: col_count,
+            actual_cols: 0,
+            pos: *cursor,
+        })?);
     }
 
     // 3. Row Index
@@ -316,8 +379,13 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
     let row_index_end = *cursor;
     let row_checksum = read_u32_le(content, cursor)?;
-    if crc32(&content[row_index_start..row_index_end]) != row_checksum {
-        return Err(NabuError::IndexChecksumMismatch(row_index_end));
+    let row_actual_crc = crc32(&content[row_index_start..row_index_end]);
+    if row_actual_crc != row_checksum {
+        return Err(NabuError::IndexChecksumMismatch {
+            expected: row_checksum,
+            actual: row_actual_crc,
+            pos: row_index_end,
+        });
     }
 
     // 4. Element Index
@@ -329,18 +397,31 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
     let element_index_end = *cursor;
     let element_checksum = read_u32_le(content, cursor)?;
-    if crc32(&content[element_index_start..element_index_end]) != element_checksum {
-        return Err(NabuError::IndexChecksumMismatch(element_index_end));
+    let element_actual_crc = crc32(&content[element_index_start..element_index_end]);
+    if element_actual_crc != element_checksum {
+        return Err(NabuError::IndexChecksumMismatch {
+            expected: element_checksum,
+            actual: element_actual_crc,
+            pos: element_index_end,
+        });
     }
 
     // 5. Row Data
     let mut rows = Vec::with_capacity(row_count);
-    for _ in 0..row_count {
+    for i in 0..row_count {
         let mut row = Vec::with_capacity(col_count);
         for _ in 0..col_count {
             row.push(deserialize_v3_value(content, cursor)?);
         }
         rows.push(row);
+        if rows[i].len() != col_count {
+            return Err(NabuError::InvalidTableSchema {
+                row_index: i,
+                expected_cols: col_count,
+                actual_cols: rows[i].len(),
+                pos: *cursor,
+            });
+        }
     }
 
     let ev = read_byte(content, cursor)?;
