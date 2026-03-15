@@ -240,14 +240,12 @@ impl fmt::Display for NabuError {
                 write!(f, "Truncated XFF version {v} at byte position {u}")
             }
             NabuError::UnknownXFFVersion(ver) => write!(f, "Unknown XFF version: {ver}"),
-            NabuError::InvalidXFFVersion(val, ver) => write!(
-                f,
-                "Invalid XffValue for XFF version {ver}. Value {val};",
-            ),
-            NabuError::TruncatedXFFValue(u, v) => write!(
-                f,
-                "Truncated XFF version {v} value at byte position {u}; ",
-            ),
+            NabuError::InvalidXFFVersion(val, ver) => {
+                write!(f, "Invalid XffValue for XFF version {ver}. Value {val};",)
+            }
+            NabuError::TruncatedXFFValue(u, v) => {
+                write!(f, "Truncated XFF version {v} value at byte position {u}; ",)
+            }
             NabuError::TruncatedXFFValueChecksum(u, v) => write!(
                 f,
                 "Truncated XFF version {v} value checksum at byte position {u}",
@@ -257,7 +255,12 @@ impl fmt::Display for NabuError {
             NabuError::InvalidFileChecksum(c, v) => {
                 write!(f, "Invalid XFF version {v} file checksum: {c}")
             }
-            NabuError::InvalidXFFValueChecksum { expected, actual, pos, version } => write!(
+            NabuError::InvalidXFFValueChecksum {
+                expected,
+                actual,
+                pos,
+                version,
+            } => write!(
                 f,
                 "Invalid XFF version {version} value checksum at byte position {pos}. Expected: {expected:08X}, Actual: {actual:08X}",
             ),
@@ -280,11 +283,20 @@ impl fmt::Display for NabuError {
                 f,
                 "Invalid XFF version 3 marker parity: {actual:02X} at byte position {pos}",
             ),
-            NabuError::IndexChecksumMismatch { expected, actual, pos } => write!(
+            NabuError::IndexChecksumMismatch {
+                expected,
+                actual,
+                pos,
+            } => write!(
                 f,
                 "XFF version 3 index checksum mismatch at byte position {pos}. Expected: {expected:08X}, Actual: {actual:08X}",
             ),
-            NabuError::InvalidTableSchema { row_index, expected_cols, actual_cols, pos } => {
+            NabuError::InvalidTableSchema {
+                row_index,
+                expected_cols,
+                actual_cols,
+                pos,
+            } => {
                 write!(
                     f,
                     "XFF version 3 invalid table schema at byte position {pos}. Row {row_index} expected {expected_cols} columns but found {actual_cols}",

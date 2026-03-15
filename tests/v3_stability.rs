@@ -1,6 +1,6 @@
+use athena::{Array, Data, Metadata, Number, Object, Table, Uuid};
 use nabu::XffValue;
-use nabu::serde::{write, read};
-use athena::{Array, Object, Table, Metadata, Uuid, Data, Number};
+use nabu::serde::{read, write};
 use std::fs;
 
 const GOLDEN_PATH: &str = "xff-example-data/v3_golden_reference.xff";
@@ -32,8 +32,11 @@ fn construct_master_value() -> Vec<XffValue> {
 
     // 5. Parents
     // Array
-    body_elements.push(XffValue::Array(Array::from(vec![XffValue::from(1), XffValue::from(2)])));
-    
+    body_elements.push(XffValue::Array(Array::from(vec![
+        XffValue::from(1),
+        XffValue::from(2),
+    ])));
+
     // Object (Single element for determinism)
     let mut obj = Object::new();
     obj.insert("stability", "confirmed");
@@ -54,7 +57,10 @@ fn construct_master_value() -> Vec<XffValue> {
 
     // IMPORTANT: Return [Metadata, Array(Body)]
     // The serializer will move Metadata to head, and serialize Array as the body.
-    vec![XffValue::Metadata(meta), XffValue::Array(Array::from(body_elements))]
+    vec![
+        XffValue::Metadata(meta),
+        XffValue::Array(Array::from(body_elements)),
+    ]
 }
 
 #[test]
@@ -71,7 +77,7 @@ fn test_v3_golden_reference_stability() {
     let full_temp_path = "v3_stability_temp.xff";
     // 1. Reconstruct the value
     let data = construct_master_value();
-    
+
     // 2. Serialize it to a temporary file
     write(temp_path, data).expect("Serialization failed");
     let current_bytes = fs::read(full_temp_path).expect("Failed to read temp file");
@@ -82,8 +88,7 @@ fn test_v3_golden_reference_stability() {
 
     // 4. Byte-by-byte comparison
     assert_eq!(
-        current_bytes, 
-        reference_bytes, 
+        current_bytes, reference_bytes,
         "BINARY REGRESSION DETECTED! The serialized output no longer matches the golden reference."
     );
 

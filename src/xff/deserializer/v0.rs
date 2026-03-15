@@ -138,7 +138,9 @@ pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuEr
                 #[allow(clippy::cast_possible_truncation)]
                 let data = content.drain(0..data_length as usize).collect::<Vec<u8>>();
                 #[allow(clippy::cast_possible_truncation)]
-                { byte_pos += data_length as usize + 5; }
+                {
+                    byte_pos += data_length as usize + 5;
+                }
 
                 if content[0] == 16 {
                     let _ = content.pop_front();

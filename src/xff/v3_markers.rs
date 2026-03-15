@@ -41,13 +41,14 @@ mod tests {
     #[test]
     fn test_marker_parity() {
         let markers = [
-            NUL, TRU, FAL, INF, NINF, NAN, 
-            TXT, DAT, DUR, UUID, DT, SINT, UINT, FLT,
-            ARY, OBJ, OOBJ, TBL, META,
-            EV, EM,
+            NUL, TRU, FAL, INF, NINF, NAN, TXT, DAT, DUR, UUID, DT, SINT, UINT, FLT, ARY, OBJ,
+            OOBJ, TBL, META, EV, EM,
         ];
         for marker in markers {
-            assert!(is_even_parity(marker), "Marker {marker:#04X} has invalid parity!");
+            assert!(
+                is_even_parity(marker),
+                "Marker {marker:#04X} has invalid parity!"
+            );
         }
     }
 }

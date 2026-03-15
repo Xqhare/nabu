@@ -152,7 +152,7 @@ fn deserialize_xff_v2_text(
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
-    
+
     // Return
     let actual_crc = crc32_with_table(&data, table);
     if txt_checksum == actual_crc {
@@ -187,7 +187,7 @@ fn deserialize_xff_v2_number(
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
-    
+
     // Return
     let actual_crc = crc32_with_table(data.make_contiguous(), table);
     if num_checksum == actual_crc {
@@ -360,7 +360,7 @@ fn deserialize_xff_v2_data(
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
-    
+
     // Return
     let actual_crc = crc32_with_table(&data, table);
     if num_checksum == actual_crc {
