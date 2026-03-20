@@ -44,7 +44,7 @@ fn construct_master_value() -> Vec<XffValue> {
 
     // OrderedObject
     let oobj = vec![("order".to_string(), XffValue::from("preserved"))];
-    body_elements.push(XffValue::OrderedObject(oobj));
+    body_elements.push(XffValue::OrderedObject(athena::OrderedObject::from(oobj)));
 
     // Table
     let mut table = Table::with_columns(vec!["id".to_string()]);

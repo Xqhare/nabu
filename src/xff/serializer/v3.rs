@@ -81,7 +81,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::String(s) => {
             let utf8_bytes = s.as_bytes();
-            let len_bytes = serialize_leb128_unsigned(utf8_bytes.len());
+            let len_bytes = serialize_leb128_unsigned(utf8_bytes.len() as u128);
 
             // Pre-allocate: Marker (1) + Len + Data + Checksum (4) + EV (1)
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + utf8_bytes.len());
@@ -113,7 +113,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Data(d) => {
             let raw_bytes = &d.data;
-            let len_bytes = serialize_leb128_unsigned(raw_bytes.len());
+            let len_bytes = serialize_leb128_unsigned(raw_bytes.len() as u128);
 
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + raw_bytes.len());
             buf.push(DAT);
@@ -130,7 +130,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::DateTime(dt) => {
             #[allow(clippy::cast_possible_truncation)]
-            let payload = serialize_leb128_unsigned(*dt as usize);
+            let payload = serialize_leb128_unsigned(*dt as u128);
             let mut buf = Vec::with_capacity(6 + payload.len());
             buf.push(DT);
             let checksum = crc32(&payload);
@@ -141,7 +141,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Duration(d) => {
             #[allow(clippy::cast_possible_truncation)]
-            let payload = serialize_leb128_unsigned(*d as usize);
+            let payload = serialize_leb128_unsigned(*d as u128);
             let mut buf = Vec::with_capacity(6 + payload.len());
             buf.push(DUR);
             let checksum = crc32(&payload);
@@ -186,17 +186,17 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
 }
 
 fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
-    let element_count_bytes = serialize_leb128_unsigned(elements.len());
+    let element_count_bytes = serialize_leb128_unsigned(elements.len() as u128);
 
     let mut serialized_elements = Vec::with_capacity(elements.len());
     let mut offsets = Vec::with_capacity(elements.len());
-    let mut current_offset = 0;
+    let mut current_offset: u128 = 0;
     let mut total_child_size = 0;
 
     for el in elements {
         let ser = serialize_v3_value(el)?;
         offsets.push(serialize_leb128_unsigned(current_offset));
-        current_offset += ser.len();
+        current_offset += ser.len() as u128;
         total_child_size += ser.len();
         serialized_elements.push(ser);
     }
@@ -225,17 +225,17 @@ fn serialize_v3_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
 
 fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
     let col_count = t.columns.len();
-    let col_count_bytes = serialize_leb128_unsigned(col_count);
+    let col_count_bytes = serialize_leb128_unsigned(col_count as u128);
 
     let mut col_names_ser = Vec::with_capacity(col_count);
     let mut col_offsets = Vec::with_capacity(col_count);
-    let mut current_col_offset = 0;
+    let mut current_col_offset: u128 = 0;
     let mut total_col_names_size = 0;
 
     for col in &t.columns {
         let ser = serialize_v3_value(&XffValue::String(col.clone()))?;
         col_offsets.push(serialize_leb128_unsigned(current_col_offset));
-        current_col_offset += ser.len();
+        current_col_offset += ser.len() as u128;
         total_col_names_size += ser.len();
         col_names_ser.push(ser);
     }
@@ -249,11 +249,11 @@ fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
 
     // Row parsing
     let row_count = t.rows.len();
-    let row_count_bytes = serialize_leb128_unsigned(row_count);
+    let row_count_bytes = serialize_leb128_unsigned(row_count as u128);
     let mut row_data_ser = Vec::with_capacity(row_count * col_count);
     let mut row_offsets = Vec::with_capacity(row_count);
     let mut element_offsets = Vec::with_capacity(row_count * col_count);
-    let mut current_row_offset = 0;
+    let mut current_row_offset: u128 = 0;
     let mut total_row_data_size = 0;
 
     for row in &t.rows {
@@ -261,7 +261,7 @@ fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
         for cell in row {
             let ser = serialize_v3_value(cell)?;
             element_offsets.push(serialize_leb128_unsigned(current_row_offset));
-            current_row_offset += ser.len();
+            current_row_offset += ser.len() as u128;
             total_row_data_size += ser.len();
             row_data_ser.push(ser);
         }
@@ -338,7 +338,7 @@ fn serialize_v3_number(n: &athena::Number) -> Vec<u8> {
         }
     } else if n.is_unsigned() {
         let val = n.into_usize().unwrap();
-        let payload = serialize_leb128_unsigned(val);
+        let payload = serialize_leb128_unsigned(val as u128);
         let mut buf = Vec::with_capacity(6 + payload.len());
         buf.push(UINT);
         let checksum = crc32(&payload);

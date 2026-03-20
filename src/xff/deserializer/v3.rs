@@ -64,7 +64,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let data_start = *cursor;
-            *cursor += len;
+            *cursor += len as usize;
 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
@@ -112,7 +112,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
-            Ok(XffValue::Number(Number::from(val)))
+            Ok(XffValue::Number(Number::from(val as u64)))
         }
 
         SINT => {
@@ -171,7 +171,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 3))?;
             *cursor += leb_len as usize;
             let data_start = *cursor;
-            *cursor += len;
+            *cursor += len as usize;
 
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
@@ -339,7 +339,7 @@ fn deserialize_v3_parent_elements(content: &[u8], cursor: &mut usize) -> Result<
         });
     }
 
-    let mut elements = Vec::with_capacity(element_count);
+    let mut elements = Vec::with_capacity(element_count as usize);
     for _ in 0..element_count {
         elements.push(deserialize_v3_value(content, cursor)?);
     }
@@ -376,12 +376,12 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
 
     // 2. Column Names
-    let mut columns = Vec::with_capacity(col_count);
+    let mut columns = Vec::with_capacity(col_count as usize);
     for _ in 0..col_count {
         let val = deserialize_v3_value(content, cursor)?;
         columns.push(val.into_string().ok_or(NabuError::InvalidTableSchema {
             row_index: 0,
-            expected_cols: col_count,
+            expected_cols: col_count as usize,
             actual_cols: 0,
             pos: *cursor,
         })?);
@@ -427,18 +427,19 @@ fn deserialize_v3_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     }
 
     // 5. Row Data
-    let mut rows = Vec::with_capacity(row_count);
+    let mut rows = Vec::with_capacity(row_count as usize);
     for i in 0..row_count {
-        let mut row = Vec::with_capacity(col_count);
+        let mut row = Vec::with_capacity(col_count as usize);
         for _ in 0..col_count {
             row.push(deserialize_v3_value(content, cursor)?);
         }
         rows.push(row);
-        if rows[i].len() != col_count {
+        let i_usize = i as usize;
+        if rows[i_usize].len() != col_count as usize {
             return Err(NabuError::InvalidTableSchema {
-                row_index: i,
-                expected_cols: col_count,
-                actual_cols: rows[i].len(),
+                row_index: i_usize,
+                expected_cols: col_count as usize,
+                actual_cols: rows[i_usize].len(),
                 pos: *cursor,
             });
         }

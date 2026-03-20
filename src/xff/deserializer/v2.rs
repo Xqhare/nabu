@@ -105,7 +105,7 @@ fn deserialize_xff_v2_value_length(
     if let Ok((res, len)) = deserialize_leb128_unsigned(content.make_contiguous()) {
         let _ = content.drain(0..len as usize);
         byte_pos.set(byte_pos.get() + len as usize);
-        Ok(res)
+        Ok(res.try_into().unwrap())
     } else {
         Err(NabuError::InvalidXFFValueLength(byte_pos.get(), 2))
     }

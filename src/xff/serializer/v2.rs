@@ -73,7 +73,7 @@ fn serialize_xff_v2_string(s: &str, table: &Crc32Table) -> Result<Vec<u8>> {
     // now byte structure and push
     let mut out: Vec<u8> = Vec::with_capacity(tmp.len() + 10);
     out.push(1);
-    out.extend(serialize_leb128_unsigned(tmp.len()));
+    out.extend(serialize_leb128_unsigned(tmp.len() as u128));
     out.extend(tmp);
     out.push(23);
     out.extend(checksum.to_le_bytes());
@@ -125,7 +125,7 @@ fn serialize_xff_v2_number(n: &Number, table: &Crc32Table) -> Result<Vec<u8>> {
     // now byte structure and push - over allocate for length
     let mut out: Vec<u8> = Vec::with_capacity(tmp.len() + 10);
     out.push(2);
-    out.extend(serialize_leb128_unsigned(tmp.len()));
+    out.extend(serialize_leb128_unsigned(tmp.len() as u128));
     out.extend(tmp);
     out.push(23);
     out.extend(checksum.to_le_bytes());
@@ -146,7 +146,7 @@ fn serialize_xff_v2_array(a: &Array, table: &Crc32Table) -> Result<Vec<u8>> {
     let checksum = crc32_with_table(&array_bytes, table);
     let mut out: Vec<u8> = Vec::with_capacity(array_bytes.len() + 10);
     out.push(3);
-    out.extend(serialize_leb128_unsigned(array_bytes.len()));
+    out.extend(serialize_leb128_unsigned(array_bytes.len() as u128));
     out.extend(array_bytes);
     out.push(23);
     out.extend(checksum.to_le_bytes());
@@ -180,7 +180,7 @@ fn serialize_xff_v2_object(o: &Object, table: &Crc32Table) -> Result<Vec<u8>> {
     let checksum = crc32_with_table(&object_bytes, table);
     let mut out: Vec<u8> = Vec::with_capacity(object_bytes.len() + 10);
     out.push(4);
-    out.extend(serialize_leb128_unsigned(object_bytes.len()));
+    out.extend(serialize_leb128_unsigned(object_bytes.len() as u128));
     out.extend(object_bytes);
     out.push(23);
     out.extend(checksum.to_le_bytes());
@@ -193,7 +193,7 @@ fn serialize_xff_v2_data(d: &Data, table: &Crc32Table) -> Vec<u8> {
     let checksum = crc32_with_table(&d.data, table);
     let mut out: Vec<u8> = Vec::with_capacity(d.data.len() + 10);
     out.push(5);
-    out.extend(serialize_leb128_unsigned(d.data.len()));
+    out.extend(serialize_leb128_unsigned(d.data.len() as u128));
     out.extend(d.data.clone());
     out.push(23);
     out.extend(checksum.to_le_bytes());
