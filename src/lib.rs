@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
-mod error;
+pub mod error;
 
 mod xff;
 
