@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod v1 {
     use std::collections::BTreeMap;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use std::{fs, usize};
 
     use serde::write_legacy;
@@ -66,12 +66,14 @@ mod v1 {
         for _ in 0..100 {
             let str = make_random_string();
             let data = XffValue::from(str);
-            let write = serde::write_legacy("xff-example-data/v1_random_strings.xff", data, 1);
+            let path: PathBuf = PathBuf::from(format!("xff-example-data/v1_random_strings.xff"));
+            let write = serde::write_legacy(&path, data, 1);
             assert!(write.is_ok());
-            let read = serde::read("xff-example-data/v1_random_strings.xff");
+            let read = serde::read(&path);
             assert!(read.is_ok());
             let read = read.unwrap();
             assert!(read.is_string());
+            assert!(std::fs::remove_file(path).is_ok());
         }
     }
 
@@ -317,10 +319,13 @@ mod v1 {
 
         let xff_val = XffValue::from(vec![small_data, medium_data, large_data]);
         assert!(xff_val.is_array());
-        let write = serde::write_legacy("xff-example-data/v1_data.xff", xff_val.clone(), 1);
-        assert!(write.is_ok());
+        let path: PathBuf = PathBuf::from("xff-example-data/v1_data.xff");
+        if !path.exists() {
+            let write = serde::write_legacy(&path, xff_val.clone(), 1);
+            assert!(write.is_ok());
+        }
 
-        let read = serde::read("xff-example-data/v1_data.xff");
+        let read = serde::read(path);
         assert!(read.is_ok());
         let read = read.unwrap().clone();
         assert!(read.is_array());

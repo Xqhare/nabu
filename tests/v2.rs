@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod v2 {
     use std::collections::BTreeMap;
+    use std::path::PathBuf;
     use std::{fs, usize};
 
     use serde::{read, remove_file, write};
@@ -437,10 +438,13 @@ mod v2 {
 
         let xff_val = XffValue::from(vec![small_data, medium_data, large_data]);
         assert!(xff_val.is_array());
-        let write = serde::write("xff-example-data/v2_data.xff", xff_val.clone());
-        assert!(write.is_ok());
+        let path: PathBuf = PathBuf::from("xff-example-data/v2_data.xff");
+        if !path.exists() {
+            let write = serde::write(&path, xff_val.clone());
+            assert!(write.is_ok());
+        }
 
-        let read = serde::read("xff-example-data/v2_data.xff");
+        let read = serde::read(path);
         assert!(read.is_ok());
         let read = read.unwrap().clone();
         assert!(read.is_array());
