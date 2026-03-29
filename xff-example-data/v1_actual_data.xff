@@ -1,4 +1,4 @@
-ìT”#![doc = include_str!("../README.md")]
+U«#![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
 pub mod error;
@@ -94,7 +94,7 @@ pub mod serde {
     /// use nabu::serde::read;
     /// use nabu::XffValue;
     ///
-    /// let tmp = read("xff-example-data/v2.xff");
+    /// let tmp = read("xff-example-data/v3_string.xff");
     /// assert!(tmp.is_ok());
     /// let data: XffValue = tmp.unwrap();
     /// println!("{}", data);
@@ -125,7 +125,7 @@ pub mod serde {
     /// use nabu::{CommandCharacter, Data, Number, XffValue};
     ///
     /// let data = XffValue::String("hello mom".to_string());
-    /// let tmp = write("xff-example-data/v2.xff", data.clone());
+    /// let tmp = write("xff-example-data/v3_example.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
     pub fn write<P, D>(path: P, data: D) -> Result<(), NabuError>
@@ -161,7 +161,7 @@ pub mod serde {
     ///         XffValue::String("hello mom".to_string()),
     ///     ]
     /// };
-    /// let tmp = write_legacy("xff-example-data/v2.xff", data.clone(), 0);
+    /// let tmp = write_legacy("xff-example-data/v1_example.xff", data.clone(), 1);
     /// assert!(tmp.is_ok());
     /// ```
     pub fn write_legacy<P, D>(path: P, data: D, xff_version: u8) -> Result<(), NabuError>

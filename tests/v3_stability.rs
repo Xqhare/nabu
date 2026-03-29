@@ -1,6 +1,6 @@
 use athena::{Array, Data, Metadata, Number, Object, Table, Uuid};
 use nabu::XffValue;
-use nabu::serde::{read, write};
+use nabu::serde::{read, write_legacy};
 use std::fs;
 
 const GOLDEN_PATH: &str = "xff-example-data/v3_golden_reference.xff";
@@ -67,7 +67,7 @@ fn construct_master_value() -> Vec<XffValue> {
 #[ignore] // Run manually to update the golden file
 fn generate_golden_reference() {
     let data = construct_master_value();
-    write(GOLDEN_PATH, data).expect("Failed to write golden reference");
+    write_legacy(GOLDEN_PATH, data, 3).expect("Failed to write golden reference");
     println!("Golden reference generated at {}", GOLDEN_PATH);
 }
 
@@ -79,7 +79,7 @@ fn test_v3_golden_reference_stability() {
     let data = construct_master_value();
 
     // 2. Serialize it to a temporary file
-    write(temp_path, data).expect("Serialization failed");
+    write_legacy(temp_path, data, 3).expect("Serialization failed");
     let current_bytes = fs::read(full_temp_path).expect("Failed to read temp file");
 
     // 3. Load the reference from disk

@@ -319,17 +319,20 @@ mod v1 {
 
         let xff_val = XffValue::from(vec![small_data, medium_data, large_data]);
         assert!(xff_val.is_array());
-        let path: PathBuf = PathBuf::from("xff-example-data/v1_data.xff");
+        let path: PathBuf = PathBuf::from("xff-example-data/v1_data_complex.xff");
         if !path.exists() {
             let write = serde::write_legacy(&path, xff_val.clone(), 1);
             assert!(write.is_ok());
         }
 
-        let read = serde::read(path);
+        let read = serde::read(&path);
         assert!(read.is_ok());
         let read = read.unwrap().clone();
         assert!(read.is_array());
         assert_eq!(read, xff_val);
+
+        // cleanup
+        let _ = fs::remove_file(path);
     }
 
     #[test]
@@ -432,7 +435,7 @@ mod v1 {
             1,
         );
         let write_null = serde::write_legacy("xff-example-data/v1_null.xff", xff_null.clone(), 1);
-        let write_data = serde::write_legacy("xff-example-data/v1_data.xff", xff_data.clone(), 1);
+        let write_data = serde::write_legacy("xff-example-data/v1_singleton_data.xff", xff_data.clone(), 1);
         let write_array =
             serde::write_legacy("xff-example-data/v1_array.xff", xff_array.clone(), 1);
         let write_object =
@@ -456,7 +459,7 @@ mod v1 {
         let read_boolean_t = serde::read("xff-example-data/v1_boolean_t.xff");
         let read_boolean_f = serde::read("xff-example-data/v1_boolean_f.xff");
         let read_null = serde::read("xff-example-data/v1_null.xff");
-        let read_data = serde::read("xff-example-data/v1_data.xff");
+        let read_data = serde::read("xff-example-data/v1_singleton_data.xff");
         let read_array = serde::read("xff-example-data/v1_array.xff");
         let read_object = serde::read("xff-example-data/v1_object.xff");
 

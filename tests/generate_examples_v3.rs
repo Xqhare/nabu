@@ -1,6 +1,6 @@
 use athena::{Data, Object, Table, Uuid};
 use nabu::XffValue;
-use nabu::serde::write;
+use nabu::serde::write_legacy;
 
 #[test]
 fn generate_v3_examples() {
@@ -25,48 +25,56 @@ fn generate_v3_examples() {
             5 => "v3_neginfinity",
             _ => unreachable!(),
         };
-        write(format!("{}{}", base_path, name), val).expect("Failed to write primitive");
+        write_legacy(format!("{}{}", base_path, name), val, 3).expect("Failed to write primitive");
     }
 
     // 2. Complex Types
-    write(
+    write_legacy(
         format!("{}v3_string", base_path),
         XffValue::from("Hello XFF v3! 🦀"),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_number_u", base_path),
         XffValue::from(123456789usize),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_number_i", base_path),
         XffValue::from(-123456789isize),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_number_f", base_path),
         XffValue::from(3.1415926535f64),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_data", base_path),
         XffValue::Data(Data::from(vec![0xDE, 0xAD, 0xBE, 0xEF])),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_datetime", base_path),
         XffValue::DateTime(1700000000000),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_duration", base_path),
         XffValue::Duration(3600000),
+        3,
     )
     .unwrap();
-    write(
+    write_legacy(
         format!("{}v3_uuid", base_path),
         XffValue::Uuid(Uuid::new([0xAA; 16])),
+        3,
     )
     .unwrap();
 
@@ -78,7 +86,7 @@ fn generate_v3_examples() {
         XffValue::from(true),
         XffValue::from(vec![XffValue::from(1.1), XffValue::from(2.2)]),
     ]);
-    write(format!("{}v3_array_nested", base_path), array).unwrap();
+    write_legacy(format!("{}v3_array_nested", base_path), array, 3).unwrap();
 
     // Object
     let mut obj = Object::new();
@@ -86,7 +94,7 @@ fn generate_v3_examples() {
     obj.insert("version", 3);
     obj.insert("status", "development");
     obj.insert("tags", vec!["binary", "rust", "integrity"]);
-    write(format!("{}v3_object", base_path), XffValue::Object(obj)).unwrap();
+    write_legacy(format!("{}v3_object", base_path), XffValue::Object(obj), 3).unwrap();
 
     // Table (The flagship v3 feature)
     let mut table = Table::with_columns(vec![
@@ -119,7 +127,7 @@ fn generate_v3_examples() {
             XffValue::from(100),
         ])
         .unwrap();
-    write(format!("{}v3_table", base_path), XffValue::Table(table)).unwrap();
+    write_legacy(format!("{}v3_table", base_path), XffValue::Table(table), 3).unwrap();
 
     // 4. Complex Nested Structure (similar to complex_read_and_write_v0)
     let mut root = Object::new();
@@ -148,9 +156,10 @@ fn generate_v3_examples() {
     content.insert("data", XffValue::Object(data_section));
     root.insert("content", XffValue::Object(content));
 
-    write(
+    write_legacy(
         format!("{}v3_complex_complete", base_path),
         XffValue::Object(root),
+        3,
     )
     .unwrap();
 }
