@@ -435,7 +435,11 @@ mod v1 {
             1,
         );
         let write_null = serde::write_legacy("xff-example-data/v1_null.xff", xff_null.clone(), 1);
-        let write_data = serde::write_legacy("xff-example-data/v1_singleton_data.xff", xff_data.clone(), 1);
+        let write_data = serde::write_legacy(
+            "xff-example-data/v1_singleton_data.xff",
+            xff_data.clone(),
+            1,
+        );
         let write_array =
             serde::write_legacy("xff-example-data/v1_array.xff", xff_array.clone(), 1);
         let write_object =
