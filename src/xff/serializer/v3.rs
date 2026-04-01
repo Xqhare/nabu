@@ -130,7 +130,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::DateTime(dt) => {
             #[allow(clippy::cast_possible_truncation)]
-            let payload = serialize_leb128_unsigned(*dt as u128);
+            let payload = serialize_leb128_unsigned(u128::from(*dt));
             let mut buf = Vec::with_capacity(6 + payload.len());
             buf.push(DT);
             let checksum = crc32(&payload);
@@ -141,7 +141,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Duration(d) => {
             #[allow(clippy::cast_possible_truncation)]
-            let payload = serialize_leb128_unsigned(*d as u128);
+            let payload = serialize_leb128_unsigned(u128::from(*d));
             let mut buf = Vec::with_capacity(6 + payload.len());
             buf.push(DUR);
             let checksum = crc32(&payload);

@@ -416,7 +416,11 @@ mod v2 {
             lorem_long,
         ]);
         assert!(xff_val.is_array());
-        let write = serde::write_legacy("xff-example-data/v2_primitive_values.xff", xff_val.clone(), 2);
+        let write = serde::write_legacy(
+            "xff-example-data/v2_primitive_values.xff",
+            xff_val.clone(),
+            2,
+        );
         assert!(write.is_ok());
 
         let read = serde::read("xff-example-data/v2_primitive_values.xff");
@@ -565,18 +569,34 @@ mod v2 {
         let xff_array = XffValue::from(vec![XffValue::from("hello"), XffValue::from(42.69)]);
         let xff_object = XffValue::from(BTreeMap::from([("key", XffValue::from(42.69))]));
 
-        let write_string = serde::write_legacy("xff-example-data/v2_string.xff", xff_string.clone(), 2);
-        let write_number_f = serde::write_legacy("xff-example-data/v2_number_f.xff", xff_number_f.clone(), 2);
-        let write_number_i = serde::write_legacy("xff-example-data/v2_number_i.xff", xff_number_i.clone(), 2);
-        let write_number_u = serde::write_legacy("xff-example-data/v2_number_u.xff", xff_number_u.clone(), 2);
-        let write_boolean_t =
-            serde::write_legacy("xff-example-data/v2_boolean_t.xff", xff_boolean_t.clone(), 2);
-        let write_boolean_f =
-            serde::write_legacy("xff-example-data/v2_boolean_f.xff", xff_boolean_f.clone(), 2);
+        let write_string =
+            serde::write_legacy("xff-example-data/v2_string.xff", xff_string.clone(), 2);
+        let write_number_f =
+            serde::write_legacy("xff-example-data/v2_number_f.xff", xff_number_f.clone(), 2);
+        let write_number_i =
+            serde::write_legacy("xff-example-data/v2_number_i.xff", xff_number_i.clone(), 2);
+        let write_number_u =
+            serde::write_legacy("xff-example-data/v2_number_u.xff", xff_number_u.clone(), 2);
+        let write_boolean_t = serde::write_legacy(
+            "xff-example-data/v2_boolean_t.xff",
+            xff_boolean_t.clone(),
+            2,
+        );
+        let write_boolean_f = serde::write_legacy(
+            "xff-example-data/v2_boolean_f.xff",
+            xff_boolean_f.clone(),
+            2,
+        );
         let write_null = serde::write_legacy("xff-example-data/v2_null.xff", xff_null.clone(), 2);
-        let write_data = serde::write_legacy("xff-example-data/v2_singleton_data.xff", xff_data.clone(), 2);
-        let write_array = serde::write_legacy("xff-example-data/v2_array.xff", xff_array.clone(), 2);
-        let write_object = serde::write_legacy("xff-example-data/v2_object.xff", xff_object.clone(), 2);
+        let write_data = serde::write_legacy(
+            "xff-example-data/v2_singleton_data.xff",
+            xff_data.clone(),
+            2,
+        );
+        let write_array =
+            serde::write_legacy("xff-example-data/v2_array.xff", xff_array.clone(), 2);
+        let write_object =
+            serde::write_legacy("xff-example-data/v2_object.xff", xff_object.clone(), 2);
 
         assert!(write_string.is_ok());
         assert!(write_number_f.is_ok());
