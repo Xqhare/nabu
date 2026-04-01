@@ -1,6 +1,36 @@
-use athena::{Object, Table, Uuid};
+use athena::{CommandCharacter, Object, Table, Uuid};
 use nabu::XffValue;
 use nabu::serde::{read, remove_file, write_legacy};
+
+#[test]
+fn test_v3_command_characters() {
+    let path = "test_cmd.xff";
+    let cmd = CommandCharacter::Bell; // 7
+    let val = XffValue::CommandCharacter(cmd);
+
+    write_legacy(path, val, 3).unwrap();
+    let read_val = read(path).unwrap();
+
+    // Deserializer reads it back as Data(7)
+    assert!(read_val.is_data());
+    assert_eq!(read_val.into_data().unwrap().data, vec![7]);
+
+    // ArrayCmdChar
+    let ac = vec![CommandCharacter::Backspace, CommandCharacter::LineFeed]; // 8, 10
+    let val_ac = XffValue::ArrayCmdChar(ac);
+
+    write_legacy(path, val_ac, 3).unwrap();
+    let read_val_ac = read(path).unwrap();
+
+    // Deserializer reads it back as Array [Data(8), Data(10)]
+    assert!(read_val_ac.is_array());
+    let array = read_val_ac.into_array().unwrap();
+    assert_eq!(array.len(), 2);
+    assert_eq!(array[0].as_data().unwrap().data, vec![8]);
+    assert_eq!(array[1].as_data().unwrap().data, vec![10]);
+
+    remove_file(path).unwrap();
+}
 
 #[test]
 fn test_v3_roundtrip_simple() {

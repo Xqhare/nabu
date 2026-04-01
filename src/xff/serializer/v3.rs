@@ -2,7 +2,7 @@ use athena::checksum::crc32;
 use athena::encoding_and_decoding::{
     serialize_leb128_signed_v3, serialize_leb128_unsigned, serialize_version_bit_chain,
 };
-use athena::{Metadata, XffValue};
+use athena::{Array, Data, Metadata, XffValue};
 
 use crate::error::Result;
 use crate::xff::v3_markers::{
@@ -181,7 +181,16 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::NaN => Ok(vec![NAN]),
         XffValue::Infinity => Ok(vec![INF]),
         XffValue::NegInfinity => Ok(vec![NINF]),
-        _ => Ok(Vec::new()),
+        XffValue::CommandCharacter(c) => {
+            serialize_v3_value(&XffValue::Data(Data::from(vec![c.as_u8()])))
+        }
+        XffValue::ArrayCmdChar(ac) => {
+            let values: Vec<XffValue> = ac
+                .iter()
+                .map(|c| XffValue::Data(Data::from(vec![c.as_u8()])))
+                .collect();
+            serialize_v3_value(&XffValue::Array(Array::from(values)))
+        }
     }
 }
 

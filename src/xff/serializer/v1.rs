@@ -1,5 +1,5 @@
 use crate::{
-    XffValue,
+    Array, Data, XffValue,
     error::{NabuError, Result},
 };
 
@@ -146,6 +146,18 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Null => {
             out.push(0);
+        }
+        XffValue::CommandCharacter(c) => {
+            out.extend(serialize_xff_v1_value(&XffValue::Data(Data::from(vec![
+                c.as_u8(),
+            ])))?);
+        }
+        XffValue::ArrayCmdChar(ac) => {
+            let values: Vec<XffValue> = ac
+                .iter()
+                .map(|c| XffValue::Data(Data::from(vec![c.as_u8()])))
+                .collect();
+            out.extend(serialize_xff_v1_value(&XffValue::Array(Array::from(values)))?);
         }
         _ => return Err(NabuError::InvalidXFFVersion(data.clone(), 1)),
     }

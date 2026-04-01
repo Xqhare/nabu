@@ -44,6 +44,16 @@ fn serialize_xff_v2_value(data: &XffValue, table: &Crc32Table) -> Result<Vec<u8>
             }
         }
         XffValue::Null => Ok(vec![0]),
+        XffValue::CommandCharacter(c) => {
+            serialize_xff_v2_value(&XffValue::Data(Data::from(vec![c.as_u8()])), table)
+        }
+        XffValue::ArrayCmdChar(ac) => {
+            let values: Vec<XffValue> = ac
+                .iter()
+                .map(|c| XffValue::Data(Data::from(vec![c.as_u8()])))
+                .collect();
+            serialize_xff_v2_value(&XffValue::Array(Array::from(values)), table)
+        }
         _ => Err(NabuError::InvalidXFFVersion(data.clone(), 2)),
     }
 }
