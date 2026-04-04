@@ -63,7 +63,7 @@ macro_rules! tvec_to_xff_value {
 /// let path = "xff-example-data/serde-main-example.txt";
 /// let path_2 = "xff-example-data/serde-main-example.xff";
 ///
-/// let data = XffValue::String("hello mom".to_string());
+/// let data = XffValue::from("hello mom".to_string());
 ///
 /// let write = write(path, data.clone());
 /// assert!(write.is_ok());
@@ -124,7 +124,7 @@ pub mod serde {
     /// use nabu::serde::write;
     /// use nabu::{CommandCharacter, Data, Number, XffValue};
     ///
-    /// let data = XffValue::String("hello mom".to_string());
+    /// let data = XffValue::from("hello mom".to_string());
     /// let tmp = write("xff-example-data/v3_example.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
@@ -158,7 +158,7 @@ pub mod serde {
     ///
     /// let data = {
     ///     vec![
-    ///         XffValue::String("hello mom".to_string()),
+    ///         XffValue::from("hello mom".to_string()),
     ///     ]
     /// };
     /// let tmp = write_legacy("xff-example-data/v1_example.xff", data.clone(), 1);
@@ -188,7 +188,7 @@ pub mod serde {
     /// # use nabu::serde::write;
     /// # use nabu::XffValue;
     ///
-    /// # let data = {vec![XffValue::String("hello mom".to_string())]};
+    /// # let data = {vec![XffValue::from("hello mom".to_string())]};
     /// # let _ = write("xff-example-data/remove.xff", data.clone());
     /// use nabu::serde::remove_file;
     ///

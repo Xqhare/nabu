@@ -52,8 +52,8 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
 
     match marker {
         NUL => Ok(XffValue::Null),
-        TRU => Ok(XffValue::Boolean(true)),
-        FAL => Ok(XffValue::Boolean(false)),
+        TRU => Ok(XffValue::from(true)),
+        FAL => Ok(XffValue::from(false)),
         NAN => Ok(XffValue::NaN),
         INF => Ok(XffValue::Infinity),
         NINF => Ok(XffValue::NegInfinity),
@@ -87,7 +87,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             let s = std::str::from_utf8(&content[data_start..checksum_start])
                 .map_err(|_| NabuError::StringContainsNonASCII(String::new(), 3))?
                 .to_string();
-            Ok(XffValue::String(s))
+            Ok(XffValue::from(s))
         }
 
         UINT => {
@@ -216,7 +216,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
-            Ok(XffValue::DateTime(val as u64))
+            Ok(XffValue::from_unix_timestamp_millis(val as u64))
         }
 
         DUR => {
@@ -239,7 +239,7 @@ fn deserialize_v3_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             if ev != EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
-            Ok(XffValue::Duration(val as u64))
+            Ok(XffValue::from_duration_millis(val as u64))
         }
 
         UUID => {

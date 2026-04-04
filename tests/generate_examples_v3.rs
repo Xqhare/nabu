@@ -9,8 +9,8 @@ fn generate_v3_examples() {
     // 1. Simple Primitive Values
     let primitives = vec![
         XffValue::Null,
-        XffValue::Boolean(true),
-        XffValue::Boolean(false),
+        XffValue::from(true),
+        XffValue::from(false),
         XffValue::NaN,
         XffValue::Infinity,
         XffValue::NegInfinity,
@@ -61,13 +61,13 @@ fn generate_v3_examples() {
     .unwrap();
     write_legacy(
         format!("{}v3_datetime", base_path),
-        XffValue::DateTime(1700000000000),
+        XffValue::from_unix_timestamp_millis(1700000000000),
         3,
     )
     .unwrap();
     write_legacy(
         format!("{}v3_duration", base_path),
-        XffValue::Duration(3600000),
+        XffValue::from_duration_millis(3600000),
         3,
     )
     .unwrap();

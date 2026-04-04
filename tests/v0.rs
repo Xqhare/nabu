@@ -132,14 +132,14 @@ mod v0 {
                 out.push(random_latin_char(false).unwrap());
             }
         }
-        XffValue::String(out)
+        XffValue::from(out)
     }
 
     #[test]
     fn serializer_deserializer_bare_bones() {
         let path = "tests/v0.txt";
         let path_2 = "tests/v0.xff";
-        let data = { vec![XffValue::String("hello mom".to_string())] };
+        let data = { vec![XffValue::from("hello mom".to_string())] };
         let tmp = serde::write_legacy(path, data.clone(), 0);
         assert!(tmp.is_ok());
         let tmp_2 = serde::read(path_2);
@@ -155,7 +155,7 @@ mod v0 {
         let path = std::path::Path::new("tests/v0_basic.xff");
         let data = {
             vec![
-                XffValue::String("hello mom".to_string()),
+                XffValue::from("hello mom".to_string()),
                 XffValue::Number(Number::from(u8::from(42))),
                 XffValue::Number(Number::from(i8::from(-42))),
                 XffValue::Number(Number::from(u16::MAX)),
@@ -198,24 +198,24 @@ mod v0 {
         let path = std::path::Path::new("tests/v0_string_to_number.xff");
         let data = {
             vec![
-                XffValue::String("42.22222E2".to_string()),
-                XffValue::String("42.22222E+2".to_string()),
-                XffValue::String("42.22222E-2".to_string()),
-                XffValue::String("-42.22222E2".to_string()),
-                XffValue::String("-42.22222E-2".to_string()),
-                XffValue::String("-42.22222E+2".to_string()),
-                XffValue::String("42.22222e2".to_string()),
-                XffValue::String("42.22222e+2".to_string()),
-                XffValue::String("42.22222e-2".to_string()),
-                XffValue::String("-42.22222e2".to_string()),
-                XffValue::String("-42.22222e-2".to_string()),
-                XffValue::String("-42.22222e+2".to_string()),
-                XffValue::String("42.22222E222".to_string()),
-                XffValue::String("42.22222E+222".to_string()),
-                XffValue::String("42.22222E-222".to_string()),
-                XffValue::String("-42.22222E222".to_string()),
-                XffValue::String("-42.22222E-222".to_string()),
-                XffValue::String("-42.22222E+222".to_string()),
+                XffValue::from("42.22222E2".to_string()),
+                XffValue::from("42.22222E+2".to_string()),
+                XffValue::from("42.22222E-2".to_string()),
+                XffValue::from("-42.22222E2".to_string()),
+                XffValue::from("-42.22222E-2".to_string()),
+                XffValue::from("-42.22222E+2".to_string()),
+                XffValue::from("42.22222e2".to_string()),
+                XffValue::from("42.22222e+2".to_string()),
+                XffValue::from("42.22222e-2".to_string()),
+                XffValue::from("-42.22222e2".to_string()),
+                XffValue::from("-42.22222e-2".to_string()),
+                XffValue::from("-42.22222e+2".to_string()),
+                XffValue::from("42.22222E222".to_string()),
+                XffValue::from("42.22222E+222".to_string()),
+                XffValue::from("42.22222E-222".to_string()),
+                XffValue::from("-42.22222E222".to_string()),
+                XffValue::from("-42.22222E-222".to_string()),
+                XffValue::from("-42.22222E+222".to_string()),
             ]
         };
         let checked_data = {
@@ -322,7 +322,7 @@ mod v0 {
         let bin_data2 = std::fs::read("tests/v0.rs").unwrap();
         let data = {
             vec![
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Data(Data {
                     len: bin_data0.len(),
                     data: bin_data0,
@@ -334,23 +334,23 @@ mod v0 {
                 XffValue::CommandCharacter(CommandCharacter::NonBreakingSpace),
                 XffValue::CommandCharacter(CommandCharacter::SoftHyphen),
                 XffValue::Number(Number::from(-42.22222E222)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Data(Data {
                     len: bin_data1.len(),
                     data: bin_data1,
                 }),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Number(Number::from(-42.22222E-222)),
                 XffValue::Number(Number::from(42.22222E+222)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Data(Data {
                     len: bin_data2.len(),
                     data: bin_data2,
                 }),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Number(Number::from(42.22222E-222)),
                 XffValue::Number(Number::from(-42.22222E+222)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::CommandCharacter(CommandCharacter::LineFeed),
                 XffValue::CommandCharacter(CommandCharacter::VerticalTab),
                 XffValue::CommandCharacter(CommandCharacter::FormFeed),
@@ -362,7 +362,7 @@ mod v0 {
                 XffValue::CommandCharacter(CommandCharacter::DeviceControl2),
                 XffValue::CommandCharacter(CommandCharacter::DeviceControl3),
                 XffValue::CommandCharacter(CommandCharacter::DeviceControl4),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::CommandCharacter(CommandCharacter::Escape),
             ]
         };
@@ -392,7 +392,7 @@ mod v0 {
         let bin_data6 = std::fs::read("tests/v0.rs").unwrap();
         let data = {
             vec![
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Data(Data {
                     len: bin_data0.len(),
                     data: bin_data0,
@@ -405,18 +405,18 @@ mod v0 {
                 }),
                 XffValue::CommandCharacter(CommandCharacter::SoftHyphen),
                 XffValue::Number(Number::from(-42.22222E222)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Data(Data::from(bin_data1)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Number(Number::from(42.22222E+222)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Data(Data::from(bin_data2)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::Number(Number::from(42.22222E-222)),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::CommandCharacter(CommandCharacter::LineFeed),
                 XffValue::CommandCharacter(CommandCharacter::DeviceControl4),
-                XffValue::String("Padding".to_string()),
+                XffValue::from("Padding".to_string()),
                 XffValue::CommandCharacter(CommandCharacter::Escape),
                 XffValue::Data(Data::from(bin_data3)),
                 XffValue::Data(Data::from(bin_data5)),

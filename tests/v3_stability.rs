@@ -10,8 +10,8 @@ fn construct_master_value() -> Vec<XffValue> {
 
     // 1. Primitives
     body_elements.push(XffValue::Null);
-    body_elements.push(XffValue::Boolean(true));
-    body_elements.push(XffValue::Boolean(false));
+    body_elements.push(XffValue::from(true));
+    body_elements.push(XffValue::from(false));
     body_elements.push(XffValue::NaN);
     body_elements.push(XffValue::Infinity);
     body_elements.push(XffValue::NegInfinity);
@@ -22,12 +22,12 @@ fn construct_master_value() -> Vec<XffValue> {
     body_elements.push(XffValue::Number(Number::from(3.1415926535f64)));
 
     // 3. Complex
-    body_elements.push(XffValue::String("Golden Standard".to_string()));
+    body_elements.push(XffValue::from("Golden Standard".to_string()));
     body_elements.push(XffValue::Data(Data::from(vec![0xDE, 0xAD, 0xBE, 0xEF])));
 
     // 4. Specialized
-    body_elements.push(XffValue::DateTime(1741474800000));
-    body_elements.push(XffValue::Duration(3600000));
+    body_elements.push(XffValue::from_unix_timestamp_millis(1741474800000));
+    body_elements.push(XffValue::from_duration_millis(3600000));
     body_elements.push(XffValue::Uuid(Uuid::new([0xAA; 16])));
 
     // 5. Parents

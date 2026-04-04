@@ -183,7 +183,7 @@ use nabu::XffValue;
 let path = "xff-example-data/serde-example.txt";
 let path_2 = "xff-example-data/serde-example.xff";
 
-let data = XffValue::String("hello mom".to_string());
+let data = XffValue::from("hello mom".to_string());
 
 let write = write(path, data.clone());
 assert!(write.is_ok());
@@ -202,7 +202,7 @@ An `Array` is a list of `XffValue`s, and an `Object` is a list of key-value pair
 
 ```rust
 use nabu::{Data, Number, XffValue};
-let data = XffValue::String("hello mom".to_string());
+let data = XffValue::from("hello mom".to_string());
 let data_2 = XffValue::Number(Number::from(-42));
 let data_4 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 ```
@@ -263,7 +263,7 @@ let data_2 = XffValue::Data(Data::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 let data_3 = XffValue::Data(Data::from(vec![152, 142, 202, 33, 54, 5, 86, 197, 38, 209]));
 
 
-let string_2 = XffValue::String("hello mom".to_string());
+let string_2 = XffValue::from("hello mom".to_string());
 
 let number_18 = XffValue::Number(Number::Unsigned(42));
 let number_19 = XffValue::Number(Number::Integer(-42));

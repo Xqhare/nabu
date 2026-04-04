@@ -31,13 +31,13 @@ pub fn serialize_xff_v2(data: &[XffValue]) -> Result<Vec<u8>> {
 
 fn serialize_xff_v2_value(data: &XffValue, table: &Crc32Table) -> Result<Vec<u8>> {
     match data {
-        XffValue::String(s) => serialize_xff_v2_string(s, table),
+        XffValue::String(s) => serialize_xff_v2_string(s.as_str(), table),
         XffValue::Number(n) => serialize_xff_v2_number(n, table),
         XffValue::Array(a) => serialize_xff_v2_array(a, table),
         XffValue::Object(o) => serialize_xff_v2_object(o, table),
         XffValue::Data(d) => Ok(serialize_xff_v2_data(d, table)),
         XffValue::Boolean(b) => {
-            if *b {
+            if b.value() {
                 Ok(vec![16])
             } else {
                 Ok(vec![17])

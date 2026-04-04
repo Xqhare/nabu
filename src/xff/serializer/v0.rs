@@ -16,6 +16,7 @@ pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
     for value in data {
         match value {
             XffValue::String(s) => {
+                let s = s.as_str();
                 escape_open = false;
                 // STX
                 out.push(2);

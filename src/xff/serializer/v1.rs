@@ -23,6 +23,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
     let mut out: Vec<u8> = Vec::default();
     match data {
         XffValue::String(s) => {
+            let s = s.as_str();
             let tmp_str: Vec<u8> = {
                 let mut out = Vec::new();
                 for char in s.chars() {
@@ -37,7 +38,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                     {
                         out.push(tmp);
                     } else {
-                        return Err(NabuError::StringContainsNonASCII(s.clone(), 1));
+                        return Err(NabuError::StringContainsNonASCII(s.to_string(), 1));
                     }
                 }
                 out
@@ -138,7 +139,7 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
             out.push(24);
         }
         XffValue::Boolean(b) => {
-            if *b {
+            if b.value() {
                 out.push(16);
             } else {
                 out.push(17);
@@ -157,7 +158,9 @@ fn serialize_xff_v1_value(data: &XffValue) -> Result<Vec<u8>> {
                 .iter()
                 .map(|c| XffValue::Data(Data::from(vec![c.as_u8()])))
                 .collect();
-            out.extend(serialize_xff_v1_value(&XffValue::Array(Array::from(values)))?);
+            out.extend(serialize_xff_v1_value(&XffValue::Array(Array::from(
+                values,
+            )))?);
         }
         _ => return Err(NabuError::InvalidXFFVersion(data.clone(), 1)),
     }

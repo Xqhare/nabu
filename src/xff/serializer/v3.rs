@@ -51,7 +51,7 @@ pub fn serialize_xff_v3_with_metadata(
 
         let mut pairs: Vec<XffValue> = Vec::with_capacity(metadata_wrapped.len() * 2);
         for (k, v) in &metadata_wrapped.map.map {
-            pairs.push(XffValue::String(k.clone()));
+            pairs.push(XffValue::from(k.clone()));
             pairs.push(v.clone());
         }
         out.extend(serialize_v3_parent(META, &pairs)?);
@@ -73,13 +73,14 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
     match value {
         XffValue::Null => Ok(vec![NUL]),
         XffValue::Boolean(b) => {
-            if *b {
+            if b.value() {
                 Ok(vec![TRU])
             } else {
                 Ok(vec![FAL])
             }
         }
         XffValue::String(s) => {
+            let s = s.as_str();
             let utf8_bytes = s.as_bytes();
             let len_bytes = serialize_leb128_unsigned(utf8_bytes.len() as u128);
 
@@ -106,7 +107,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             }
             let mut pairs: Vec<XffValue> = Vec::with_capacity(meta.len() * 2);
             for (k, v) in &meta.map.map {
-                pairs.push(XffValue::String(k.clone()));
+                pairs.push(XffValue::from(k.clone()));
                 pairs.push(v.clone());
             }
             serialize_v3_parent(META, &pairs)
@@ -130,7 +131,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::DateTime(dt) => {
             #[allow(clippy::cast_possible_truncation)]
-            let payload = serialize_leb128_unsigned(u128::from(*dt));
+            let payload = serialize_leb128_unsigned(u128::from(dt.as_millis()));
             let mut buf = Vec::with_capacity(6 + payload.len());
             buf.push(DT);
             let checksum = crc32(&payload);
@@ -141,7 +142,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         }
         XffValue::Duration(d) => {
             #[allow(clippy::cast_possible_truncation)]
-            let payload = serialize_leb128_unsigned(u128::from(*d));
+            let payload = serialize_leb128_unsigned(u128::from(d.as_millis()));
             let mut buf = Vec::with_capacity(6 + payload.len());
             buf.push(DUR);
             let checksum = crc32(&payload);
@@ -164,7 +165,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::Object(o) => {
             let mut pairs = Vec::with_capacity(o.len() * 2);
             for (k, v) in &o.map {
-                pairs.push(XffValue::String(k.clone()));
+                pairs.push(XffValue::from(k.clone()));
                 pairs.push(v.clone());
             }
             serialize_v3_parent(OBJ, &pairs)
@@ -172,7 +173,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::OrderedObject(o) => {
             let mut pairs = Vec::with_capacity(o.len() * 2);
             for (k, v) in o {
-                pairs.push(XffValue::String(k.clone()));
+                pairs.push(XffValue::from(k.clone()));
                 pairs.push(v.clone());
             }
             serialize_v3_parent(OOBJ, &pairs)
@@ -242,7 +243,7 @@ fn serialize_v3_table(t: &athena::Table) -> Result<Vec<u8>> {
     let mut total_col_names_size = 0;
 
     for col in &t.columns {
-        let ser = serialize_v3_value(&XffValue::String(col.clone()))?;
+        let ser = serialize_v3_value(&XffValue::from(col.clone()))?;
         col_offsets.push(serialize_leb128_unsigned(current_col_offset));
         current_col_offset += ser.len() as u128;
         total_col_names_size += ser.len();

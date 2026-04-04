@@ -9,7 +9,7 @@ mod v2 {
 
     use nabu::*;
 
-#[test]
+    #[test]
     fn test_v2_command_characters() {
         let path = "xff-example-data/v2_test_cmd.xff";
         let cmd = CommandCharacter::Bell; // 7
@@ -832,6 +832,6 @@ mod v2 {
                 out.push(random_latin_char(false).unwrap());
             }
         }
-        XffValue::String(out)
+        XffValue::from(out)
     }
 }

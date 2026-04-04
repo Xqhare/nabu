@@ -131,8 +131,8 @@ pub fn deserialize_xff_v2_value(
         3 => deserialize_xff_v2_array(content, byte_pos, table),
         4 => deserialize_xff_v2_object(content, byte_pos, table),
         5 => deserialize_xff_v2_data(content, byte_pos, table),
-        16 => Ok(XffValue::Boolean(true)),
-        17 => Ok(XffValue::Boolean(false)),
+        16 => Ok(XffValue::from(true)),
+        17 => Ok(XffValue::from(false)),
         _ => Err(NabuError::InvalidXFFByte(content[0], byte_pos.get(), 2)),
     }
 }

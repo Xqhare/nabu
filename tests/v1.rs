@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod v1 {
     use std::collections::BTreeMap;
+    use std::fs;
     use std::path::{Path, PathBuf};
-    use std::{fs, usize};
 
     use serde::write_legacy;
     use tyche::prelude::*;
 
     use nabu::*;
 
-#[test]
+    #[test]
     fn test_v1_command_characters() {
         let path = "xff-example-data/v1_test_cmd.xff";
         let cmd = CommandCharacter::Bell; // 7
@@ -707,6 +707,6 @@ mod v1 {
                 out.push(random_latin_char(false).unwrap());
             }
         }
-        XffValue::String(out)
+        XffValue::from(out)
     }
 }

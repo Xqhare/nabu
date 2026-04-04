@@ -37,8 +37,8 @@ fn test_v3_roundtrip_simple() {
     let path = "test_simple.xff";
     let values = vec![
         XffValue::Null,
-        XffValue::Boolean(true),
-        XffValue::Boolean(false),
+        XffValue::from(true),
+        XffValue::from(false),
         XffValue::NaN,
         XffValue::Infinity,
         XffValue::NegInfinity,
@@ -55,7 +55,7 @@ fn test_v3_roundtrip_simple() {
 #[test]
 fn test_v3_roundtrip_complex() {
     let path = "test_complex.xff";
-    let val = XffValue::String("Hello XFF v3! 🦀".to_string());
+    let val = XffValue::from("Hello XFF v3! 🦀".to_string());
     write_legacy(path, val.clone(), 3).unwrap();
     let read_val = read(path).unwrap();
     assert_eq!(val, read_val);
@@ -87,11 +87,11 @@ fn test_v3_roundtrip_complex() {
 fn test_v3_roundtrip_specialized() {
     let path = "test_special.xff";
 
-    let val = XffValue::DateTime(1700000000000);
+    let val = XffValue::from_unix_timestamp_millis(1700000000000);
     write_legacy(path, val.clone(), 3).unwrap();
     assert_eq!(val, read(path).unwrap());
 
-    let val = XffValue::Duration(3600000);
+    let val = XffValue::from_duration_millis(3600000);
     write_legacy(path, val.clone(), 3).unwrap();
     assert_eq!(val, read(path).unwrap());
 
