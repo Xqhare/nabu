@@ -167,12 +167,21 @@ impl From<std::io::Error> for NabuError {
     }
 }
 
+impl std::error::Error for NabuError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            NabuError::IoError(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
 impl fmt::Display for NabuError {
     #[allow(clippy::too_many_lines)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             // external errors
-            NabuError::IoError(err) => err.fmt(f),
+            NabuError::IoError(err) => write!(f, "IO error: {err}"),
 
             // Xff v0 errors
             NabuError::MissingETX(u) => write!(f, "Missing ETX at byte position {u}"),
