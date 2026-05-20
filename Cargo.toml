@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.93.0"
 
 [dependencies]
-athena = { path = "../athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
+athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
