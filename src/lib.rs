@@ -6,10 +6,15 @@ pub mod error;
 mod xff;
 
 // Re-exported types - XffValue was moved out of Nabu and into Athena
-pub use athena::{Array, CommandCharacter, Data, Metadata, Number, Object, XffValue};
+pub use athena::{
+    Array, CommandCharacter, Data, LocalDate, LocalDateTime, LocalTime, Metadata, Number, Object,
+    XffValue,
+};
+pub use athena::graph::Graph;
+pub use athena::float::HpFloat;
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
-const XFF_VERSION: u8 = 3;
+const XFF_VERSION: u8 = 4;
 
 // ----------------------------------------------------------
 // Macros

@@ -179,7 +179,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             serialize_v3_parent(OOBJ, &pairs)
         }
         XffValue::Table(t) => serialize_v3_table(t),
-        XffValue::NaN => Ok(vec![NAN]),
+        XffValue::NaN | XffValue::PNan | XffValue::NNan => Ok(vec![NAN]),
         XffValue::Infinity => Ok(vec![INF]),
         XffValue::NegInfinity => Ok(vec![NINF]),
         XffValue::CommandCharacter(c) => {
@@ -192,6 +192,10 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
                 .collect();
             serialize_v3_value(&XffValue::Array(Array::from(values)))
         }
+        _ => Err(crate::error::NabuError::InvalidXFFValueForVersion(
+            value.clone(),
+            3,
+        )),
     }
 }
 

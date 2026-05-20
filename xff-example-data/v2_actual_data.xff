@@ -1,4 +1,4 @@
-ª£3#![doc = include_str!("../README.md")]
+Ùª‘4#![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
 pub mod error;
@@ -6,10 +6,15 @@ pub mod error;
 mod xff;
 
 // Re-exported types - XffValue was moved out of Nabu and into Athena
-pub use athena::{Array, CommandCharacter, Data, Metadata, Number, Object, XffValue};
+pub use athena::{
+    Array, CommandCharacter, Data, LocalDate, LocalDateTime, LocalTime, Metadata, Number, Object,
+    XffValue,
+};
+pub use athena::graph::Graph;
+pub use athena::float::HpFloat;
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
-const XFF_VERSION: u8 = 3;
+const XFF_VERSION: u8 = 4;
 
 // ----------------------------------------------------------
 // Macros
@@ -203,19 +208,19 @@ pub mod serde {
         Ok(std::fs::remove_file(path_with_xff_extension)?)
     }
 }
-Wßœ[package]
+–?Å††[package]
 name = "nabu"
 version = "3.0.0"
 edition = "2024"
 rust-version = "1.93.0"
 
 [dependencies]
-athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
+athena = { path = "../athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
 
-gÊ´_¤t# Nabu
+ð,¤t# Nabu
 
 > [!note]
 > Nabu and its foundational `.xff` specification gurantee the integrity of all data stored.\
@@ -650,4 +655,4 @@ cargo test --all-features -- --include-ignored
 
 > [!note]
 > Ignored tests require the `--all-features` flag as some are feature dependent.
-½ê×Û–Jü‰²°
+½ê×Û{£Æ¸ÐTæ

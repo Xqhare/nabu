@@ -18,6 +18,8 @@ pub mod v2;
 use crate::xff::deserializer::v2::deserialize_xff_v2;
 pub mod v3;
 use crate::xff::deserializer::v3::deserialize_xff_v3;
+pub mod v4;
+use crate::xff::deserializer::v4::deserialize_xff_v4;
 
 /// Reads the content of a XFF file and returns a `XffValue`
 ///
@@ -48,6 +50,8 @@ pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
 
         if ver == 3 {
             return deserialize_xff_v3(&content, &mut cursor);
+        } else if ver == 4 {
+            return deserialize_xff_v4(&content, &mut cursor);
         }
         return Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0)));
     }
