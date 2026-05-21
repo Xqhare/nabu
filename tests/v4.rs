@@ -125,3 +125,140 @@ fn test_v4_hamming_distance_simulation() {
     
     remove_file(path).unwrap();
 }
+
+#[test]
+fn test_v4_compliance_fixes() {
+    use athena::{LocalDate, LocalTime, LocalDateTime, Metadata, XffValue, Data};
+    use athena::float::HpFloat;
+    use athena::checksum::crc32;
+    use nabu::serde::{read, write_legacy, remove_file};
+
+    let path = "test_compliance_fixes.xff";
+
+    // Helper to get serialized value bytes for any XffValue
+    fn get_serialized_value_bytes(val: XffValue) -> Vec<u8> {
+        let temp_path = "temp_val.xff";
+        write_legacy(temp_path, val, 4).unwrap();
+        let content = std::fs::read(temp_path).unwrap();
+        let _ = std::fs::remove_file(temp_path);
+        // XFF v4 file structure: Magic (4 bytes) + Version (1 byte) + Value + EM (1 byte)
+        // Strip the first 5 bytes (Magic + Version) and the last byte (EM terminator)
+        let len = content.len();
+        content[5..len - 1].to_vec()
+    }
+
+    fn encode_leb128(mut val: u128) -> Vec<u8> {
+        let mut buf = Vec::new();
+        loop {
+            let mut byte = (val & 0x7F) as u8;
+            val >>= 7;
+            if val != 0 {
+                byte |= 0x80;
+            }
+            buf.push(byte);
+            if val == 0 {
+                break;
+            }
+        }
+        buf
+    }
+
+    // 1. Test Object/OrderedObject/Metadata key deserialization with XffValue::Ascii keys.
+    let key_bytes = get_serialized_value_bytes(XffValue::Ascii(athena::XffString::from("ascii_key")));
+    let val_bytes = get_serialized_value_bytes(XffValue::from("value"));
+
+    let mut element_bytes = Vec::new();
+    element_bytes.extend(key_bytes.clone());
+    element_bytes.extend(val_bytes);
+
+    let count = 2; // key + value = 2 elements
+    let mut index_data = encode_leb128(count);
+    index_data.extend(encode_leb128(0));
+    index_data.extend(encode_leb128(key_bytes.len() as u128));
+
+    let index_checksum = crc32(&index_data);
+
+    let mut obj_bytes = Vec::new();
+    obj_bytes.push(0x41); // parent::OBJ
+    obj_bytes.extend(index_data);
+    obj_bytes.extend_from_slice(&index_checksum.to_le_bytes());
+    obj_bytes.extend(element_bytes);
+    obj_bytes.push(0x60); // internal::EV
+
+    // Construct a full XFF v4 file containing this object
+    let mut file_bytes = Vec::new();
+    file_bytes.extend_from_slice(b"XFFV");
+    file_bytes.push(0x0F); // version 4 bit-chain
+    file_bytes.extend(obj_bytes);
+    file_bytes.push(0xF0); // internal::EM
+
+    std::fs::write(path, &file_bytes).unwrap();
+    let read_val = read(path).unwrap();
+    assert!(read_val.is_object());
+    let read_obj = read_val.as_object().unwrap();
+    assert_eq!(read_obj.get("ascii_key"), Some(&XffValue::from("value")));
+
+    // 2. Test metadata flatness check with all v4 flat types and Data.
+    let mut meta = Metadata::new();
+    meta.set_custom("ascii", XffValue::Ascii(athena::XffString::from("hello")));
+    meta.set_custom("date", XffValue::LocalDate(LocalDate::new(2026, 5, 21)));
+    meta.set_custom("time", XffValue::LocalTime(LocalTime::new(18, 0, 0, 0)));
+    meta.set_custom("datetime", XffValue::LocalDateTime(LocalDateTime::new(LocalDate::new(2026, 5, 21), LocalTime::new(18, 0, 0, 0))));
+    meta.set_custom("hpfloat", XffValue::HpFloat(HpFloat::new(12345, 2)));
+    meta.set_custom("pnan", XffValue::PNan);
+    meta.set_custom("nnan", XffValue::NNan);
+    meta.set_custom("data", XffValue::Data(Data::from(vec![1, 2, 3])));
+
+    let val_meta = XffValue::Metadata(meta);
+    write_legacy(path, val_meta.clone(), 4).unwrap();
+    let read_meta = read(path).unwrap();
+    if let XffValue::Array(arr) = read_meta {
+        assert_eq!(arr.len(), 2);
+        assert_eq!(arr[0], val_meta);
+        assert_eq!(arr[1], XffValue::Null);
+    } else {
+        panic!("Expected Array with metadata and body");
+    }
+
+    // 3. Verify custom NaN payload preservation.
+    let custom_nan_bits = 0x7ff8_0000_0000_0001;
+    let custom_nan = f64::from_bits(custom_nan_bits);
+    assert!(custom_nan.is_nan());
+
+    let val_nan = XffValue::from(custom_nan);
+    write_legacy(path, val_nan, 4).unwrap();
+    
+    let content = std::fs::read(path).unwrap();
+    assert_eq!(content[5], 0x3F); // complex::FLT
+
+    let read_nan = read(path).unwrap();
+    let read_nan_val = read_nan.into_number().unwrap().into_f64().unwrap();
+    assert!(read_nan_val.is_nan());
+    assert_eq!(read_nan_val.to_bits(), custom_nan_bits);
+
+    // 4. Verification that ASCII deserialization ignores/clears the MSB.
+    let raw_text = b"h\xE5llo"; // 'e' with MSB set is 0xE5 (normal 'e' is 0x65)
+    let mut payload = encode_leb128(raw_text.len() as u128);
+    payload.extend_from_slice(raw_text);
+    let checksum = crc32(&payload);
+
+    let mut asci_val_bytes = Vec::new();
+    asci_val_bytes.push(0xA5); // complex::ASCI
+    asci_val_bytes.extend(payload);
+    asci_val_bytes.extend_from_slice(&checksum.to_le_bytes());
+    asci_val_bytes.push(0x60); // internal::EV
+
+    let mut file_bytes = Vec::new();
+    file_bytes.extend_from_slice(b"XFFV");
+    file_bytes.push(0x0F); // version 4 bit-chain
+    file_bytes.extend(asci_val_bytes);
+    file_bytes.push(0xF0); // internal::EM
+
+    std::fs::write(path, &file_bytes).unwrap();
+    let read_asci = read(path).unwrap();
+    assert_eq!(read_asci, XffValue::Ascii(athena::XffString::from("hello")));
+
+    remove_file(path).unwrap();
+    let _ = std::fs::remove_file(path);
+}
+
