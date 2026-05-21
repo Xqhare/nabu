@@ -1,4 +1,4 @@
-MU#![doc = include_str!("../README.md")]
+ÝV#![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
 pub mod error;
@@ -208,17 +208,33 @@ pub mod serde {
         Ok(std::fs::remove_file(path_with_xff_extension)?)
     }
 }
-[package]
+–[package]
 name = "nabu"
 version = "3.0.0"
 edition = "2024"
 rust-version = "1.93.0"
 
 [dependencies]
-athena = { path = "../athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
+athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
+
+[patch."https://github.com/Xqhare/athena"]
+athena = { path = "../athena" }
+
+[patch."https://github.com/xqhare/athena.git"]
+athena = { path = "../athena" }
+
+[patch."https://github.com/argos-ci/aequa"]
+aequa = { path = "../aequa" }
+
+[patch."https://github.com/xqhare/aequa"]
+aequa = { path = "../aequa" }
+
+[patch."https://github.com/Xqhare/tyche"]
+tyche = { path = "../tyche" }
+
 
 $:# Nabu
 

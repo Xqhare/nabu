@@ -10,3 +10,18 @@ athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decod
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
 
+[patch."https://github.com/Xqhare/athena"]
+athena = { path = "../athena" }
+
+[patch."https://github.com/xqhare/athena.git"]
+athena = { path = "../athena" }
+
+[patch."https://github.com/Xqhare/aequa"]
+aequa = { path = "../aequa" }
+
+[patch."https://github.com/xqhare/aequa.git"]
+aequa = { path = "../aequa" }
+
+[patch."https://github.com/Xqhare/tyche"]
+tyche = { path = "../tyche" }
+
