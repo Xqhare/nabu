@@ -488,10 +488,20 @@ fn serialize_v4_number(n: &athena::Number) -> Vec<u8> {
     if n.is_float() {
         let val = n.into_f64().unwrap();
         if val.is_nan() {
-            if val.is_sign_negative() {
+            let bits = val.to_bits();
+            if bits == 0x7ff8_0000_0000_0000 {
+                simple::PNAN.to_vec()
+            } else if bits == 0xfff8_0000_0000_0000 {
                 simple::NNAN.to_vec()
             } else {
-                simple::PNAN.to_vec()
+                let mut buf = Vec::with_capacity(14);
+                buf.push(complex::FLT);
+                let bytes = bits.to_le_bytes();
+                let checksum = crc32(&bytes);
+                buf.extend_from_slice(&bytes);
+                buf.extend_from_slice(&checksum.to_le_bytes());
+                buf.push(internal::EV);
+                buf
             }
         } else if val.is_infinite() {
             if val.is_sign_positive() {
