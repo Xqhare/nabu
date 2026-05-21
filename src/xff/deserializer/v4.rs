@@ -95,7 +95,11 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
 
             if marker == complex::ASCI {
-                let s = String::from_utf8_lossy(&content[data_start..checksum_start]).into_owned();
+                let bytes: Vec<u8> = content[data_start..checksum_start]
+                    .iter()
+                    .map(|&b| b & 0x7F)
+                    .collect();
+                let s = String::from_utf8_lossy(&bytes).into_owned();
                 Ok(XffValue::Ascii(athena::XffString::from(s)))
             } else {
                 let s = std::str::from_utf8(&content[data_start..checksum_start])
@@ -402,10 +406,11 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             let mut pairs = Vec::with_capacity(elements.len() / 2);
             for i in (0..elements.len()).step_by(2) {
-                let key = elements[i]
-                    .as_string()
-                    .cloned()
-                    .ok_or(NabuError::InvalidKey(*cursor, elements[i].clone(), 4))?;
+                let key = match &elements[i] {
+                    XffValue::String(s) => s.value.clone(),
+                    XffValue::Ascii(s) => s.value.clone(),
+                    _ => return Err(NabuError::InvalidKey(*cursor, elements[i].clone(), 4)),
+                };
                 pairs.push((key, elements[i + 1].clone()));
             }
             if marker == parent::OBJ {
@@ -426,10 +431,11 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             let mut pairs = Vec::with_capacity(elements.len() / 2);
             for i in (0..elements.len()).step_by(2) {
-                let key = elements[i]
-                    .as_string()
-                    .cloned()
-                    .ok_or(NabuError::InvalidKey(*cursor, elements[i].clone(), 4))?;
+                let key = match &elements[i] {
+                    XffValue::String(s) => s.value.clone(),
+                    XffValue::Ascii(s) => s.value.clone(),
+                    _ => return Err(NabuError::InvalidKey(*cursor, elements[i].clone(), 4)),
+                };
                 pairs.push((key, elements[i + 1].clone()));
             }
             Ok(XffValue::Metadata(Metadata::from(Object::from(pairs))))
