@@ -21,6 +21,47 @@ use crate::xff::deserializer::v3::deserialize_xff_v3;
 pub mod v4;
 use crate::xff::deserializer::v4::deserialize_xff_v4;
 
+pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue, NabuError> {
+    if content.is_empty() {
+        return Err(NabuError::EmptyXFF);
+    }
+
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        // Check for v3 Magic Number
+        if content.starts_with(&[0x58, 0x46, 0x46, 0x56]) {
+            let mut cursor = 4;
+            let (ver, len) =
+                match athena::encoding_and_decoding::deserialize_version_bit_chain(&content[cursor..]) {
+                    Ok(v) => v,
+                    Err(_) => return Err(NabuError::UnknownXFFVersion(0)),
+                };
+            cursor += len as usize;
+
+            if ver == 3 {
+                return deserialize_xff_v3(content, &mut cursor);
+            } else if ver == 4 {
+                return deserialize_xff_v4(content, &mut cursor);
+            }
+            return Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0)));
+        }
+
+        // Legacy path (v0-v2)
+        let mut deque: VecDeque<u8> = content.to_vec().into();
+        let ver = deserialize_xff_version(&mut deque);
+        match ver {
+            0 => deserialize_xff_v0(&mut deque),
+            1 => deserialize_xff_v1(&mut deque),
+            2 => deserialize_xff_v2(&mut deque),
+            _ => Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0))),
+        }
+    }));
+
+    match result {
+        Ok(res) => res,
+        Err(_) => Err(NabuError::TruncatedXFF(0, 0)),
+    }
+}
+
 /// Reads the content of a XFF file and returns a `XffValue`
 ///
 /// Reads the first byte of the file to determine the version and then calls the appropriate deserializer for the version
@@ -36,35 +77,7 @@ use crate::xff::deserializer::v4::deserialize_xff_v4;
 /// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
 pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
     let content: Vec<u8> = std::fs::read(path)?;
-    if content.is_empty() {
-        return Err(NabuError::EmptyXFF);
-    }
-
-    // Check for v3 Magic Number
-    if content.starts_with(&[0x58, 0x46, 0x46, 0x56]) {
-        let mut cursor = 4;
-        let (ver, len) =
-            athena::encoding_and_decoding::deserialize_version_bit_chain(&content[cursor..])
-                .map_err(|_| NabuError::UnknownXFFVersion(0))?;
-        cursor += len as usize;
-
-        if ver == 3 {
-            return deserialize_xff_v3(&content, &mut cursor);
-        } else if ver == 4 {
-            return deserialize_xff_v4(&content, &mut cursor);
-        }
-        return Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0)));
-    }
-
-    // Legacy path (v0-v2)
-    let mut deque: VecDeque<u8> = content.into();
-    let ver = deserialize_xff_version(&mut deque);
-    match ver {
-        0 => deserialize_xff_v0(&mut deque),
-        1 => deserialize_xff_v1(&mut deque),
-        2 => deserialize_xff_v2(&mut deque),
-        _ => Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0))),
-    }
+    deserialize_xff_from_buffer(&content)
 }
 
 #[inline]

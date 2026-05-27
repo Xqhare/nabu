@@ -83,6 +83,7 @@ pub mod serde {
     use crate::XFF_VERSION;
     use crate::XffValue;
     use crate::error::NabuError;
+    pub use crate::xff::deserializer::deserialize_xff_from_buffer;
     use crate::xff::deserializer::deserialize_xff;
     use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
 
@@ -177,6 +178,31 @@ pub mod serde {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         let byte_data = serialize_xff(data.into(), xff_version)?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
+    }
+
+    /// Serializes a Vec of `XffValues` to a buffer (vector of bytes) with a specific XFF version.
+    ///
+    /// # Arguments
+    /// * `data` - The data to serialize
+    /// * `xff_version` - The XFF version to use
+    ///
+    /// # Errors
+    /// Errors if serialization fails.
+    ///
+    /// # Example
+    /// ```rust
+    /// use nabu::serde::serialize_xff_to_buffer;
+    /// use nabu::XffValue;
+    ///
+    /// let data = vec![XffValue::from("hello mom".to_string())];
+    /// let buffer = serialize_xff_to_buffer(data, 4);
+    /// assert!(buffer.is_ok());
+    /// ```
+    pub fn serialize_xff_to_buffer<D>(data: D, xff_version: u8) -> Result<Vec<u8>, NabuError>
+    where
+        D: Into<Vec<XffValue>>,
+    {
+        serialize_xff(data.into(), xff_version)
     }
 
     /// A convenience function to delete any XFF file from disk
