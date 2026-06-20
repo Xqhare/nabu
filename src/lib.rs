@@ -83,6 +83,8 @@ pub mod serde {
     use crate::XFF_VERSION;
     use crate::XffValue;
     use crate::error::NabuError;
+    use nemesis::NemesisError;
+    use nemesis::NemesisResultExt;
     pub use crate::xff::deserializer::deserialize_xff_from_buffer;
     use crate::xff::deserializer::deserialize_xff;
     use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
@@ -105,12 +107,17 @@ pub mod serde {
     /// let data: XffValue = tmp.unwrap();
     /// println!("{}", data);
     /// ```
-    pub fn read<P>(path: P) -> Result<XffValue, NabuError>
+    pub fn read<P>(path: P) -> Result<XffValue, NemesisError>
     where
         P: AsRef<std::path::Path>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
         deserialize_xff(&path_with_xff_extension)
+            .add_source("nabu::serde::read")
+            .add_ctx(format!(
+                "Failed to read XFF file: {}",
+                path_with_xff_extension.display()
+            ))
     }
 
     /// Writes `XffValues` to a XFF file
@@ -134,14 +141,21 @@ pub mod serde {
     /// let tmp = write("xff-example-data/v3_example.xff", data.clone());
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write<P, D>(path: P, data: D) -> Result<(), NabuError>
+    pub fn write<P, D>(path: P, data: D) -> Result<(), NemesisError>
     where
         P: AsRef<std::path::Path>,
         D: Into<Vec<XffValue>>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        let byte_data = serialize_xff(data.into(), XFF_VERSION)?;
+        let byte_data = serialize_xff(data.into(), XFF_VERSION)
+            .add_source("nabu::serde::write")
+            .add_ctx("Failed serialization")?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
+            .add_source("nabu::serde::write")
+            .add_ctx(format!(
+                "Failed to write bytes to file: {}",
+                path_with_xff_extension.display()
+            ))
     }
 
     /// Writes a Vec of `XffValues` to a XFF file with a specific XFF version
@@ -170,14 +184,21 @@ pub mod serde {
     /// let tmp = write_legacy("xff-example-data/v1_example.xff", data.clone(), 1);
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn write_legacy<P, D>(path: P, data: D, xff_version: u8) -> Result<(), NabuError>
+    pub fn write_legacy<P, D>(path: P, data: D, xff_version: u8) -> Result<(), NemesisError>
     where
         P: AsRef<std::path::Path>,
         D: Into<Vec<XffValue>>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        let byte_data = serialize_xff(data.into(), xff_version)?;
+        let byte_data = serialize_xff(data.into(), xff_version)
+            .add_source("nabu::serde::write_legacy")
+            .add_ctx("Failed serialization")?;
         write_bytes_to_file(&path_with_xff_extension, byte_data)
+            .add_source("nabu::serde::write_legacy")
+            .add_ctx(format!(
+                "Failed to write bytes to file: {}",
+                path_with_xff_extension.display()
+            ))
     }
 
     /// Serializes a Vec of `XffValues` to a buffer (vector of bytes) with a specific XFF version.
@@ -198,11 +219,11 @@ pub mod serde {
     /// let buffer = serialize_xff_to_buffer(data, 4);
     /// assert!(buffer.is_ok());
     /// ```
-    pub fn serialize_xff_to_buffer<D>(data: D, xff_version: u8) -> Result<Vec<u8>, NabuError>
+    pub fn serialize_xff_to_buffer<D>(data: D, xff_version: u8) -> Result<Vec<u8>, NemesisError>
     where
         D: Into<Vec<XffValue>>,
     {
-        serialize_xff(data.into(), xff_version)
+        serialize_xff(data.into(), xff_version).add_source("nabu::serde::serialize_xff_to_buffer")
     }
 
     /// A convenience function to delete any XFF file from disk
@@ -226,11 +247,17 @@ pub mod serde {
     /// let tmp = remove_file("xff-example-data/remove.xff");
     /// assert!(tmp.is_ok());
     /// ```
-    pub fn remove_file<P>(path: P) -> Result<(), NabuError>
+    pub fn remove_file<P>(path: P) -> Result<(), NemesisError>
     where
         P: AsRef<std::path::Path>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        Ok(std::fs::remove_file(path_with_xff_extension)?)
+        std::fs::remove_file(path_with_xff_extension)
+            .map_err(NabuError::from)
+            .add_source("nabu::serde::remove_file")
+            .add_ctx(format!(
+                "Failed to remove XFF file: {}",
+                path_with_xff_extension.display()
+            ))
     }
 }
