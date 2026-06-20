@@ -21,10 +21,6 @@ use crate::error::Result;
 /// # Errors
 /// Errors if the content is malformed or truncated according to v2 specification.
 pub fn deserialize_xff_v2(content: &mut VecDeque<u8>) -> Result<XffValue> {
-    deserialize_xff_v2_inner(content).add_source("nabu::xff::deserializer::v2")
-}
-
-fn deserialize_xff_v2_inner(content: &mut VecDeque<u8>) -> std::result::Result<XffValue, NabuError> {
     // somewhat expensive function
     // doesn't save enough to really matter in this codebase, but it's the thought that counts!
     let table: Crc32Table = generate_crc32_lookuptable();
@@ -37,21 +33,22 @@ fn deserialize_xff_v2_inner(content: &mut VecDeque<u8>) -> std::result::Result<X
         return Err(NabuError::InvalidFileChecksum(
             content.len().saturating_sub(1),
             2,
-        ));
+        ).into());
     }
 
-    let out = deserialize_xff_v2_value(content, byte_pos.borrow(), &table)?;
+    let out = deserialize_xff_v2_value(content, byte_pos.borrow(), &table)
+        .add_source("nabu::xff::deserializer::v2")?;
 
     // popped last 5 elements in check_file_checksum but not accounted for them on purpouse
     byte_pos.set(byte_pos.get() + 5);
 
     // EM check
     if content.is_empty() {
-        return Err(NabuError::TruncatedXFF(byte_pos.get(), 2));
+        return Err(NabuError::TruncatedXFF(byte_pos.get(), 2).into());
     } else if content[0] == 25 && content.len() == 1 {
         return Ok(out);
     }
-    Err(NabuError::TruncatedXFF(byte_pos.get(), 2))
+    Err(NabuError::TruncatedXFF(byte_pos.get(), 2).into())
 }
 
 fn check_file_checksum(content: &mut VecDeque<u8>, crc_table: &Crc32Table) -> bool {
@@ -86,7 +83,7 @@ fn check_file_checksum(content: &mut VecDeque<u8>, crc_table: &Crc32Table) -> bo
 fn deserialize_xff_v2_value_checksum(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
-) -> Result<u32, NabuError> {
+) -> std::result::Result<u32, NabuError> {
     // pop CHK
     if let Some(23) = content.pop_front() {
         byte_pos.set(byte_pos.get() + 1);
@@ -108,7 +105,7 @@ fn deserialize_xff_v2_value_checksum(
 fn deserialize_xff_v2_value_length(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
-) -> Result<usize, NabuError> {
+) -> std::result::Result<usize, NabuError> {
     if let Ok((res, len)) = deserialize_leb128_unsigned(content.make_contiguous()) {
         let _ = content.drain(0..len as usize);
         byte_pos.set(byte_pos.get() + len as usize);

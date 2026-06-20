@@ -18,19 +18,16 @@ use crate::error::Result;
 /// # Errors
 /// Errors if the content is malformed or truncated according to v1 specification.
 pub fn deserialize_xff_v1(contents: &mut VecDeque<u8>) -> Result<XffValue> {
-    deserialize_xff_v1_inner(contents).add_source("nabu::xff::deserializer::v1")
-}
-
-fn deserialize_xff_v1_inner(contents: &mut VecDeque<u8>) -> std::result::Result<XffValue, NabuError> {
     // version is byte 0;
     let byte_pos: Cell<usize> = Cell::new(1);
-    let out = deserialize_xff_v1_value(contents, byte_pos.borrow())?;
+    let out = deserialize_xff_v1_value(contents, byte_pos.borrow())
+        .add_source("nabu::xff::deserializer::v1")?;
     if contents.is_empty() {
-        Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
+        Err(NabuError::TruncatedXFF(byte_pos.get(), 1).into())
     } else if contents[0] == 25 && contents.len() == 1 {
         Ok(out)
     } else {
-        Err(NabuError::TruncatedXFF(byte_pos.get(), 1))
+        Err(NabuError::TruncatedXFF(byte_pos.get(), 1).into())
     }
 }
 
@@ -203,7 +200,7 @@ fn deserialize_xff_v1_number(
 fn deserialize_xff_v1_value_length(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
-) -> Result<usize, NabuError> {
+) -> std::result::Result<usize, NabuError> {
     let len_of_len_bytes = content
         .pop_front()
         .ok_or(NabuError::TruncatedXFF(byte_pos.get(), 1))?;
