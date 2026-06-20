@@ -158,8 +158,15 @@ pub enum NabuError {
     InvalidMetadata(String),
 }
 
-/// Result type for Nabu XFF operations
-pub type Result<T> = std::result::Result<T, NabuError>;
+pub type Result<T> = std::result::Result<T, nemesis::NemesisError>;
+
+pub use nemesis::NemesisResultExt;
+
+impl From<NabuError> for nemesis::NemesisError {
+    fn from(err: NabuError) -> Self {
+        nemesis::NemesisError::new("nabu", err)
+    }
+}
 
 impl From<std::io::Error> for NabuError {
     fn from(err: std::io::Error) -> Self {
