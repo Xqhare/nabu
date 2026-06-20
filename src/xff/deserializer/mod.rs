@@ -8,7 +8,8 @@ use v1::deserialize_xff_v1_value;
 use v2::deserialize_xff_v2_value;
 
 use crate::{Data, Number};
-use crate::{XffValue, error::NabuError};
+use crate::{XffValue, error::{NabuError, Result}};
+use nemesis::NemesisResultExt;
 
 pub mod v0;
 use crate::xff::deserializer::v0::deserialize_xff_v0;
@@ -21,9 +22,9 @@ use crate::xff::deserializer::v3::deserialize_xff_v3;
 pub mod v4;
 use crate::xff::deserializer::v4::deserialize_xff_v4;
 
-pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue, NabuError> {
+pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue> {
     if content.is_empty() {
-        return Err(NabuError::EmptyXFF);
+        return Err(NabuError::EmptyXFF.into());
     }
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -33,7 +34,7 @@ pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue, NabuError
             let (ver, len) =
                 match athena::encoding_and_decoding::deserialize_version_bit_chain(&content[cursor..]) {
                     Ok(v) => v,
-                    Err(_) => return Err(NabuError::UnknownXFFVersion(0)),
+                    Err(_) => return Err(NabuError::UnknownXFFVersion(0).into()),
                 };
             cursor += len as usize;
 
@@ -42,7 +43,7 @@ pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue, NabuError
             } else if ver == 4 {
                 return deserialize_xff_v4(content, &mut cursor);
             }
-            return Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0)));
+            return Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0)).into());
         }
 
         // Legacy path (v0-v2)
@@ -52,13 +53,13 @@ pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue, NabuError
             0 => deserialize_xff_v0(&mut deque),
             1 => deserialize_xff_v1(&mut deque),
             2 => deserialize_xff_v2(&mut deque),
-            _ => Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0))),
+            _ => Err(NabuError::UnknownXFFVersion(u8::try_from(ver).unwrap_or(0)).into()),
         }
     }));
 
     match result {
         Ok(res) => res,
-        Err(_) => Err(NabuError::TruncatedXFF(0, 0)),
+        Err(_) => Err(NabuError::TruncatedXFF(0, 0).into()),
     }
 }
 
@@ -75,8 +76,11 @@ pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue, NabuError
 /// # Errors
 /// Returns IO errors when issues with reading the file from disk occur
 /// Also returns `NabuError::UnknownXFFVersion` when the version is higher than the current highest version of the XFF format
-pub fn deserialize_xff(path: &Path) -> Result<XffValue, NabuError> {
-    let content: Vec<u8> = std::fs::read(path)?;
+pub fn deserialize_xff(path: &Path) -> Result<XffValue> {
+    let content: Vec<u8> = std::fs::read(path)
+        .map_err(NabuError::from)
+        .add_source("nabu::xff::deserialize_xff")
+        .add_ctx(format!("Failed to read file from path: {}", path.display()))?;
     deserialize_xff_from_buffer(&content)
 }
 
@@ -99,11 +103,11 @@ fn deserialize_xff_key_value(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     ver: u8,
-) -> Result<(String, XffValue), NabuError> {
+) -> Result<(String, XffValue)> {
     let table: Crc32Table = generate_crc32_lookuptable();
     // GS
     if content[0] != 29 {
-        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver));
+        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver).into());
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
@@ -132,17 +136,17 @@ fn deserialize_xff_key_value(
             1 => deserialize_xff_v1_value(&mut key_bytes, byte_pos)?,
             2 => deserialize_xff_v2_value(&mut key_bytes, byte_pos, &table)?,
             _ => {
-                return Err(NabuError::UnknownXFFVersion(ver));
+                return Err(NabuError::UnknownXFFVersion(ver).into());
             }
         }
     };
     if !key_bind.is_string() {
-        return Err(NabuError::InvalidKey(byte_pos.get(), key_bind, ver));
+        return Err(NabuError::InvalidKey(byte_pos.get(), key_bind, ver).into());
     }
 
     // US
     if content[0] != 31 {
-        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver));
+        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver).into());
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
@@ -158,7 +162,7 @@ fn deserialize_xff_key_value(
     };
     // Trailing GS
     if !content.is_empty() && content[0] != 29 {
-        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver));
+        return Err(NabuError::InvalidObject(byte_pos.get(), content[0], ver).into());
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
@@ -182,7 +186,7 @@ fn deserialize_xff_number(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     ver: u8,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     let mut signed = false;
     let mut float = false;
     let mut num_store: Vec<u8> = Vec::default();
@@ -204,7 +208,7 @@ fn deserialize_xff_number(
                     byte_pos.get(),
                     "Multiple decimal points".to_string(),
                     2,
-                ));
+                ).into());
             }
             float = true;
         } else {
@@ -212,7 +216,7 @@ fn deserialize_xff_number(
                 byte_pos.get(),
                 format!("Unexpected character: {front}"),
                 ver,
-            ));
+            ).into());
         }
     }
 
@@ -221,18 +225,18 @@ fn deserialize_xff_number(
         if let Ok(val) = num_as_str.parse::<isize>() {
             Ok(XffValue::Number(Number::from(val)))
         } else {
-            Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str, 2))
+            Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str, 2).into())
         }
     } else if float {
         if let Ok(val) = num_as_str.parse::<f64>() {
             Ok(XffValue::Number(Number::from(val)))
         } else {
-            Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str, 2))
+            Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str, 2).into())
         }
     } else if let Ok(val) = num_as_str.parse::<usize>() {
         Ok(XffValue::Number(Number::from(val)))
     } else {
-        Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str, 2))
+        Err(NabuError::InvalidNumber(byte_pos.get(), num_as_str, 2).into())
     }
 }
 
@@ -240,7 +244,7 @@ fn deserialize_xff_text(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     ver: u8,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     let mut str_out: String = String::default();
     while let Some(current_char) = content.pop_front() {
         byte_pos.set(byte_pos.get() + 1);
@@ -288,7 +292,7 @@ fn deserialize_xff_text(
                 current_char,
                 byte_pos.get(),
                 ver,
-            ));
+            ).into());
         }
     }
     Ok(XffValue::from(str_out))

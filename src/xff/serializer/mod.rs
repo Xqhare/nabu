@@ -4,6 +4,7 @@ use crate::{
     XffValue,
     error::{NabuError, Result},
 };
+use nemesis::NemesisResultExt;
 
 pub mod v0;
 use crate::xff::serializer::v0::serialize_xff_v0;
@@ -32,22 +33,22 @@ use crate::xff::serializer::v4::serialize_xff_v4;
 /// Returns `NabuError` when serialization fails or version is unknown.
 pub fn serialize_xff(data: Vec<XffValue>, version: u8) -> Result<Vec<u8>> {
     match version {
-        0 => serialize_xff_v0(data),
+        0 => serialize_xff_v0(data).add_source("nabu::xff::serializer::v0"),
         1 => {
             if data.is_empty() {
-                return Err(NabuError::TruncatedXFF(1, version));
+                return Err(NabuError::TruncatedXFF(1, version).into());
             }
-            serialize_xff_v1(&data)
+            serialize_xff_v1(&data).add_source("nabu::xff::serializer::v1")
         }
         2 => {
             if data.is_empty() {
-                return Err(NabuError::TruncatedXFF(1, version));
+                return Err(NabuError::TruncatedXFF(1, version).into());
             }
-            serialize_xff_v2(&data)
+            serialize_xff_v2(&data).add_source("nabu::xff::serializer::v2")
         }
-        3 => serialize_xff_v3(&data),
-        4 => serialize_xff_v4(&data),
-        _ => Err(NabuError::UnknownXFFVersion(version)),
+        3 => serialize_xff_v3(&data).add_source("nabu::xff::serializer::v3"),
+        4 => serialize_xff_v4(&data).add_source("nabu::xff::serializer::v4"),
+        _ => Err(NabuError::UnknownXFFVersion(version).into()),
     }
 }
 
@@ -60,6 +61,6 @@ pub fn serialize_xff(data: Vec<XffValue>, version: u8) -> Result<Vec<u8>> {
 /// # Errors
 /// Returns IO errors should issues with writing the file to disk arise
 pub fn write_bytes_to_file(path: &Path, data: Vec<u8>) -> Result<()> {
-    std::fs::write(path, data)?;
+    std::fs::write(path, data).map_err(NabuError::from)?;
     Ok(())
 }
