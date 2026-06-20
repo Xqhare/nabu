@@ -7,7 +7,9 @@ use athena::{LocalDate, LocalTime, LocalDateTime};
 use athena::float::HpFloat;
 use athena::graph::Graph;
 
-use crate::error::{NabuError, Result};
+use crate::error::{NabuError, Result as NemesisResult};
+use nemesis::NemesisResultExt;
+type Result<T> = std::result::Result<T, NabuError>;
 use crate::xff::v4_markers::{
     complex, internal, parent, simple,
 };
@@ -16,7 +18,11 @@ use crate::xff::v4_markers::{
 ///
 /// # Errors
 /// Errors if the file is malformed, truncated, or has invalid checksums/parity.
-pub fn deserialize_xff_v4(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
+pub fn deserialize_xff_v4(content: &[u8], cursor: &mut usize) -> NemesisResult<XffValue> {
+    deserialize_xff_v4_inner(content, cursor).add_source("nabu::xff::deserializer::v4")
+}
+
+fn deserialize_xff_v4_inner(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     // 1. Check for Head Metadata (optional)
     let mut head_metadata = None;
     if *cursor < content.len() && content[*cursor] == parent::META {

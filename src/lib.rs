@@ -252,7 +252,7 @@ pub mod serde {
         P: AsRef<std::path::Path>,
     {
         let path_with_xff_extension = path.as_ref().with_extension("xff");
-        std::fs::remove_file(path_with_xff_extension)
+        std::fs::remove_file(&path_with_xff_extension)
             .map_err(NabuError::from)
             .add_source("nabu::serde::remove_file")
             .add_ctx(format!(

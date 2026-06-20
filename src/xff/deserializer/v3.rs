@@ -4,7 +4,9 @@ use athena::encoding_and_decoding::{deserialize_leb128_signed_v3, deserialize_le
 use athena::{Array, Data, Metadata, Number, Object, Table, Uuid};
 use athena::{OrderedObject, XffValue};
 
-use crate::error::{NabuError, Result};
+use crate::error::{NabuError, Result as NemesisResult};
+use nemesis::NemesisResultExt;
+type Result<T> = std::result::Result<T, NabuError>;
 use crate::xff::v3_markers::{
     ARY, DAT, DT, DUR, EM, EV, FAL, FLT, INF, META, NAN, NINF, NUL, OBJ, OOBJ, SINT, TBL, TRU, TXT,
     UINT, UUID,
@@ -14,7 +16,11 @@ use crate::xff::v3_markers::{
 ///
 /// # Errors
 /// Errors if the file is malformed, truncated, or has invalid checksums/parity.
-pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
+pub fn deserialize_xff_v3(content: &[u8], cursor: &mut usize) -> NemesisResult<XffValue> {
+    deserialize_xff_v3_inner(content, cursor).add_source("nabu::xff::deserializer::v3")
+}
+
+fn deserialize_xff_v3_inner(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     // 1. Check for Head Metadata (optional)
     let mut head_metadata = None;
     if *cursor < content.len() && content[*cursor] == META {

@@ -4,16 +4,20 @@ use athena::{
     encoding_and_decoding::serialize_leb128_unsigned,
 };
 
-use crate::{
-    Array, Data, Number, Object, XffValue,
-    error::{NabuError, Result},
-};
+use crate::error::{NabuError, Result as NemesisResult};
+use nemesis::NemesisResultExt;
+type Result<T> = std::result::Result<T, NabuError>;
+use crate::{Array, Data, Number, Object, XffValue};
 
 /// Serializes XFF version 2 data.
 ///
 /// # Errors
 /// Errors if serialization fails.
-pub fn serialize_xff_v2(data: &[XffValue]) -> Result<Vec<u8>> {
+pub fn serialize_xff_v2(data: &[XffValue]) -> NemesisResult<Vec<u8>> {
+    serialize_xff_v2_inner(data).add_source("nabu::xff::serializer::v2")
+}
+
+fn serialize_xff_v2_inner(data: &[XffValue]) -> Result<Vec<u8>> {
     let table: Crc32Table = generate_crc32_lookuptable();
     let file_data = serialize_xff_v2_value(&data[0], &table)?;
     let file_checksum = crc32_with_table(&file_data, &table);

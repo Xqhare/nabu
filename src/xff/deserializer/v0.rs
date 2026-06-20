@@ -5,6 +5,9 @@ use crate::{
     {CommandCharacter, Data, XffValue},
 };
 
+use nemesis::NemesisResultExt;
+use crate::error::Result;
+
 // ---------------------------------------------------
 //                      LEGACY CODE
 // ---------------------------------------------------
@@ -14,7 +17,11 @@ use crate::{
 /// # Errors
 /// Errors if the content is malformed or truncated according to v0 specification.
 #[allow(clippy::too_many_lines)]
-pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
+pub fn deserialize_xff_v0(content: &mut VecDeque<u8>) -> Result<XffValue> {
+    deserialize_xff_v0_inner(content).add_source("nabu::xff::deserializer::v0")
+}
+
+fn deserialize_xff_v0_inner(content: &mut VecDeque<u8>) -> std::result::Result<XffValue, NabuError> {
     let xff_ver = 0;
     let mut out: Vec<XffValue> = Vec::default();
     // version is byte 0;

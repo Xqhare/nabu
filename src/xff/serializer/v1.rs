@@ -1,13 +1,17 @@
-use crate::{
-    Array, Data, XffValue,
-    error::{NabuError, Result},
-};
+use crate::error::{NabuError, Result as NemesisResult};
+use nemesis::NemesisResultExt;
+type Result<T> = std::result::Result<T, NabuError>;
+use crate::{Array, Data, XffValue};
 
 /// Serializes XFF version 1 data.
 ///
 /// # Errors
 /// Errors if the data contains non-ASCII characters or is invalid for v1.
-pub fn serialize_xff_v1(data: &[XffValue]) -> Result<Vec<u8>> {
+pub fn serialize_xff_v1(data: &[XffValue]) -> NemesisResult<Vec<u8>> {
+    serialize_xff_v1_inner(data).add_source("nabu::xff::serializer::v1")
+}
+
+fn serialize_xff_v1_inner(data: &[XffValue]) -> Result<Vec<u8>> {
     let mut out: Vec<u8> = Vec::default();
     // Version 1
     out.push(1);

@@ -4,7 +4,9 @@ use athena::encoding_and_decoding::{
 };
 use athena::{Array, Data, Metadata, XffValue};
 
-use crate::error::Result;
+use crate::error::{NabuError, Result as NemesisResult};
+use nemesis::NemesisResultExt;
+type Result<T> = std::result::Result<T, NabuError>;
 use crate::xff::v3_markers::{
     ARY, DAT, DT, DUR, EM, EV, FAL, FLT, INF, MAGIC, META, NAN, NINF, NUL, OBJ, OOBJ, SINT, TBL,
     TRU, TXT, UINT, UUID,
@@ -14,7 +16,11 @@ use crate::xff::v3_markers::{
 ///
 /// # Errors
 /// Errors if serialization fails or if metadata is invalid.
-pub fn serialize_xff_v3(data: &[XffValue]) -> Result<Vec<u8>> {
+pub fn serialize_xff_v3(data: &[XffValue]) -> NemesisResult<Vec<u8>> {
+    serialize_xff_v3_inner(data).add_source("nabu::xff::serializer::v3")
+}
+
+fn serialize_xff_v3_inner(data: &[XffValue]) -> Result<Vec<u8>> {
     // If the first value is Metadata, move it to the head
     if let Some(XffValue::Metadata(meta)) = data.first() {
         let body = data.get(1).cloned().unwrap_or(XffValue::Null);

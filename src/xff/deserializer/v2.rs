@@ -13,11 +13,18 @@ use crate::{Data, XffValue, error::NabuError};
 
 use super::{deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};
 
+use nemesis::NemesisResultExt;
+use crate::error::Result;
+
 /// Deserializes XFF version 2 content.
 ///
 /// # Errors
 /// Errors if the content is malformed or truncated according to v2 specification.
-pub fn deserialize_xff_v2(content: &mut VecDeque<u8>) -> Result<XffValue, NabuError> {
+pub fn deserialize_xff_v2(content: &mut VecDeque<u8>) -> Result<XffValue> {
+    deserialize_xff_v2_inner(content).add_source("nabu::xff::deserializer::v2")
+}
+
+fn deserialize_xff_v2_inner(content: &mut VecDeque<u8>) -> std::result::Result<XffValue, NabuError> {
     // somewhat expensive function
     // doesn't save enough to really matter in this codebase, but it's the thought that counts!
     let table: Crc32Table = generate_crc32_lookuptable();
@@ -119,9 +126,9 @@ pub fn deserialize_xff_v2_value(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     table: &Crc32Table,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     if content.is_empty() {
-        return Err(NabuError::TruncatedXFFValue(byte_pos.get(), 2));
+        return Err(NabuError::TruncatedXFFValue(byte_pos.get(), 2).into());
     }
     byte_pos.set(byte_pos.get() + 1);
     match content.pop_front().unwrap() {
@@ -133,7 +140,7 @@ pub fn deserialize_xff_v2_value(
         5 => deserialize_xff_v2_data(content, byte_pos, table),
         16 => Ok(XffValue::from(true)),
         17 => Ok(XffValue::from(false)),
-        _ => Err(NabuError::InvalidXFFByte(content[0], byte_pos.get(), 2)),
+        _ => Err(NabuError::InvalidXFFByte(content[0], byte_pos.get(), 2).into()),
     }
 }
 
@@ -141,14 +148,14 @@ fn deserialize_xff_v2_text(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     table: &Crc32Table,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
     let data = content.drain(0..len).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len);
     let txt_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
     // check EV
     if content[0] != 24 {
-        return Err(NabuError::MissingEV(byte_pos.get()));
+        return Err(NabuError::MissingEV(byte_pos.get()).into());
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
@@ -168,7 +175,7 @@ fn deserialize_xff_v2_text(
             actual: actual_crc,
             pos: byte_pos.get().saturating_sub(1),
             version: 2,
-        })
+        }.into())
     }
 }
 
@@ -176,14 +183,14 @@ fn deserialize_xff_v2_number(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     table: &Crc32Table,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
     let mut data = content.drain(0..len).collect::<VecDeque<u8>>();
     byte_pos.set(byte_pos.get() + len);
     let num_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
     // check EV
     if content[0] != 24 {
-        return Err(NabuError::MissingEV(byte_pos.get()));
+        return Err(NabuError::MissingEV(byte_pos.get()).into());
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
@@ -201,7 +208,7 @@ fn deserialize_xff_v2_number(
             actual: actual_crc,
             pos: byte_pos.get().saturating_sub(1),
             version: 2,
-        })
+        }.into())
     }
 }
 
@@ -209,7 +216,7 @@ fn deserialize_xff_v2_array(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     table: &Crc32Table,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     //ARY
 
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
@@ -228,7 +235,7 @@ fn deserialize_xff_v2_array(
                 actual: actual_crc,
                 pos: byte_pos.get().saturating_sub(1),
                 version: 2,
-            });
+            }.into());
         }
         // no EV check -> 5
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(5));
@@ -247,22 +254,22 @@ fn deserialize_xff_v2_array(
                     byte_pos.set(byte_pos.get() + 2);
                     return Ok(XffValue::from(ary_bind));
                 }
-                return Err(NabuError::MissingEV(byte_pos.get()));
+                return Err(NabuError::MissingEV(byte_pos.get()).into());
             } else if array_data.is_empty() {
                 if content[0] == 24 {
                     let _ = content.pop_front();
                     byte_pos.set(byte_pos.get() + 1);
                     return Ok(XffValue::from(ary_bind));
                 }
-                return Err(NabuError::MissingEV(byte_pos.get()));
+                return Err(NabuError::MissingEV(byte_pos.get()).into());
             }
             if array_data[0] != 30 {
-                return Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2));
+                return Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2).into());
             }
             let _ = array_data.pop_front();
             byte_pos.set(byte_pos.get() + 1);
         }
-        Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2))
+        Err(NabuError::InvalidArray(byte_pos.get(), content[0], 2).into())
     } else {
         // remove checksum, check ev
         let _ = content.drain(0..5);
@@ -272,7 +279,7 @@ fn deserialize_xff_v2_array(
             byte_pos.set(byte_pos.get() + 1);
             Ok(XffValue::from(ary_bind))
         } else {
-            Err(NabuError::MissingEV(byte_pos.get()))
+            Err(NabuError::MissingEV(byte_pos.get()).into())
         }
     }
 }
@@ -281,7 +288,7 @@ fn deserialize_xff_v2_object(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     table: &Crc32Table,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     //OBJ
 
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
@@ -300,7 +307,7 @@ fn deserialize_xff_v2_object(
                 actual: actual_crc,
                 pos: byte_pos.get().saturating_sub(1),
                 version: 2,
-            });
+            }.into());
         }
         byte_pos.set(byte_pos.get().saturating_sub(len));
 
@@ -327,7 +334,7 @@ fn deserialize_xff_v2_object(
         let _ = content.drain(0..5);
         byte_pos.set(byte_pos.get() + 5);
         if content[0] != 24 {
-            return Err(NabuError::MissingEV(byte_pos.get()));
+            return Err(NabuError::MissingEV(byte_pos.get()).into());
         }
         let _ = content.pop_front();
         byte_pos.set(byte_pos.get() + 1);
@@ -341,7 +348,7 @@ fn deserialize_xff_v2_object(
         byte_pos.set(byte_pos.get() + 1);
         Ok(XffValue::from(obj_bind))
     } else {
-        Err(NabuError::InvalidObject(byte_pos.get(), content[0], 2))
+        Err(NabuError::InvalidObject(byte_pos.get(), content[0], 2).into())
     }
 }
 
@@ -349,14 +356,14 @@ fn deserialize_xff_v2_data(
     content: &mut VecDeque<u8>,
     byte_pos: &Cell<usize>,
     table: &Crc32Table,
-) -> Result<XffValue, NabuError> {
+) -> Result<XffValue> {
     let len = deserialize_xff_v2_value_length(content, byte_pos)?;
     let data = content.drain(0..len).collect::<Vec<u8>>();
     byte_pos.set(byte_pos.get() + len);
     let num_checksum = deserialize_xff_v2_value_checksum(content, byte_pos)?;
     // check EV
     if content[0] != 24 {
-        return Err(NabuError::MissingEV(byte_pos.get()));
+        return Err(NabuError::MissingEV(byte_pos.get()).into());
     }
     let _ = content.pop_front();
     byte_pos.set(byte_pos.get() + 1);
@@ -372,6 +379,6 @@ fn deserialize_xff_v2_data(
             actual: actual_crc,
             pos: byte_pos.get().saturating_sub(1),
             version: 2,
-        })
+        }.into())
     }
 }

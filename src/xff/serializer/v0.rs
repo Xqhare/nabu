@@ -1,13 +1,17 @@
-use crate::{
-    error::{NabuError, Result},
-    {CommandCharacter, XffValue},
-};
+use crate::error::{NabuError, Result as NemesisResult};
+use nemesis::NemesisResultExt;
+type Result<T> = std::result::Result<T, NabuError>;
+use crate::{CommandCharacter, XffValue};
 
 /// Serializes XFF version 0 data.
 ///
 /// # Errors
 /// Errors if the data contains values not supported by v0.
-pub fn serialize_xff_v0(data: Vec<XffValue>) -> Result<Vec<u8>> {
+pub fn serialize_xff_v0(data: Vec<XffValue>) -> NemesisResult<Vec<u8>> {
+    serialize_xff_v0_inner(data).add_source("nabu::xff::serializer::v0")
+}
+
+fn serialize_xff_v0_inner(data: Vec<XffValue>) -> Result<Vec<u8>> {
     let mut out: Vec<u8> = Vec::default();
     // Only true if the last pushed data was a command character
     let mut escape_open = false;
