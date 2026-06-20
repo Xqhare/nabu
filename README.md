@@ -15,9 +15,9 @@ The overarching goal of this project is to create a rust library that can be use
 
 The repository contains the `.xff` standard as well as, what I lovingly call, a reference implementation.
 
-This README documents the usage of the most recent version of `.xff`: Version 3.
+This README documents the usage of the most recent version of `.xff`: Version 4.
 
-If you would like to use version 0, 1 or 2, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
+If you would like to use version 0, 1, 2, or 3, you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
 This library is designed for interoperability with [Mawu](https://github.com/Xqhare/mawu), a library for working with `.json` and `.csv` files in rust; Enabling easy data interchange between them.
 
@@ -36,6 +36,7 @@ I also tried to make it easy to detect malformed data, and to make it slightly h
 
 In version 2, I wanted to play with single bits and bit operations.
 In version 3, I introduced universal integrity via parity and checksums, and improved performance with index-based parent types.
+In version 4, I integrated delta-encoded offset lists, remapped Group 00 markers (offering Hamming Distance of 4 error resilience), naive temporal types, graph parent types, 7-bit ASCII-TEXT, signed NaNs, and structured Nemesis error handling.
 
 ## Motivation
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
@@ -85,12 +86,17 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
 - Storage of a variety of data types
     - Basic data types
         - Strings, Numbers, Boolean's, Null
-    - Arrays, Objects, Tables, Metadata
+        - Naive temporal types (LocalDate, LocalTime, LocalDateTime) and HpFloat
+    - Arrays, Objects, OrderedObjects, Tables, Graphs, Metadata
     - Arbitrary data
 - Performant
     - 100MB are read in approximately 200ms
-- Strong integrity (v3)
-    - CRC-32 checksums and even-parity marker bytes
+    - Delta-encoded offset lists for parent types
+- Strong integrity and resilience
+    - CRC-32 checksums and even-parity marker bytes (v3)
+    - Remapped Group 00 marker bytes offering Hamming Distance of 4 error resilience (v4)
+- Structured error handling
+    - Integrated with Nemesis for detailed, context-rich nesting and propagation
 - Fully documented
 - High test coverage
 - Macros
@@ -104,6 +110,7 @@ All specifications are in the `specifications` directory.
 - [V1](specifications/v1.md).
 - [V2](specifications/v2.md).
 - [V3](specifications/v3.md).
+- [V4](specifications/v4.md).
 
 ## Usage
 
@@ -405,20 +412,39 @@ assert_eq!(value, &XffValue::from("hello mom"));
 ```
 
 ### Errors
-Nabu will return one of two larger groups of errors:
 
-1. `IOError`
-2. `InternalError`
+Nabu returns `nemesis::NemesisError` for error handling, which integrates structural error nesting, source tagging, and context propagation.
 
-#### `IOError`
-These errors are just the standard IO errors.
-Read and write permissions and the such.
+#### Printing Errors
 
-#### `InternalError`
-These errors are errors that are caused while parsing or encoding a `.xff` file and are not expected to be encountered in normal use.
-These errors are generally not recoverable as they point to a malformed file.
+A `NemesisError` prints the entire causal error chain along with source labels and contexts.
 
-In error messages that contain a position value, the position is given in bytes from the start of the `.xff` file.
+```rust
+if let Err(err) = nabu::serde::read("data.xff") {
+    // Prints formatted nested error hierarchy
+    eprintln!("{}", err);
+}
+```
+
+#### Downcasting to Leaf Errors
+
+You can downcast the leaf error to investigate the root cause (such as a specific `NabuError` variant or a standard `std::io::Error`):
+
+```rust
+use std::io;
+use nabu::error::NabuError;
+
+if let Err(err) = nabu::serde::read("data.xff") {
+    if let Some(io_err) = err.downcast_ref::<io::Error>() {
+        eprintln!("IO issue: {}", io_err);
+    } else if let Some(nabu_err) = err.downcast_ref::<NabuError>() {
+        match nabu_err {
+            NabuError::EmptyXFF => eprintln!("Empty XFF file"),
+            _ => eprintln!("Parsing error: {}", nabu_err),
+        }
+    }
+}
+```
 
 ### Testing
 Nabu can be tested with the following commands:
