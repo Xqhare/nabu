@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 athena = { git = "https://github.com/Xqhare/athena", features = ["encoding_decoding", "checksum", "byte_bit"] }
+nemesis = { git = "https://github.com/Xqhare/nemesis" }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
