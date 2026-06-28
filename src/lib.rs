@@ -6,12 +6,12 @@ pub mod error;
 mod xff;
 
 // Re-exported types - XffValue was moved out of Nabu and into Athena
+pub use athena::float::HpFloat;
+pub use athena::graph::Graph;
 pub use athena::{
     Array, CommandCharacter, Data, LocalDate, LocalDateTime, LocalTime, Metadata, Number, Object,
-    XffValue, xff!, tvec_to_xff_value!
+    XffValue, tvec_to_xff_value, xff,
 };
-pub use athena::graph::Graph;
-pub use athena::float::HpFloat;
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
 const XFF_VERSION: u8 = 4;
@@ -41,11 +41,11 @@ pub mod serde {
     use crate::XFF_VERSION;
     use crate::XffValue;
     use crate::error::NabuError;
+    use crate::xff::deserializer::deserialize_xff;
+    pub use crate::xff::deserializer::deserialize_xff_from_buffer;
+    use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
     use nemesis::NemesisError;
     use nemesis::NemesisResultExt;
-    pub use crate::xff::deserializer::deserialize_xff_from_buffer;
-    use crate::xff::deserializer::deserialize_xff;
-    use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
 
     /// Reads the content of a XFF file and returns a `XffValue`
     ///
