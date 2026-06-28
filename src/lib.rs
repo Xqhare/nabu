@@ -8,55 +8,13 @@ mod xff;
 // Re-exported types - XffValue was moved out of Nabu and into Athena
 pub use athena::{
     Array, CommandCharacter, Data, LocalDate, LocalDateTime, LocalTime, Metadata, Number, Object,
-    XffValue,
+    XffValue, xff!, tvec_to_xff_value!
 };
 pub use athena::graph::Graph;
 pub use athena::float::HpFloat;
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
 const XFF_VERSION: u8 = 4;
-
-// ----------------------------------------------------------
-// Macros
-// ----------------------------------------------------------
-
-#[macro_export]
-/// Macro to convert any value into a `XffValue`
-///
-/// ## Example
-/// ```rust
-/// use nabu::{XffValue, xff};
-/// let value_int = xff!(42);
-/// let value_string = xff!("hello mom");
-/// let value_float = xff!(42.0);
-/// let value_vec = xff!(vec![42]);
-///
-/// assert_eq!(value_int, XffValue::from(42));
-/// assert_eq!(value_string, XffValue::from("hello mom"));
-/// assert_eq!(value_float, XffValue::from(42.0));
-/// assert_eq!(value_vec, XffValue::from(vec![42]));
-/// ```
-macro_rules! xff {
-    ($value: expr) => {
-        XffValue::from($value)
-    };
-}
-
-#[macro_export]
-/// Macro to convert any Vector into a `Vec<XffValue>`
-///
-/// ## Example
-/// ```rust
-/// use nabu::{XffValue, tvec_to_xff_value};
-/// let vec = tvec_to_xff_value!(u8; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-/// let vec2 = tvec_to_xff_value!(i8; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-/// let ary: Vec<u8> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-/// assert_eq!(vec, XffValue::from(ary.clone()));
-/// assert_ne!(vec2, XffValue::from(ary));
-/// ```
-macro_rules! tvec_to_xff_value {
-    ($t:ty; $($e:expr),*) => { XffValue::from(vec![$($e as $t),*] as Vec<$t>)};
-}
 
 /// Module to serialize and deserialize XFF files
 ///
