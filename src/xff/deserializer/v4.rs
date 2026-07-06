@@ -1,18 +1,16 @@
 use athena::byte_bit::is_even_parity;
 use athena::checksum::crc32;
 use athena::encoding_and_decoding::{deserialize_leb128_signed_v3, deserialize_leb128_unsigned};
-use athena::{Array, Data, Metadata, Number, Object, Table, Uuid};
-use athena::{OrderedObject, XffValue};
-use athena::{LocalDate, LocalTime, LocalDateTime};
 use athena::float::HpFloat;
 use athena::graph::Graph;
+use athena::{Array, Data, Metadata, Number, Object, Table, Uuid};
+use athena::{LocalDate, LocalDateTime, LocalTime};
+use athena::{OrderedObject, XffValue};
 
 use crate::error::{NabuError, Result as NemesisResult};
 use nemesis::NemesisResultExt;
 type Result<T> = std::result::Result<T, NabuError>;
-use crate::xff::v4_markers::{
-    complex, internal, parent, simple,
-};
+use crate::xff::v4_markers::{complex, internal, parent, simple};
 
 /// Deserializes a complete XFF v4 file from a byte slice.
 ///
@@ -64,8 +62,8 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             match second_byte {
                 simple::NUL => Ok(XffValue::Infinity),
                 simple::TRU => Ok(XffValue::NegInfinity),
-                simple::FAL => Ok(XffValue::PNan),
-                simple::NAN => Ok(XffValue::NNan),
+                simple::FAL => Ok(XffValue::PosNaN),
+                simple::NAN => Ok(XffValue::NegNaN),
                 _ => Err(NabuError::InvalidXFFByte(second_byte, marker_pos + 1, 4)),
             }
         }
@@ -192,13 +190,14 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
 
         complex::CFLT => {
             let start = *cursor;
-            let (coefficient, leb_len_c) = athena::encoding_and_decoding::deserialize_leb128_signed_i128(&content[*cursor..])
-                .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 4))?;
+            let (coefficient, leb_len_c) =
+                athena::encoding_and_decoding::deserialize_leb128_signed_i128(&content[*cursor..])
+                    .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 4))?;
             *cursor += leb_len_c as usize;
             let (scale, leb_len_e) = deserialize_leb128_unsigned(&content[*cursor..])
                 .map_err(|_| NabuError::InvalidXFFValueLength(marker_pos, 4))?;
             *cursor += leb_len_e as usize;
-            
+
             let checksum_start = *cursor;
             let checksum = read_u32_le(content, cursor)?;
             let actual_crc = crc32(&content[start..checksum_start]);
@@ -340,7 +339,12 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             if ev != internal::EV {
                 return Err(NabuError::MissingEV(*cursor - 1));
             }
-            Ok(XffValue::LocalTime(LocalTime::new(hour, minute, second, subseconds as u64)))
+            Ok(XffValue::LocalTime(LocalTime::new(
+                hour,
+                minute,
+                second,
+                subseconds as u64,
+            )))
         }
 
         complex::LDT => {
@@ -371,7 +375,7 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
             Ok(XffValue::LocalDateTime(LocalDateTime::new(
                 LocalDate::new(year, month, day),
-                LocalTime::new(hour, minute, second, subseconds as u64)
+                LocalTime::new(hour, minute, second, subseconds as u64),
             )))
         }
 
@@ -592,7 +596,7 @@ fn deserialize_v4_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
 
 fn deserialize_v4_graph(content: &[u8], cursor: &mut usize) -> Result<XffValue> {
     let mut g = Graph::new();
-    
+
     // 1. Nodes Block
     let nodes_index_start = *cursor;
     let (node_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
@@ -622,7 +626,7 @@ fn deserialize_v4_graph(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         let metadata = deserialize_v4_value(content, cursor)?;
         let _inbound = deserialize_v4_value(content, cursor)?; // We'll rebuild connections
         let _outbound = deserialize_v4_value(content, cursor)?;
-        
+
         g.add_node(payload, metadata);
     }
 
@@ -655,7 +659,7 @@ fn deserialize_v4_graph(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
         let (to, leb_len_t) = deserialize_leb128_unsigned(&content[*cursor..])
             .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
         *cursor += leb_len_t as usize;
-        
+
         let c_payload_end = *cursor;
         let c_checksum = read_u32_le(content, cursor)?;
         let c_actual_crc = crc32(&content[c_start..c_payload_end]);
@@ -667,9 +671,10 @@ fn deserialize_v4_graph(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
                 version: 4,
             });
         }
-        
+
         let metadata = deserialize_v4_value(content, cursor)?;
-        g.add_connection(from as u32, to as u32, metadata).map_err(|_| NabuError::InvalidObject(*cursor, 0, 4))?;
+        g.add_connection(from as u32, to as u32, metadata)
+            .map_err(|_| NabuError::InvalidObject(*cursor, 0, 4))?;
     }
 
     let ev = read_byte(content, cursor)?;

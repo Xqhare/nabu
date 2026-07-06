@@ -1,6 +1,6 @@
-use athena::{LocalDate, LocalDateTime, LocalTime, XffValue};
 use athena::float::HpFloat;
 use athena::graph::Graph;
+use athena::{LocalDate, LocalDateTime, LocalTime, XffValue};
 use nabu::serde::{read, remove_file, write_legacy};
 
 #[test]
@@ -11,8 +11,8 @@ fn test_v4_roundtrip_simple() {
         XffValue::from(true),
         XffValue::from(false),
         XffValue::NaN,
-        XffValue::PNan,
-        XffValue::NNan,
+        XffValue::PosNaN,
+        XffValue::NegNaN,
         XffValue::Infinity,
         XffValue::NegInfinity,
     ];
@@ -42,7 +42,7 @@ fn test_v4_roundtrip_new_types() {
     // LocalDateTime
     let val = XffValue::LocalDateTime(LocalDateTime::new(
         LocalDate::new(2026, 5, 16),
-        LocalTime::new(14, 30, 0, 123)
+        LocalTime::new(14, 30, 0, 123),
     ));
     write_legacy(path, val.clone(), 4).unwrap();
     assert_eq!(val, read(path).unwrap());
@@ -67,7 +67,7 @@ fn test_v4_roundtrip_graph() {
     let n0 = g.add_node(XffValue::from("root"), XffValue::Null);
     let n1 = g.add_node(XffValue::from("child"), XffValue::from("meta"));
     g.add_connection(n0, n1, XffValue::from("link")).unwrap();
-    
+
     let val = XffValue::Graph(g);
     write_legacy(path, val.clone(), 4).unwrap();
     let read_val = read(path).unwrap();
@@ -92,46 +92,46 @@ fn test_v4_delta_encoding_large() {
 #[test]
 fn test_v4_hamming_distance_simulation() {
     use nabu::XffValue;
-    use nabu::serde::{write_legacy};
-    
+    use nabu::serde::write_legacy;
+
     let path = "test_hamming.xff";
     let val = XffValue::from(true); // TRU is 0x87 (1000 0111)
     write_legacy(path, val, 4).unwrap();
-    
+
     let mut content = std::fs::read(path).unwrap();
     // Find the TRU marker. It's after magic (4) and version (1) and optional meta (none).
     // So byte 5 should be 0x87.
     assert_eq!(content[5], 0x87);
-    
+
     // 1-bit flip: 0x87 -> 0x86 (1000 0110)
     content[5] = 0x86;
     std::fs::write(path, &content).unwrap();
     assert!(read(path).is_err()); // Parity error
-    
+
     // 2-bit flip: 0x87 -> 0x85 (1000 0101)
     content[5] = 0x85;
     std::fs::write(path, &content).unwrap();
     assert!(read(path).is_err()); // Even parity but not a valid v4 marker
-    
+
     // 3-bit flip: 0x87 -> 0x84 (1000 0100)
     content[5] = 0x84;
     std::fs::write(path, &content).unwrap();
     assert!(read(path).is_err()); // Parity error
-    
+
     // 4-bit flip: 0x87 -> 0x00 (0000 0000) which is NUL
     content[5] = 0x00;
     std::fs::write(path, &content).unwrap();
     assert!(read(path).is_ok()); // Valid marker (NUL)
-    
+
     remove_file(path).unwrap();
 }
 
 #[test]
 fn test_v4_compliance_fixes() {
-    use athena::{LocalDate, LocalTime, LocalDateTime, Metadata, XffValue, Data};
-    use athena::float::HpFloat;
     use athena::checksum::crc32;
-    use nabu::serde::{read, write_legacy, remove_file};
+    use athena::float::HpFloat;
+    use athena::{Data, LocalDate, LocalDateTime, LocalTime, Metadata, XffValue};
+    use nabu::serde::{read, remove_file, write_legacy};
 
     let path = "test_compliance_fixes.xff";
 
@@ -164,7 +164,8 @@ fn test_v4_compliance_fixes() {
     }
 
     // 1. Test Object/OrderedObject/Metadata key deserialization with XffValue::Ascii keys.
-    let key_bytes = get_serialized_value_bytes(XffValue::Ascii(athena::XffString::from("ascii_key")));
+    let key_bytes =
+        get_serialized_value_bytes(XffValue::Ascii(athena::XffString::from("ascii_key")));
     let val_bytes = get_serialized_value_bytes(XffValue::from("value"));
 
     let mut element_bytes = Vec::new();
@@ -203,10 +204,16 @@ fn test_v4_compliance_fixes() {
     meta.set_custom("ascii", XffValue::Ascii(athena::XffString::from("hello")));
     meta.set_custom("date", XffValue::LocalDate(LocalDate::new(2026, 5, 21)));
     meta.set_custom("time", XffValue::LocalTime(LocalTime::new(18, 0, 0, 0)));
-    meta.set_custom("datetime", XffValue::LocalDateTime(LocalDateTime::new(LocalDate::new(2026, 5, 21), LocalTime::new(18, 0, 0, 0))));
+    meta.set_custom(
+        "datetime",
+        XffValue::LocalDateTime(LocalDateTime::new(
+            LocalDate::new(2026, 5, 21),
+            LocalTime::new(18, 0, 0, 0),
+        )),
+    );
     meta.set_custom("hpfloat", XffValue::HpFloat(HpFloat::new(12345, 2)));
-    meta.set_custom("pnan", XffValue::PNan);
-    meta.set_custom("nnan", XffValue::NNan);
+    meta.set_custom("pnan", XffValue::PosNaN);
+    meta.set_custom("nnan", XffValue::NegNaN);
     meta.set_custom("data", XffValue::Data(Data::from(vec![1, 2, 3])));
 
     let val_meta = XffValue::Metadata(meta);
@@ -227,7 +234,7 @@ fn test_v4_compliance_fixes() {
 
     let val_nan = XffValue::from(custom_nan);
     write_legacy(path, val_nan, 4).unwrap();
-    
+
     let content = std::fs::read(path).unwrap();
     assert_eq!(content[5], 0x3F); // complex::FLT
 
@@ -261,4 +268,3 @@ fn test_v4_compliance_fixes() {
     remove_file(path).unwrap();
     let _ = std::fs::remove_file(path);
 }
-

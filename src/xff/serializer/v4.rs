@@ -7,9 +7,7 @@ use athena::{Array, Data, Metadata, XffValue};
 use crate::error::{NabuError, Result as NemesisResult};
 use nemesis::NemesisResultExt;
 type Result<T> = std::result::Result<T, NabuError>;
-use crate::xff::v4_markers::{
-    complex, internal, parent, simple,
-};
+use crate::xff::v4_markers::{complex, internal, parent, simple};
 
 /// Serializes XFF values into a byte vector using the v4 specification.
 ///
@@ -90,7 +88,8 @@ fn serialize_v4_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::HpFloat(hp) => {
             let mut buf = Vec::new();
             buf.push(complex::CFLT);
-            let mut payload = athena::encoding_and_decoding::serialize_leb128_signed_i128(hp.get_value());
+            let mut payload =
+                athena::encoding_and_decoding::serialize_leb128_signed_i128(hp.get_value());
             payload.extend(serialize_leb128_unsigned(u128::from(hp.get_scale())));
             let checksum = crc32(&payload);
             buf.extend(payload);
@@ -225,8 +224,8 @@ fn serialize_v4_value(value: &XffValue) -> Result<Vec<u8>> {
         XffValue::Table(t) => serialize_v4_table(t),
         XffValue::Graph(g) => serialize_v4_graph(g),
         XffValue::NaN => Ok(vec![simple::NAN]),
-        XffValue::PNan => Ok(simple::PNAN.to_vec()),
-        XffValue::NNan => Ok(simple::NNAN.to_vec()),
+        XffValue::PosNaN => Ok(simple::PNAN.to_vec()),
+        XffValue::NegNaN => Ok(simple::NNAN.to_vec()),
         XffValue::Infinity => Ok(simple::INF.to_vec()),
         XffValue::NegInfinity => Ok(simple::NINF.to_vec()),
         XffValue::CommandCharacter(c) => {
@@ -273,7 +272,7 @@ fn serialize_v4_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
         let ser = serialize_v4_value(el)?;
         let delta = current_offset - prev_offset;
         deltas.push(serialize_leb128_unsigned(delta));
-        
+
         prev_offset = current_offset;
         current_offset += ser.len() as u128;
         total_child_size += ser.len();
@@ -316,7 +315,7 @@ fn serialize_v4_table(t: &athena::Table) -> Result<Vec<u8>> {
         let ser = serialize_v4_value(&XffValue::from(col.clone()))?;
         let delta = current_col_offset - prev_col_offset;
         col_deltas.push(serialize_leb128_unsigned(delta));
-        
+
         prev_col_offset = current_col_offset;
         current_col_offset += ser.len() as u128;
         total_col_names_size += ser.len();
@@ -345,12 +344,12 @@ fn serialize_v4_table(t: &athena::Table) -> Result<Vec<u8>> {
         let row_delta = current_row_offset - prev_row_offset;
         row_deltas.push(serialize_leb128_unsigned(row_delta));
         prev_row_offset = current_row_offset;
-        
+
         for cell in row {
             let ser = serialize_v4_value(cell)?;
             let el_delta = current_row_offset - prev_element_offset;
             element_deltas.push(serialize_leb128_unsigned(el_delta));
-            
+
             prev_element_offset = current_row_offset;
             current_row_offset += ser.len() as u128;
             total_row_data_size += ser.len();
@@ -418,19 +417,25 @@ fn serialize_v4_graph(g: &athena::graph::Graph) -> Result<Vec<u8>> {
 
     let all_node_indices: Vec<u32> = g.get_all_nodes_indices().collect();
     let node_count = all_node_indices.len();
-    
+
     for &idx in &all_node_indices {
         let node = g.get_node(idx).unwrap();
         let mut n_ser = Vec::new();
         n_ser.extend(serialize_v4_value(&node.payload)?);
         n_ser.extend(serialize_v4_value(&node.metadata)?);
         n_ser.extend(serialize_v4_value(&XffValue::Array(Array::from(
-            node.inbound_connections.iter().map(|&i| XffValue::from(i as usize)).collect::<Vec<_>>()
+            node.inbound_connections
+                .iter()
+                .map(|&i| XffValue::from(i as usize))
+                .collect::<Vec<_>>(),
         )))?);
         n_ser.extend(serialize_v4_value(&XffValue::Array(Array::from(
-            node.outbound_connections.iter().map(|&i| XffValue::from(i as usize)).collect::<Vec<_>>()
+            node.outbound_connections
+                .iter()
+                .map(|&i| XffValue::from(i as usize))
+                .collect::<Vec<_>>(),
         )))?);
-        
+
         let delta = current_node_offset - prev_node_offset;
         node_deltas.push(serialize_leb128_unsigned(delta));
         prev_node_offset = current_node_offset;
@@ -463,7 +468,7 @@ fn serialize_v4_graph(g: &athena::graph::Graph) -> Result<Vec<u8>> {
         let mut c_payload = serialize_leb128_unsigned(conn.from as u128);
         c_payload.extend(serialize_leb128_unsigned(conn.to as u128));
         let c_checksum = crc32(&c_payload);
-        
+
         let mut c_ser = c_payload;
         c_ser.extend_from_slice(&c_checksum.to_le_bytes());
         c_ser.extend(serialize_v4_value(&conn.metadata)?);

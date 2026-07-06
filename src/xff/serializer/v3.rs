@@ -185,7 +185,7 @@ fn serialize_v3_value(value: &XffValue) -> Result<Vec<u8>> {
             serialize_v3_parent(OOBJ, &pairs)
         }
         XffValue::Table(t) => serialize_v3_table(t),
-        XffValue::NaN | XffValue::PNan | XffValue::NNan => Ok(vec![NAN]),
+        XffValue::NaN | XffValue::PosNaN | XffValue::NegNaN => Ok(vec![NAN]),
         XffValue::Infinity => Ok(vec![INF]),
         XffValue::NegInfinity => Ok(vec![NINF]),
         XffValue::CommandCharacter(c) => {
