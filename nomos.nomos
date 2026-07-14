@@ -1,0 +1,7 @@
+- [ ] (3) Adress performance issues
+    * Focus on latest version only. Slow parsing of older versions is not an issue that needs fixing
+    - [ ] (1) Measure the performance of the code :: never done any real benchmarking at all; should be fun
+    - [ ] Find performance killers
+    - [ ] Find performance bottlenecks
+    - [ ] Fix performance killers
+    - [ ] Fix performance bottlenecks

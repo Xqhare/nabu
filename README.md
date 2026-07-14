@@ -31,6 +31,7 @@ To be clear: You may choose one of the two licenses, or both.
 If you would like to contribute to this project, please make sure to read the [Contributing](CONTRIBUTING.md) file.
 
 ## Purpose
+
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
 I also tried to make it easy to detect malformed data, and to make it slightly harder to manipulate the file by hand.
 
@@ -39,6 +40,7 @@ In version 3, I introduced universal integrity via parity and checksums, and imp
 In version 4, I integrated delta-encoded offset lists, remapped Group 00 markers (offering Hamming Distance of 4 error resilience), naive temporal types, graph parent types, 7-bit ASCII-TEXT, signed NaNs, and structured Nemesis error handling.
 
 ## Motivation
+
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation of v0.
 After a few weeks of work and running into several issues and design oversights (as expected), I started work on v1.
@@ -47,6 +49,7 @@ As `xff` is meant to be a jack of all trades, it is important that it can be use
 Because I like creating problems for myself, the `.xff` specification contains several error detection features. If these are of any use to anyone (or actually work as intended), only time will tell.
 
 ## Naming
+
 As with all my projects, Nabu is named after an ancient god.
 
 This library's namesake is the ancient Babylonian god Nabu, the god of literacy, rational arts and scribes.
@@ -56,6 +59,7 @@ I am still undecided if NABU will also be a recursive acronym.
 The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really like it though.
 
 ## Contents
+
 - [Purpose](#purpose)
 - [Motivation](#motivation)
 - [Naming](#naming)
@@ -80,6 +84,12 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
 - [Testing](#testing)
     
 ## Roadmap
+
+`Nabu` uses my [nomos](https://github.com/xqhare/nomos) project management system.
+
+The roadmap for this project can be found in the [nomos.nomos](nomos.nomos) file.
+
+All nomos files follow the syntax defined [here](https://github.com/Xqhare/nomos/blob/master/spec/).
 
 ## Features
 
