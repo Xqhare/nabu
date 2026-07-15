@@ -1,4 +1,4 @@
-ÂºÅC#![doc = include_str!("../README.md")]
+®»ç9#![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
 pub mod error;
@@ -6,57 +6,15 @@ pub mod error;
 mod xff;
 
 // Re-exported types - XffValue was moved out of Nabu and into Athena
+pub use athena::float::HpFloat;
+pub use athena::graph::Graph;
 pub use athena::{
     Array, CommandCharacter, Data, LocalDate, LocalDateTime, LocalTime, Metadata, Number, Object,
-    XffValue,
+    XffValue, tvec_to_xff_value, xff,
 };
-pub use athena::graph::Graph;
-pub use athena::float::HpFloat;
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
 const XFF_VERSION: u8 = 4;
-
-// ----------------------------------------------------------
-// Macros
-// ----------------------------------------------------------
-
-#[macro_export]
-/// Macro to convert any value into a `XffValue`
-///
-/// ## Example
-/// ```rust
-/// use nabu::{XffValue, xff};
-/// let value_int = xff!(42);
-/// let value_string = xff!("hello mom");
-/// let value_float = xff!(42.0);
-/// let value_vec = xff!(vec![42]);
-///
-/// assert_eq!(value_int, XffValue::from(42));
-/// assert_eq!(value_string, XffValue::from("hello mom"));
-/// assert_eq!(value_float, XffValue::from(42.0));
-/// assert_eq!(value_vec, XffValue::from(vec![42]));
-/// ```
-macro_rules! xff {
-    ($value: expr) => {
-        XffValue::from($value)
-    };
-}
-
-#[macro_export]
-/// Macro to convert any Vector into a `Vec<XffValue>`
-///
-/// ## Example
-/// ```rust
-/// use nabu::{XffValue, tvec_to_xff_value};
-/// let vec = tvec_to_xff_value!(u8; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-/// let vec2 = tvec_to_xff_value!(i8; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-/// let ary: Vec<u8> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-/// assert_eq!(vec, XffValue::from(ary.clone()));
-/// assert_ne!(vec2, XffValue::from(ary));
-/// ```
-macro_rules! tvec_to_xff_value {
-    ($t:ty; $($e:expr),*) => { XffValue::from(vec![$($e as $t),*] as Vec<$t>)};
-}
 
 /// Module to serialize and deserialize XFF files
 ///
@@ -83,11 +41,11 @@ pub mod serde {
     use crate::XFF_VERSION;
     use crate::XffValue;
     use crate::error::NabuError;
+    use crate::xff::deserializer::deserialize_xff;
+    pub use crate::xff::deserializer::deserialize_xff_from_buffer;
+    use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
     use nemesis::NemesisError;
     use nemesis::NemesisResultExt;
-    pub use crate::xff::deserializer::deserialize_xff_from_buffer;
-    use crate::xff::deserializer::deserialize_xff;
-    use crate::xff::serializer::{serialize_xff, write_bytes_to_file};
 
     /// Reads the content of a XFF file and returns a `XffValue`
     ///
@@ -261,9 +219,9 @@ pub mod serde {
             ))
     }
 }
-Ä˜š»[package]
+f¸®»[package]
 name = "nabu"
-version = "4.0.0"
+version = "4.1.0"
 edition = "2024"
 
 [dependencies]
@@ -272,7 +230,7 @@ nemesis = { git = "https://github.com/Xqhare/nemesis" }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
-‡w ¼¤t# Nabu
+žóxî~# Nabu
 
 > [!note]
 > Nabu and its foundational `.xff` specification gurantee the integrity of all data stored.\
@@ -289,9 +247,9 @@ The overarching goal of this project is to create a rust library that can be use
 
 The repository contains the `.xff` standard as well as, what I lovingly call, a reference implementation.
 
-This README documents the usage of the most recent version of `.xff`: Version 3.
+This README documents the usage of the most recent version of `.xff`: Version 4.
 
-If you would like to use version 0, 1 or 2, I discourage you from doing so but you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
+If you would like to use version 0, 1, 2, or 3, you can refer to the [releases page](https://github.com/Xqhare/nabu/releases/). 
 
 This library is designed for interoperability with [Mawu](https://github.com/Xqhare/mawu), a library for working with `.json` and `.csv` files in rust; Enabling easy data interchange between them.
 
@@ -305,13 +263,16 @@ To be clear: You may choose one of the two licenses, or both.
 If you would like to contribute to this project, please make sure to read the [Contributing](CONTRIBUTING.md) file.
 
 ## Purpose
+
 Nabu was written to satiate my want of being able to embed binary data inside a JSON like data structure.
 I also tried to make it easy to detect malformed data, and to make it slightly harder to manipulate the file by hand.
 
 In version 2, I wanted to play with single bits and bit operations.
 In version 3, I introduced universal integrity via parity and checksums, and improved performance with index-based parent types.
+In version 4, I integrated delta-encoded offset lists, remapped Group 00 markers (offering Hamming Distance of 4 error resilience), naive temporal types, graph parent types, 7-bit ASCII-TEXT, signed NaNs, and structured Nemesis error handling.
 
 ## Motivation
+
 After finishing [Mawu](https://github.com/Xqhare/mawu), I wanted to dive deeper into file structures and working with bytes directly, instead of `&str` and later `chars` like in Mawu. Around this time I also had my first deep dive on ASCII after rewatching "The Martian" and thus decided on making my own file format.
 I wrote v0 of the `.xff` specification in just a few days, and then started working on the implementation of v0.
 After a few weeks of work and running into several issues and design oversights (as expected), I started work on v1.
@@ -320,6 +281,7 @@ As `xff` is meant to be a jack of all trades, it is important that it can be use
 Because I like creating problems for myself, the `.xff` specification contains several error detection features. If these are of any use to anyone (or actually work as intended), only time will tell.
 
 ## Naming
+
 As with all my projects, Nabu is named after an ancient god.
 
 This library's namesake is the ancient Babylonian god Nabu, the god of literacy, rational arts and scribes.
@@ -329,6 +291,7 @@ I am still undecided if NABU will also be a recursive acronym.
 The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really like it though.
 
 ## Contents
+
 - [Purpose](#purpose)
 - [Motivation](#motivation)
 - [Naming](#naming)
@@ -354,17 +317,28 @@ The only candidate is 'Nabu's Archival Binary Utility' as of now. I don't really
     
 ## Roadmap
 
+`Nabu` uses my [nomos](https://github.com/xqhare/nomos) project management system.
+
+The roadmap for this project can be found in the [nomos.nomos](nomos.nomos) file.
+
+All nomos files follow the syntax defined [here](https://github.com/Xqhare/nomos/blob/master/spec/).
+
 ## Features
 
 - Storage of a variety of data types
     - Basic data types
         - Strings, Numbers, Boolean's, Null
-    - Arrays, Objects, Tables, Metadata
+        - Naive temporal types (LocalDate, LocalTime, LocalDateTime) and HpFloat
+    - Arrays, Objects, OrderedObjects, Tables, Graphs, Metadata
     - Arbitrary data
 - Performant
     - 100MB are read in approximately 200ms
-- Strong integrity (v3)
-    - CRC-32 checksums and even-parity marker bytes
+    - Delta-encoded offset lists for parent types
+- Strong integrity and resilience
+    - CRC-32 checksums and even-parity marker bytes (v3)
+    - Remapped Group 00 marker bytes offering Hamming Distance of 4 error resilience (v4)
+- Structured error handling
+    - Integrated with Nemesis for detailed, context-rich nesting and propagation
 - Fully documented
 - High test coverage
 - Macros
@@ -378,6 +352,7 @@ All specifications are in the `specifications` directory.
 - [V1](specifications/v1.md).
 - [V2](specifications/v2.md).
 - [V3](specifications/v3.md).
+- [V4](specifications/v4.md).
 
 ## Usage
 
@@ -679,20 +654,39 @@ assert_eq!(value, &XffValue::from("hello mom"));
 ```
 
 ### Errors
-Nabu will return one of two larger groups of errors:
 
-1. `IOError`
-2. `InternalError`
+Nabu returns `nemesis::NemesisError` for error handling, which integrates structural error nesting, source tagging, and context propagation.
 
-#### `IOError`
-These errors are just the standard IO errors.
-Read and write permissions and the such.
+#### Printing Errors
 
-#### `InternalError`
-These errors are errors that are caused while parsing or encoding a `.xff` file and are not expected to be encountered in normal use.
-These errors are generally not recoverable as they point to a malformed file.
+A `NemesisError` prints the entire causal error chain along with source labels and contexts.
 
-In error messages that contain a position value, the position is given in bytes from the start of the `.xff` file.
+```rust
+if let Err(err) = nabu::serde::read("data.xff") {
+    // Prints formatted nested error hierarchy
+    eprintln!("{}", err);
+}
+```
+
+#### Downcasting to Leaf Errors
+
+You can downcast the leaf error to investigate the root cause (such as a specific `NabuError` variant or a standard `std::io::Error`):
+
+```rust
+use std::io;
+use nabu::error::NabuError;
+
+if let Err(err) = nabu::serde::read("data.xff") {
+    if let Some(io_err) = err.downcast_ref::<io::Error>() {
+        eprintln!("IO issue: {}", io_err);
+    } else if let Some(nabu_err) = err.downcast_ref::<NabuError>() {
+        match nabu_err {
+            NabuError::EmptyXFF => eprintln!("Empty XFF file"),
+            _ => eprintln!("Parsing error: {}", nabu_err),
+        }
+    }
+}
+```
 
 ### Testing
 Nabu can be tested with the following commands:
@@ -707,4 +701,4 @@ cargo test --all-features -- --include-ignored
 
 > [!note]
 > Ignored tests require the `--all-features` flag as some are feature dependent.
-½ê×Ûº¾n¤½.Â
+ŠfI]%R]1ŠO¿
