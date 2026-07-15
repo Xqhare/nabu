@@ -373,4 +373,28 @@ fn main() {
         Some(raw_profile_data.len() + 6),
     )
     .print();
+
+    // Case 6: Realistic Complex Payload (deeply nested config/metadata/users/tables/graphs)
+    let complex_val = create_complex_mock();
+    let buf_complex = serialize_xff_to_buffer(vec![complex_val.clone()], 4).expect("Failed serialization");
+
+    run_bench(
+        "complex_payload",
+        "Ser",
+        1000,
+        || {
+            serialize_xff_to_buffer(vec![complex_val.clone()], 4).unwrap()
+        },
+        Some(buf_complex.len())
+    ).print();
+
+    run_bench(
+        "complex_payload",
+        "Deser",
+        1000,
+        || {
+            deserialize_xff_from_buffer(&buf_complex).unwrap()
+        },
+        Some(buf_complex.len())
+    ).print();
 }
