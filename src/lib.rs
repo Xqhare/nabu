@@ -10,7 +10,7 @@ pub use athena::float::HpFloat;
 pub use athena::graph::Graph;
 pub use athena::{
     Array, CommandCharacter, Data, LocalDate, LocalDateTime, LocalTime, Metadata, Number, Object,
-    XffValue, tvec_to_xff_value, xff,
+    Table, Uuid, XffValue, tvec_to_xff_value, xff,
 };
 
 /// Most recent finalised version of XFF specification - Used for `write()` exclusively
