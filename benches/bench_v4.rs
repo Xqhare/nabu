@@ -221,4 +221,52 @@ fn main() {
         },
         Some(buf_graph.len())
     ).print();
+
+    // --- Profiling / Isolation Cases ---
+    let raw_profile_data = vec![127u8; 1024 * 1024];
+
+    // 1. CPU-Only: CRC32 computation on 1 MB
+    run_bench(
+        "profile: crc32_1mb_only",
+        "CPU",
+        100,
+        || {
+            athena::checksum::crc32(&raw_profile_data)
+        },
+        Some(raw_profile_data.len())
+    ).print();
+
+    // 2. MEM-Only: Temp allocation & copying of 1 MB
+    run_bench(
+        "profile: alloc_and_copy_1mb",
+        "MEM",
+        100,
+        || {
+            let mut payload = Vec::with_capacity(raw_profile_data.len() + 8);
+            payload.extend_from_slice(&raw_profile_data);
+            payload
+        },
+        Some(raw_profile_data.len())
+    ).print();
+
+    // 3. Opt: In-place serialization of 1 MB (eliminates intermediate allocation/copy)
+    run_bench(
+        "profile: in_place_ser_1mb",
+        "Opt",
+        100,
+        || {
+            let len_bytes = athena::encoding_and_decoding::serialize_leb128_unsigned(raw_profile_data.len() as u128);
+            let mut buf = Vec::with_capacity(6 + len_bytes.len() + raw_profile_data.len());
+            buf.push(0x21); // complex::DAT
+            let payload_start = buf.len();
+            buf.extend_from_slice(&len_bytes);
+            buf.extend_from_slice(&raw_profile_data);
+            let payload_end = buf.len();
+            let checksum = athena::checksum::crc32(&buf[payload_start..payload_end]);
+            buf.extend_from_slice(&checksum.to_le_bytes());
+            buf.push(0x60); // internal::EV
+            buf
+        },
+        Some(raw_profile_data.len() + 6)
+    ).print();
 }
