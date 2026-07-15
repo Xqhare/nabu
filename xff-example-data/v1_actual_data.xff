@@ -1,4 +1,4 @@
-¢]ç#![doc = include_str!("../README.md")]
+Ð]ç#![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
 pub mod error;
@@ -219,7 +219,7 @@ pub mod serde {
             ))
     }
 }
-;[package]
+i[package]
 name = "nabu"
 version = "4.1.0"
 edition = "2024"
@@ -230,6 +230,11 @@ nemesis = { git = "https://github.com/Xqhare/nemesis" }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
+
+[[bench]]
+name = "bench_v4"
+harness = false
+
 n?# Nabu
 
 > [!note]

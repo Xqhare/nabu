@@ -93,9 +93,23 @@ pub fn is_valid_v4_marker(byte: u8) -> bool {
 
     match byte {
         simple::NUL | simple::TRU | simple::FAL | simple::NAN => true,
-        complex::TXT | complex::DAT | complex::DUR | complex::UUID | complex::DT | complex::ASCI | complex::LDT | complex::LD | complex::LT | complex::SINT | complex::UINT | complex::FLT | complex::CFLT => true,
+        complex::TXT
+        | complex::DAT
+        | complex::DUR
+        | complex::UUID
+        | complex::DT
+        | complex::ASCI
+        | complex::LDT
+        | complex::LD
+        | complex::LT
+        | complex::SINT
+        | complex::UINT
+        | complex::FLT
+        | complex::CFLT => true,
 
-        parent::ARY | parent::OBJ | parent::OOBJ | parent::TBL | parent::GRPH | parent::META => true,
+        parent::ARY | parent::OBJ | parent::OOBJ | parent::TBL | parent::GRPH | parent::META => {
+            true
+        }
         internal::EV | internal::EM | internal::CONT => true,
         _ => false,
     }

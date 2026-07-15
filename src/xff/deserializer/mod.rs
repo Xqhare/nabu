@@ -8,7 +8,10 @@ use v1::deserialize_xff_v1_value;
 use v2::deserialize_xff_v2_value;
 
 use crate::{Data, Number};
-use crate::{XffValue, error::{NabuError, Result}};
+use crate::{
+    XffValue,
+    error::{NabuError, Result},
+};
 use nemesis::NemesisResultExt;
 
 pub mod v0;
@@ -31,11 +34,12 @@ pub fn deserialize_xff_from_buffer(content: &[u8]) -> Result<XffValue> {
         // Check for v3 Magic Number
         if content.starts_with(&[0x58, 0x46, 0x46, 0x56]) {
             let mut cursor = 4;
-            let (ver, len) =
-                match athena::encoding_and_decoding::deserialize_version_bit_chain(&content[cursor..]) {
-                    Ok(v) => v,
-                    Err(_) => return Err(NabuError::UnknownXFFVersion(0).into()),
-                };
+            let (ver, len) = match athena::encoding_and_decoding::deserialize_version_bit_chain(
+                &content[cursor..],
+            ) {
+                Ok(v) => v,
+                Err(_) => return Err(NabuError::UnknownXFFVersion(0).into()),
+            };
             cursor += len as usize;
 
             if ver == 3 {
@@ -208,7 +212,8 @@ fn deserialize_xff_number(
                     byte_pos.get(),
                     "Multiple decimal points".to_string(),
                     2,
-                ).into());
+                )
+                .into());
             }
             float = true;
         } else {
@@ -216,7 +221,8 @@ fn deserialize_xff_number(
                 byte_pos.get(),
                 format!("Unexpected character: {front}"),
                 ver,
-            ).into());
+            )
+            .into());
         }
     }
 
@@ -288,11 +294,7 @@ fn deserialize_xff_text(
         {
             str_out.push(char::from_u32(u32::from(current_char)).unwrap());
         } else {
-            return Err(NabuError::InvalidASCIIString(
-                current_char,
-                byte_pos.get(),
-                ver,
-            ).into());
+            return Err(NabuError::InvalidASCIIString(current_char, byte_pos.get(), ver).into());
         }
     }
     Ok(XffValue::from(str_out))

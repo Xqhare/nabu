@@ -10,8 +10,8 @@ use super::{
     deserialize_xff_data, deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text,
 };
 
-use nemesis::NemesisResultExt;
 use crate::error::Result;
+use nemesis::NemesisResultExt;
 
 /// Deserializes XFF version 1 content.
 ///
@@ -57,10 +57,7 @@ pub fn deserialize_xff_v1_value(
     }
 }
 
-fn deserialize_xff_v1_text(
-    content: &mut VecDeque<u8>,
-    byte_pos: &Cell<usize>,
-) -> Result<XffValue> {
+fn deserialize_xff_v1_text(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<XffValue> {
     //TXT
 
     // reading length first
@@ -167,10 +164,7 @@ fn deserialize_xff_v1_object(
     }
 }
 
-fn deserialize_xff_v1_data(
-    content: &mut VecDeque<u8>,
-    byte_pos: &Cell<usize>,
-) -> Result<XffValue> {
+fn deserialize_xff_v1_data(content: &mut VecDeque<u8>, byte_pos: &Cell<usize>) -> Result<XffValue> {
     let len = deserialize_xff_v1_value_length(content, byte_pos)?;
     let data = deserialize_xff_data(content, byte_pos, len);
     if content[0] != 24 {

@@ -13,8 +13,8 @@ use crate::{Data, XffValue, error::NabuError};
 
 use super::{deserialize_xff_key_value, deserialize_xff_number, deserialize_xff_text};
 
-use nemesis::NemesisResultExt;
 use crate::error::Result;
+use nemesis::NemesisResultExt;
 
 /// Deserializes XFF version 2 content.
 ///
@@ -30,10 +30,7 @@ pub fn deserialize_xff_v2(content: &mut VecDeque<u8>) -> Result<XffValue> {
     // check file checksum
     if !check_file_checksum(content, &table) {
         // byte_pos should point to last byte of checksum
-        return Err(NabuError::InvalidFileChecksum(
-            content.len().saturating_sub(1),
-            2,
-        ).into());
+        return Err(NabuError::InvalidFileChecksum(content.len().saturating_sub(1), 2).into());
     }
 
     let out = deserialize_xff_v2_value(content, byte_pos.borrow(), &table)
@@ -172,7 +169,8 @@ fn deserialize_xff_v2_text(
             actual: actual_crc,
             pos: byte_pos.get().saturating_sub(1),
             version: 2,
-        }.into())
+        }
+        .into())
     }
 }
 
@@ -205,7 +203,8 @@ fn deserialize_xff_v2_number(
             actual: actual_crc,
             pos: byte_pos.get().saturating_sub(1),
             version: 2,
-        }.into())
+        }
+        .into())
     }
 }
 
@@ -232,7 +231,8 @@ fn deserialize_xff_v2_array(
                 actual: actual_crc,
                 pos: byte_pos.get().saturating_sub(1),
                 version: 2,
-            }.into());
+            }
+            .into());
         }
         // no EV check -> 5
         byte_pos.set(byte_pos.get().saturating_sub(len).saturating_sub(5));
@@ -304,7 +304,8 @@ fn deserialize_xff_v2_object(
                 actual: actual_crc,
                 pos: byte_pos.get().saturating_sub(1),
                 version: 2,
-            }.into());
+            }
+            .into());
         }
         byte_pos.set(byte_pos.get().saturating_sub(len));
 
@@ -376,6 +377,7 @@ fn deserialize_xff_v2_data(
             actual: actual_crc,
             pos: byte_pos.get().saturating_sub(1),
             version: 2,
-        }.into())
+        }
+        .into())
     }
 }

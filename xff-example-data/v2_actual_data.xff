@@ -1,4 +1,4 @@
-®»ç9#![doc = include_str!("../README.md")]
+Ü»ç9#![doc = include_str!("../README.md")]
 #![warn(clippy::pedantic)]
 
 pub mod error;
@@ -219,7 +219,7 @@ pub mod serde {
             ))
     }
 }
-f¸®»[package]
+f¸®é[package]
 name = "nabu"
 version = "4.1.0"
 edition = "2024"
@@ -230,7 +230,12 @@ nemesis = { git = "https://github.com/Xqhare/nemesis" }
 
 [dev-dependencies]
 tyche = { git = "https://github.com/Xqhare/tyche" }
-óxî~# Nabu
+
+[[bench]]
+name = "bench_v4"
+harness = false
+
+Ä¿½î~# Nabu
 
 > [!note]
 > Nabu and its foundational `.xff` specification gurantee the integrity of all data stored.\
@@ -701,4 +706,4 @@ cargo test --all-features -- --include-ignored
 
 > [!note]
 > Ignored tests require the `--all-features` flag as some are feature dependent.
-ŠfI]%R]1ŠO¿
+ŠfIks¹;úÎC;

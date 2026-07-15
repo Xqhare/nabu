@@ -1,8 +1,30 @@
 use athena::checksum::crc32;
 use athena::encoding_and_decoding::{
-    serialize_leb128_signed_v3, serialize_leb128_unsigned, serialize_version_bit_chain,
+    serialize_leb128_signed_i128_buf, serialize_leb128_signed_v3_buf,
+    serialize_leb128_unsigned_buf, serialize_version_bit_chain,
 };
 use athena::{Array, Data, Metadata, XffValue};
+
+#[inline]
+fn push_leb128_unsigned(val: u128, out: &mut Vec<u8>) {
+    let mut buf = [0u8; 19];
+    let len = serialize_leb128_unsigned_buf(val, &mut buf).unwrap();
+    out.extend_from_slice(&buf[..len]);
+}
+
+#[inline]
+fn push_leb128_signed_v3(val: i64, out: &mut Vec<u8>) {
+    let mut buf = [0u8; 10];
+    let len = serialize_leb128_signed_v3_buf(val, &mut buf).unwrap();
+    out.extend_from_slice(&buf[..len]);
+}
+
+#[inline]
+fn push_leb128_signed_i128(val: i128, out: &mut Vec<u8>) {
+    let mut buf = [0u8; 19];
+    let len = serialize_leb128_signed_i128_buf(val, &mut buf).unwrap();
+    out.extend_from_slice(&buf[..len]);
+}
 
 use crate::error::{NabuError, Result as NemesisResult};
 use nemesis::NemesisResultExt;
@@ -91,11 +113,11 @@ fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
         XffValue::Number(n) => serialize_v4_number(n, out),
         XffValue::HpFloat(hp) => {
             out.push(complex::CFLT);
-            let mut payload =
-                athena::encoding_and_decoding::serialize_leb128_signed_i128(hp.get_value());
-            payload.extend(serialize_leb128_unsigned(u128::from(hp.get_scale())));
-            let checksum = crc32(&payload);
-            out.extend(payload);
+            let payload_start = out.len();
+            push_leb128_signed_i128(hp.get_value(), out);
+            push_leb128_unsigned(u128::from(hp.get_scale()), out);
+            let payload_end = out.len();
+            let checksum = crc32(&out[payload_start..payload_end]);
             out.extend_from_slice(&checksum.to_le_bytes());
             out.push(internal::EV);
             Ok(())
@@ -116,10 +138,9 @@ fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
         }
         XffValue::Data(d) => {
             let raw_bytes = &d.data;
-            let len_bytes = serialize_leb128_unsigned(raw_bytes.len() as u128);
             out.push(complex::DAT);
             let payload_start = out.len();
-            out.extend_from_slice(&len_bytes);
+            push_leb128_unsigned(raw_bytes.len() as u128, out);
             out.extend_from_slice(raw_bytes);
             let payload_end = out.len();
             let checksum = crc32(&out[payload_start..payload_end]);
@@ -128,19 +149,21 @@ fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
             Ok(())
         }
         XffValue::DateTime(dt) => {
-            let payload = serialize_leb128_unsigned(u128::from(dt.0));
             out.push(complex::DT);
-            let checksum = crc32(&payload);
-            out.extend(payload);
+            let payload_start = out.len();
+            push_leb128_unsigned(u128::from(dt.0), out);
+            let payload_end = out.len();
+            let checksum = crc32(&out[payload_start..payload_end]);
             out.extend_from_slice(&checksum.to_le_bytes());
             out.push(internal::EV);
             Ok(())
         }
         XffValue::Duration(d) => {
-            let payload = serialize_leb128_unsigned(u128::from(d.0));
             out.push(complex::DUR);
-            let checksum = crc32(&payload);
-            out.extend(payload);
+            let payload_start = out.len();
+            push_leb128_unsigned(u128::from(d.0), out);
+            let payload_end = out.len();
+            let checksum = crc32(&out[payload_start..payload_end]);
             out.extend_from_slice(&checksum.to_le_bytes());
             out.push(internal::EV);
             Ok(())
@@ -162,7 +185,7 @@ fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
             out.push(lt.hour);
             out.push(lt.minute);
             out.push(lt.second);
-            out.extend(serialize_leb128_unsigned(lt.subseconds as u128));
+            push_leb128_unsigned(lt.subseconds as u128, out);
             let checksum = crc32(&out[payload_start..]);
             out.extend_from_slice(&checksum.to_le_bytes());
             out.push(internal::EV);
@@ -177,7 +200,7 @@ fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
             out.push(ldt.time.hour);
             out.push(ldt.time.minute);
             out.push(ldt.time.second);
-            out.extend(serialize_leb128_unsigned(ldt.time.subseconds as u128));
+            push_leb128_unsigned(ldt.time.subseconds as u128, out);
             let checksum = crc32(&out[payload_start..]);
             out.extend_from_slice(&checksum.to_le_bytes());
             out.push(internal::EV);
@@ -246,10 +269,9 @@ fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
 
 fn serialize_v4_text(s: &str, marker: u8, out: &mut Vec<u8>) -> Result<()> {
     let utf8_bytes = s.as_bytes();
-    let len_bytes = serialize_leb128_unsigned(utf8_bytes.len() as u128);
     out.push(marker);
     let payload_start = out.len();
-    out.extend_from_slice(&len_bytes);
+    push_leb128_unsigned(utf8_bytes.len() as u128, out);
     out.extend_from_slice(utf8_bytes);
     let payload_end = out.len();
     let checksum = crc32(&out[payload_start..payload_end]);
@@ -271,17 +293,14 @@ fn serialize_v4_parent(marker: u8, elements: &[XffValue], out: &mut Vec<u8>) -> 
         prev_offset = start_offset;
     }
 
-    let element_count_bytes = serialize_leb128_unsigned(elements.len() as u128);
-    let mut index_data = Vec::with_capacity(element_count_bytes.len() + deltas.len() * 2);
-    index_data.extend(element_count_bytes);
-    for delta in deltas {
-        index_data.extend(serialize_leb128_unsigned(delta));
-    }
-
-    let checksum = crc32(&index_data);
-
     out.push(marker);
-    out.extend(index_data);
+    let index_start = out.len();
+    push_leb128_unsigned(elements.len() as u128, out);
+    for delta in deltas {
+        push_leb128_unsigned(delta, out);
+    }
+    let index_end = out.len();
+    let checksum = crc32(&out[index_start..index_end]);
     out.extend_from_slice(&checksum.to_le_bytes());
     out.extend_from_slice(&children_buf);
     out.push(internal::EV);
@@ -290,7 +309,6 @@ fn serialize_v4_parent(marker: u8, elements: &[XffValue], out: &mut Vec<u8>) -> 
 
 fn serialize_v4_table(t: &athena::Table, out: &mut Vec<u8>) -> Result<()> {
     let col_count = t.columns.len();
-    let col_count_bytes = serialize_leb128_unsigned(col_count as u128);
 
     let mut col_names_ser = Vec::new();
     let mut col_deltas = Vec::with_capacity(col_count);
@@ -306,15 +324,7 @@ fn serialize_v4_table(t: &athena::Table, out: &mut Vec<u8>) -> Result<()> {
         current_col_offset += (col_names_ser.len() as u128) - start;
     }
 
-    let mut col_index_data = Vec::with_capacity(col_count_bytes.len() + (col_deltas.len() * 2));
-    col_index_data.extend(col_count_bytes);
-    for delta in col_deltas {
-        col_index_data.extend(serialize_leb128_unsigned(delta));
-    }
-    let col_checksum = crc32(&col_index_data);
-
     let row_count = t.rows.len();
-    let row_count_bytes = serialize_leb128_unsigned(row_count as u128);
     let mut row_data_ser = Vec::new();
     let mut row_deltas = Vec::with_capacity(row_count);
     let mut element_deltas = Vec::with_capacity(row_count * col_count);
@@ -337,32 +347,36 @@ fn serialize_v4_table(t: &athena::Table, out: &mut Vec<u8>) -> Result<()> {
         }
     }
 
-    let mut row_index_data = Vec::with_capacity(row_count_bytes.len() + (row_deltas.len() * 2));
-    row_index_data.extend(row_count_bytes);
-    for delta in row_deltas {
-        row_index_data.extend(serialize_leb128_unsigned(delta));
-    }
-    let row_checksum = crc32(&row_index_data);
-
-    let mut element_index_data = Vec::with_capacity(element_deltas.len() * 2);
-    for delta in element_deltas {
-        element_index_data.extend(serialize_leb128_unsigned(delta));
-    }
-    let element_checksum = crc32(&element_index_data);
-
     out.push(parent::TBL);
 
     // Column Index + Names
-    out.extend(col_index_data);
+    let col_index_start = out.len();
+    push_leb128_unsigned(col_count as u128, out);
+    for delta in col_deltas {
+        push_leb128_unsigned(delta, out);
+    }
+    let col_index_end = out.len();
+    let col_checksum = crc32(&out[col_index_start..col_index_end]);
     out.extend_from_slice(&col_checksum.to_le_bytes());
     out.extend_from_slice(&col_names_ser);
 
     // Row Index
-    out.extend(row_index_data);
+    let row_index_start = out.len();
+    push_leb128_unsigned(row_count as u128, out);
+    for delta in row_deltas {
+        push_leb128_unsigned(delta, out);
+    }
+    let row_index_end = out.len();
+    let row_checksum = crc32(&out[row_index_start..row_index_end]);
     out.extend_from_slice(&row_checksum.to_le_bytes());
 
     // Element Index
-    out.extend(element_index_data);
+    let element_index_start = out.len();
+    for delta in element_deltas {
+        push_leb128_unsigned(delta, out);
+    }
+    let element_index_end = out.len();
+    let element_checksum = crc32(&out[element_index_start..element_index_end]);
     out.extend_from_slice(&element_checksum.to_le_bytes());
 
     // Row Data
@@ -389,18 +403,24 @@ fn serialize_v4_graph(g: &athena::graph::Graph, out: &mut Vec<u8>) -> Result<()>
         let start = nodes_ser.len() as u128;
         serialize_v4_value(&node.payload, &mut nodes_ser)?;
         serialize_v4_value(&node.metadata, &mut nodes_ser)?;
-        serialize_v4_value(&XffValue::Array(Array::from(
-            node.inbound_connections
-                .iter()
-                .map(|&i| XffValue::from(i as usize))
-                .collect::<Vec<_>>(),
-        )), &mut nodes_ser)?;
-        serialize_v4_value(&XffValue::Array(Array::from(
-            node.outbound_connections
-                .iter()
-                .map(|&i| XffValue::from(i as usize))
-                .collect::<Vec<_>>(),
-        )), &mut nodes_ser)?;
+        serialize_v4_value(
+            &XffValue::Array(Array::from(
+                node.inbound_connections
+                    .iter()
+                    .map(|&i| XffValue::from(i as usize))
+                    .collect::<Vec<_>>(),
+            )),
+            &mut nodes_ser,
+        )?;
+        serialize_v4_value(
+            &XffValue::Array(Array::from(
+                node.outbound_connections
+                    .iter()
+                    .map(|&i| XffValue::from(i as usize))
+                    .collect::<Vec<_>>(),
+            )),
+            &mut nodes_ser,
+        )?;
 
         let delta = current_node_offset - prev_node_offset;
         node_deltas.push(delta);
@@ -408,12 +428,13 @@ fn serialize_v4_graph(g: &athena::graph::Graph, out: &mut Vec<u8>) -> Result<()>
         current_node_offset += (nodes_ser.len() as u128) - start;
     }
 
-    let mut nodes_index = serialize_leb128_unsigned(node_count as u128);
+    let nodes_index_start = out.len();
+    push_leb128_unsigned(node_count as u128, out);
     for d in node_deltas {
-        nodes_index.extend(serialize_leb128_unsigned(d));
+        push_leb128_unsigned(d, out);
     }
-    let nodes_checksum = crc32(&nodes_index);
-    out.extend(nodes_index);
+    let nodes_index_end = out.len();
+    let nodes_checksum = crc32(&out[nodes_index_start..nodes_index_end]);
     out.extend_from_slice(&nodes_checksum.to_le_bytes());
     out.extend_from_slice(&nodes_ser);
 
@@ -428,12 +449,12 @@ fn serialize_v4_graph(g: &athena::graph::Graph, out: &mut Vec<u8>) -> Result<()>
 
     for &idx in &all_conn_indices {
         let conn = g.get_connection(idx).unwrap();
-        let mut c_payload = serialize_leb128_unsigned(conn.from as u128);
-        c_payload.extend(serialize_leb128_unsigned(conn.to as u128));
-        let c_checksum = crc32(&c_payload);
-
         let start = conns_ser.len() as u128;
-        conns_ser.extend(c_payload);
+        let c_start = conns_ser.len();
+        push_leb128_unsigned(conn.from as u128, &mut conns_ser);
+        push_leb128_unsigned(conn.to as u128, &mut conns_ser);
+        let c_end = conns_ser.len();
+        let c_checksum = crc32(&conns_ser[c_start..c_end]);
         conns_ser.extend_from_slice(&c_checksum.to_le_bytes());
         serialize_v4_value(&conn.metadata, &mut conns_ser)?;
 
@@ -443,12 +464,13 @@ fn serialize_v4_graph(g: &athena::graph::Graph, out: &mut Vec<u8>) -> Result<()>
         current_conn_offset += (conns_ser.len() as u128) - start;
     }
 
-    let mut conns_index = serialize_leb128_unsigned(conn_count as u128);
+    let conns_index_start = out.len();
+    push_leb128_unsigned(conn_count as u128, out);
     for d in conn_deltas {
-        conns_index.extend(serialize_leb128_unsigned(d));
+        push_leb128_unsigned(d, out);
     }
-    let conns_checksum = crc32(&conns_index);
-    out.extend(conns_index);
+    let conns_index_end = out.len();
+    let conns_checksum = crc32(&out[conns_index_start..conns_index_end]);
     out.extend_from_slice(&conns_checksum.to_le_bytes());
     out.extend_from_slice(&conns_ser);
 
@@ -489,18 +511,20 @@ fn serialize_v4_number(n: &athena::Number, out: &mut Vec<u8>) -> Result<()> {
         }
     } else if n.is_unsigned() {
         let val = n.into_usize().unwrap();
-        let payload = serialize_leb128_unsigned(val as u128);
         out.push(complex::UINT);
-        let checksum = crc32(&payload);
-        out.extend(payload);
+        let payload_start = out.len();
+        push_leb128_unsigned(val as u128, out);
+        let payload_end = out.len();
+        let checksum = crc32(&out[payload_start..payload_end]);
         out.extend_from_slice(&checksum.to_le_bytes());
         out.push(internal::EV);
     } else {
         let val = n.into_isize().unwrap() as i64;
-        let payload = serialize_leb128_signed_v3(val);
         out.push(complex::SINT);
-        let checksum = crc32(&payload);
-        out.extend(payload);
+        let payload_start = out.len();
+        push_leb128_signed_v3(val, out);
+        let payload_end = out.len();
+        let checksum = crc32(&out[payload_start..payload_end]);
         out.extend_from_slice(&checksum.to_le_bytes());
         out.push(internal::EV);
     }

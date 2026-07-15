@@ -1,7 +1,7 @@
+use nabu::serde::{deserialize_xff_from_buffer, serialize_xff_to_buffer};
+use nabu::{Array, Data, Graph, Object, XffValue};
 use std::hint::black_box;
 use std::time::{Duration, Instant};
-use nabu::{XffValue, Array, Object, Data, Graph};
-use nabu::serde::{serialize_xff_to_buffer, deserialize_xff_from_buffer};
 
 struct BenchResult {
     name: &'static str,
@@ -20,11 +20,12 @@ impl BenchResult {
             format!("{:.1} µs", time_per_op * 1e6)
         } else {
             format!("{:.1} ms", time_per_op * 1e3)
-        } ;
+        };
 
         let throughput = if let Some(bytes) = self.bytes {
             let total_bytes = bytes * self.iterations;
-            let mb_per_sec = (total_bytes as f64 / (1024.0 * 1024.0)) / self.total_time.as_secs_f64();
+            let mb_per_sec =
+                (total_bytes as f64 / (1024.0 * 1024.0)) / self.total_time.as_secs_f64();
             format!("{:.2} MB/s", mb_per_sec)
         } else {
             "N/A".to_string()
@@ -42,7 +43,13 @@ impl BenchResult {
     }
 }
 
-fn run_bench<F, R>(name: &'static str, mode: &'static str, iterations: usize, mut op: F, bytes: Option<usize>) -> BenchResult
+fn run_bench<F, R>(
+    name: &'static str,
+    mode: &'static str,
+    iterations: usize,
+    mut op: F,
+    bytes: Option<usize>,
+) -> BenchResult
 where
     F: FnMut() -> R,
 {
@@ -87,52 +94,50 @@ fn main() {
         XffValue::from(-1234),
     ];
     let val_primitives = XffValue::Array(Array::from(primitives));
-    let buf_primitives = serialize_xff_to_buffer(vec![val_primitives.clone()], 4).expect("Failed serialization");
+    let buf_primitives =
+        serialize_xff_to_buffer(vec![val_primitives.clone()], 4).expect("Failed serialization");
 
     run_bench(
         "primitives",
         "Ser",
         50000,
-        || {
-            serialize_xff_to_buffer(vec![val_primitives.clone()], 4).unwrap()
-        },
-        None
-    ).print();
+        || serialize_xff_to_buffer(vec![val_primitives.clone()], 4).unwrap(),
+        None,
+    )
+    .print();
 
     run_bench(
         "primitives",
         "Deser",
         50000,
-        || {
-            deserialize_xff_from_buffer(&buf_primitives).unwrap()
-        },
-        None
-    ).print();
+        || deserialize_xff_from_buffer(&buf_primitives).unwrap(),
+        None,
+    )
+    .print();
 
     // Case 2: Large Array (1000 integers)
     let large_arr_values: Vec<XffValue> = (0..1000).map(|i| XffValue::from(i)).collect();
     let val_large_arr = XffValue::Array(Array::from(large_arr_values));
-    let buf_large_arr = serialize_xff_to_buffer(vec![val_large_arr.clone()], 4).expect("Failed serialization");
+    let buf_large_arr =
+        serialize_xff_to_buffer(vec![val_large_arr.clone()], 4).expect("Failed serialization");
 
     run_bench(
         "large_array",
         "Ser",
         1000,
-        || {
-            serialize_xff_to_buffer(vec![val_large_arr.clone()], 4).unwrap()
-        },
-        Some(buf_large_arr.len())
-    ).print();
+        || serialize_xff_to_buffer(vec![val_large_arr.clone()], 4).unwrap(),
+        Some(buf_large_arr.len()),
+    )
+    .print();
 
     run_bench(
         "large_array",
         "Deser",
         1000,
-        || {
-            deserialize_xff_from_buffer(&buf_large_arr).unwrap()
-        },
-        Some(buf_large_arr.len())
-    ).print();
+        || deserialize_xff_from_buffer(&buf_large_arr).unwrap(),
+        Some(buf_large_arr.len()),
+    )
+    .print();
 
     // Case 3: Large Object (100 key-value pairs)
     let mut large_obj = Object::new();
@@ -140,52 +145,50 @@ fn main() {
         large_obj.insert(format!("key_{}", i), XffValue::from(i));
     }
     let val_large_obj = XffValue::Object(large_obj);
-    let buf_large_obj = serialize_xff_to_buffer(vec![val_large_obj.clone()], 4).expect("Failed serialization");
+    let buf_large_obj =
+        serialize_xff_to_buffer(vec![val_large_obj.clone()], 4).expect("Failed serialization");
 
     run_bench(
         "large_object",
         "Ser",
         1000,
-        || {
-            serialize_xff_to_buffer(vec![val_large_obj.clone()], 4).unwrap()
-        },
-        Some(buf_large_obj.len())
-    ).print();
+        || serialize_xff_to_buffer(vec![val_large_obj.clone()], 4).unwrap(),
+        Some(buf_large_obj.len()),
+    )
+    .print();
 
     run_bench(
         "large_object",
         "Deser",
         1000,
-        || {
-            deserialize_xff_from_buffer(&buf_large_obj).unwrap()
-        },
-        Some(buf_large_obj.len())
-    ).print();
+        || deserialize_xff_from_buffer(&buf_large_obj).unwrap(),
+        Some(buf_large_obj.len()),
+    )
+    .print();
 
     // Case 4: Large Data (1 MB binary payload)
     let raw_data = vec![127u8; 1024 * 1024];
     let val_large_data = XffValue::Data(Data::from(raw_data));
-    let buf_large_data = serialize_xff_to_buffer(vec![val_large_data.clone()], 4).expect("Failed serialization");
+    let buf_large_data =
+        serialize_xff_to_buffer(vec![val_large_data.clone()], 4).expect("Failed serialization");
 
     run_bench(
         "large_data (1 MB)",
         "Ser",
         100,
-        || {
-            serialize_xff_to_buffer(vec![val_large_data.clone()], 4).unwrap()
-        },
-        Some(buf_large_data.len())
-    ).print();
+        || serialize_xff_to_buffer(vec![val_large_data.clone()], 4).unwrap(),
+        Some(buf_large_data.len()),
+    )
+    .print();
 
     run_bench(
         "large_data (1 MB)",
         "Deser",
         100,
-        || {
-            deserialize_xff_from_buffer(&buf_large_data).unwrap()
-        },
-        Some(buf_large_data.len())
-    ).print();
+        || deserialize_xff_from_buffer(&buf_large_data).unwrap(),
+        Some(buf_large_data.len()),
+    )
+    .print();
 
     // Case 5: Graph (50 nodes, 100 connections)
     let mut graph = Graph::new();
@@ -196,31 +199,38 @@ fn main() {
         let from = nodes[i];
         let to = nodes[(i + 1) % 50];
         let to_other = nodes[(i + 25) % 50];
-        let _ = graph.add_connection(from, to, XffValue::from(format!("edge_{}_to_{}", i, (i + 1) % 50)));
-        let _ = graph.add_connection(from, to_other, XffValue::from(format!("edge_{}_to_{}", i, (i + 25) % 50)));
+        let _ = graph.add_connection(
+            from,
+            to,
+            XffValue::from(format!("edge_{}_to_{}", i, (i + 1) % 50)),
+        );
+        let _ = graph.add_connection(
+            from,
+            to_other,
+            XffValue::from(format!("edge_{}_to_{}", i, (i + 25) % 50)),
+        );
     }
     let val_graph = XffValue::Graph(graph);
-    let buf_graph = serialize_xff_to_buffer(vec![val_graph.clone()], 4).expect("Failed serialization");
+    let buf_graph =
+        serialize_xff_to_buffer(vec![val_graph.clone()], 4).expect("Failed serialization");
 
     run_bench(
         "graph",
         "Ser",
         500,
-        || {
-            serialize_xff_to_buffer(vec![val_graph.clone()], 4).unwrap()
-        },
-        Some(buf_graph.len())
-    ).print();
+        || serialize_xff_to_buffer(vec![val_graph.clone()], 4).unwrap(),
+        Some(buf_graph.len()),
+    )
+    .print();
 
     run_bench(
         "graph",
         "Deser",
         500,
-        || {
-            deserialize_xff_from_buffer(&buf_graph).unwrap()
-        },
-        Some(buf_graph.len())
-    ).print();
+        || deserialize_xff_from_buffer(&buf_graph).unwrap(),
+        Some(buf_graph.len()),
+    )
+    .print();
 
     // --- Profiling / Isolation Cases ---
     let raw_profile_data = vec![127u8; 1024 * 1024];
@@ -230,11 +240,10 @@ fn main() {
         "profile: crc32_1mb_only",
         "CPU",
         100,
-        || {
-            athena::checksum::crc32(&raw_profile_data)
-        },
-        Some(raw_profile_data.len())
-    ).print();
+        || athena::checksum::crc32(&raw_profile_data),
+        Some(raw_profile_data.len()),
+    )
+    .print();
 
     // 2. MEM-Only: Temp allocation & copying of 1 MB
     run_bench(
@@ -246,8 +255,9 @@ fn main() {
             payload.extend_from_slice(&raw_profile_data);
             payload
         },
-        Some(raw_profile_data.len())
-    ).print();
+        Some(raw_profile_data.len()),
+    )
+    .print();
 
     // 3. Opt: In-place serialization of 1 MB (eliminates intermediate allocation/copy)
     run_bench(
@@ -255,7 +265,9 @@ fn main() {
         "Opt",
         100,
         || {
-            let len_bytes = athena::encoding_and_decoding::serialize_leb128_unsigned(raw_profile_data.len() as u128);
+            let len_bytes = athena::encoding_and_decoding::serialize_leb128_unsigned(
+                raw_profile_data.len() as u128,
+            );
             let mut buf = Vec::with_capacity(6 + len_bytes.len() + raw_profile_data.len());
             buf.push(0x21); // complex::DAT
             let payload_start = buf.len();
@@ -267,6 +279,7 @@ fn main() {
             buf.push(0x60); // internal::EV
             buf
         },
-        Some(raw_profile_data.len() + 6)
-    ).print();
+        Some(raw_profile_data.len() + 6),
+    )
+    .print();
 }
