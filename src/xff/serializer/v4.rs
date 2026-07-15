@@ -57,12 +57,12 @@ pub fn serialize_xff_v4_with_metadata(
             pairs.push(XffValue::from(k.clone()));
             pairs.push(v.clone());
         }
-        out.extend(serialize_v4_parent(parent::META, &pairs)?);
+        serialize_v4_parent(parent::META, &pairs, &mut out)?;
     }
 
     // 3. Body: Exactly one single XFF Value (as per v4 spec)
     if let Some(first_value) = data.first() {
-        out.extend(serialize_v4_value(first_value)?);
+        serialize_v4_value(first_value, &mut out)?;
     }
 
     // 4. Terminator: EM
@@ -72,30 +72,33 @@ pub fn serialize_xff_v4_with_metadata(
 }
 
 #[allow(clippy::too_many_lines)]
-fn serialize_v4_value(value: &XffValue) -> Result<Vec<u8>> {
+fn serialize_v4_value(value: &XffValue, out: &mut Vec<u8>) -> Result<()> {
     match value {
-        XffValue::Null => Ok(vec![simple::NUL]),
+        XffValue::Null => {
+            out.push(simple::NUL);
+            Ok(())
+        }
         XffValue::Boolean(b) => {
             if b.0 {
-                Ok(vec![simple::TRU])
+                out.push(simple::TRU);
             } else {
-                Ok(vec![simple::FAL])
+                out.push(simple::FAL);
             }
+            Ok(())
         }
-        XffValue::String(s) => serialize_v4_text(s.as_str(), complex::TXT),
-        XffValue::Ascii(s) => serialize_v4_text(s.as_str(), complex::ASCI),
-        XffValue::Number(n) => Ok(serialize_v4_number(n)),
+        XffValue::String(s) => serialize_v4_text(s.as_str(), complex::TXT, out),
+        XffValue::Ascii(s) => serialize_v4_text(s.as_str(), complex::ASCI, out),
+        XffValue::Number(n) => serialize_v4_number(n, out),
         XffValue::HpFloat(hp) => {
-            let mut buf = Vec::new();
-            buf.push(complex::CFLT);
+            out.push(complex::CFLT);
             let mut payload =
                 athena::encoding_and_decoding::serialize_leb128_signed_i128(hp.get_value());
             payload.extend(serialize_leb128_unsigned(u128::from(hp.get_scale())));
             let checksum = crc32(&payload);
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.extend(payload);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
 
         XffValue::Metadata(meta) => {
@@ -109,109 +112,94 @@ fn serialize_v4_value(value: &XffValue) -> Result<Vec<u8>> {
                 pairs.push(XffValue::from(k.clone()));
                 pairs.push(v.clone());
             }
-            serialize_v4_parent(parent::META, &pairs)
+            serialize_v4_parent(parent::META, &pairs, out)
         }
         XffValue::Data(d) => {
             let raw_bytes = &d.data;
             let len_bytes = serialize_leb128_unsigned(raw_bytes.len() as u128);
-
-            let mut buf = Vec::with_capacity(6 + len_bytes.len() + raw_bytes.len());
-            buf.push(complex::DAT);
-
-            let mut payload = len_bytes;
-            payload.extend_from_slice(raw_bytes);
-
-            let checksum = crc32(&payload);
-
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.push(complex::DAT);
+            let payload_start = out.len();
+            out.extend_from_slice(&len_bytes);
+            out.extend_from_slice(raw_bytes);
+            let payload_end = out.len();
+            let checksum = crc32(&out[payload_start..payload_end]);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
         XffValue::DateTime(dt) => {
-            #[allow(clippy::cast_possible_truncation)]
             let payload = serialize_leb128_unsigned(u128::from(dt.0));
-            let mut buf = Vec::with_capacity(6 + payload.len());
-            buf.push(complex::DT);
+            out.push(complex::DT);
             let checksum = crc32(&payload);
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.extend(payload);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
         XffValue::Duration(d) => {
-            #[allow(clippy::cast_possible_truncation)]
             let payload = serialize_leb128_unsigned(u128::from(d.0));
-            let mut buf = Vec::with_capacity(6 + payload.len());
-            buf.push(complex::DUR);
+            out.push(complex::DUR);
             let checksum = crc32(&payload);
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.extend(payload);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
         XffValue::LocalDate(ld) => {
-            let mut buf = Vec::new();
-            buf.push(complex::LD);
-            let mut payload = Vec::new();
-            payload.extend_from_slice(&ld.year.to_le_bytes());
-            payload.push(ld.month);
-            payload.push(ld.day);
-            let checksum = crc32(&payload);
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.push(complex::LD);
+            let payload_start = out.len();
+            out.extend_from_slice(&ld.year.to_le_bytes());
+            out.push(ld.month);
+            out.push(ld.day);
+            let checksum = crc32(&out[payload_start..]);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
         XffValue::LocalTime(lt) => {
-            let mut buf = Vec::new();
-            buf.push(complex::LT);
-            let mut payload = Vec::new();
-            payload.push(lt.hour);
-            payload.push(lt.minute);
-            payload.push(lt.second);
-            payload.extend(serialize_leb128_unsigned(lt.subseconds as u128));
-            let checksum = crc32(&payload);
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.push(complex::LT);
+            let payload_start = out.len();
+            out.push(lt.hour);
+            out.push(lt.minute);
+            out.push(lt.second);
+            out.extend(serialize_leb128_unsigned(lt.subseconds as u128));
+            let checksum = crc32(&out[payload_start..]);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
         XffValue::LocalDateTime(ldt) => {
-            let mut buf = Vec::new();
-            buf.push(complex::LDT);
-            let mut payload = Vec::new();
-            payload.extend_from_slice(&ldt.date.year.to_le_bytes());
-            payload.push(ldt.date.month);
-            payload.push(ldt.date.day);
-            payload.push(ldt.time.hour);
-            payload.push(ldt.time.minute);
-            payload.push(ldt.time.second);
-            payload.extend(serialize_leb128_unsigned(ldt.time.subseconds as u128));
-            let checksum = crc32(&payload);
-            buf.extend(payload);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.push(complex::LDT);
+            let payload_start = out.len();
+            out.extend_from_slice(&ldt.date.year.to_le_bytes());
+            out.push(ldt.date.month);
+            out.push(ldt.date.day);
+            out.push(ldt.time.hour);
+            out.push(ldt.time.minute);
+            out.push(ldt.time.second);
+            out.extend(serialize_leb128_unsigned(ldt.time.subseconds as u128));
+            let checksum = crc32(&out[payload_start..]);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
         XffValue::Uuid(u) => {
             let bytes = u.as_bytes();
-            let mut buf = Vec::with_capacity(22); // 1 + 16 + 4 + 1
-            buf.push(complex::UUID);
+            out.push(complex::UUID);
             let checksum = crc32(bytes);
-            buf.extend_from_slice(bytes);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            Ok(buf)
+            out.extend_from_slice(bytes);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
+            Ok(())
         }
-        XffValue::Array(a) => serialize_v4_parent(parent::ARY, &a.values),
+        XffValue::Array(a) => serialize_v4_parent(parent::ARY, &a.values, out),
         XffValue::Object(o) => {
             let mut pairs = Vec::with_capacity(o.len() * 2);
             for (k, v) in &o.map {
                 pairs.push(XffValue::from(k.clone()));
                 pairs.push(v.clone());
             }
-            serialize_v4_parent(parent::OBJ, &pairs)
+            serialize_v4_parent(parent::OBJ, &pairs, out)
         }
         XffValue::OrderedObject(o) => {
             let mut pairs = Vec::with_capacity(o.len() * 2);
@@ -219,44 +207,55 @@ fn serialize_v4_value(value: &XffValue) -> Result<Vec<u8>> {
                 pairs.push(XffValue::from(k.clone()));
                 pairs.push(v.clone());
             }
-            serialize_v4_parent(parent::OOBJ, &pairs)
+            serialize_v4_parent(parent::OOBJ, &pairs, out)
         }
-        XffValue::Table(t) => serialize_v4_table(t),
-        XffValue::Graph(g) => serialize_v4_graph(g),
-        XffValue::NaN => Ok(vec![simple::NAN]),
-        XffValue::PosNaN => Ok(simple::PNAN.to_vec()),
-        XffValue::NegNaN => Ok(simple::NNAN.to_vec()),
-        XffValue::Infinity => Ok(simple::INF.to_vec()),
-        XffValue::NegInfinity => Ok(simple::NINF.to_vec()),
+        XffValue::Table(t) => serialize_v4_table(t, out),
+        XffValue::Graph(g) => serialize_v4_graph(g, out),
+        XffValue::NaN => {
+            out.push(simple::NAN);
+            Ok(())
+        }
+        XffValue::PosNaN => {
+            out.extend_from_slice(&simple::PNAN);
+            Ok(())
+        }
+        XffValue::NegNaN => {
+            out.extend_from_slice(&simple::NNAN);
+            Ok(())
+        }
+        XffValue::Infinity => {
+            out.extend_from_slice(&simple::INF);
+            Ok(())
+        }
+        XffValue::NegInfinity => {
+            out.extend_from_slice(&simple::NINF);
+            Ok(())
+        }
         XffValue::CommandCharacter(c) => {
-            serialize_v4_value(&XffValue::Data(Data::from(vec![c.as_u8()])))
+            serialize_v4_value(&XffValue::Data(Data::from(vec![c.as_u8()])), out)
         }
         XffValue::ArrayCmdChar(ac) => {
             let values: Vec<XffValue> = ac
                 .iter()
                 .map(|c| XffValue::Data(Data::from(vec![c.as_u8()])))
                 .collect();
-            serialize_v4_value(&XffValue::Array(Array::from(values)))
+            serialize_v4_value(&XffValue::Array(Array::from(values)), out)
         }
     }
 }
 
-fn serialize_v4_text(s: &str, marker: u8) -> Result<Vec<u8>> {
+fn serialize_v4_text(s: &str, marker: u8, out: &mut Vec<u8>) -> Result<()> {
     let utf8_bytes = s.as_bytes();
     let len_bytes = serialize_leb128_unsigned(utf8_bytes.len() as u128);
-
-    let mut buf = Vec::with_capacity(6 + len_bytes.len() + utf8_bytes.len());
-    buf.push(marker);
-
-    let mut payload = len_bytes;
-    payload.extend_from_slice(utf8_bytes);
-
-    let checksum = crc32(&payload);
-
-    buf.extend(payload);
-    buf.extend_from_slice(&checksum.to_le_bytes());
-    buf.push(internal::EV);
-    Ok(buf)
+    out.push(marker);
+    let payload_start = out.len();
+    out.extend_from_slice(&len_bytes);
+    out.extend_from_slice(utf8_bytes);
+    let payload_end = out.len();
+    let checksum = crc32(&out[payload_start..payload_end]);
+    out.extend_from_slice(&checksum.to_le_bytes());
+    out.push(internal::EV);
+    Ok(())
 }
 
 fn serialize_v4_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
@@ -495,60 +494,53 @@ fn serialize_v4_graph(g: &athena::graph::Graph) -> Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn serialize_v4_number(n: &athena::Number) -> Vec<u8> {
+fn serialize_v4_number(n: &athena::Number, out: &mut Vec<u8>) -> Result<()> {
     if n.is_float() {
         let val = n.into_f64().unwrap();
         if val.is_nan() {
             let bits = val.to_bits();
             if bits == 0x7ff8_0000_0000_0000 {
-                simple::PNAN.to_vec()
+                out.extend_from_slice(&simple::PNAN);
             } else if bits == 0xfff8_0000_0000_0000 {
-                simple::NNAN.to_vec()
+                out.extend_from_slice(&simple::NNAN);
             } else {
-                let mut buf = Vec::with_capacity(14);
-                buf.push(complex::FLT);
+                out.push(complex::FLT);
                 let bytes = bits.to_le_bytes();
                 let checksum = crc32(&bytes);
-                buf.extend_from_slice(&bytes);
-                buf.extend_from_slice(&checksum.to_le_bytes());
-                buf.push(internal::EV);
-                buf
+                out.extend_from_slice(&bytes);
+                out.extend_from_slice(&checksum.to_le_bytes());
+                out.push(internal::EV);
             }
         } else if val.is_infinite() {
             if val.is_sign_positive() {
-                simple::INF.to_vec()
+                out.extend_from_slice(&simple::INF);
             } else {
-                simple::NINF.to_vec()
+                out.extend_from_slice(&simple::NINF);
             }
         } else {
-            let mut buf = Vec::with_capacity(14); // 1 + 8 + 4 + 1
-            buf.push(complex::FLT);
+            out.push(complex::FLT);
             let bytes = val.to_le_bytes();
             let checksum = crc32(&bytes);
-            buf.extend_from_slice(&bytes);
-            buf.extend_from_slice(&checksum.to_le_bytes());
-            buf.push(internal::EV);
-            buf
+            out.extend_from_slice(&bytes);
+            out.extend_from_slice(&checksum.to_le_bytes());
+            out.push(internal::EV);
         }
     } else if n.is_unsigned() {
         let val = n.into_usize().unwrap();
         let payload = serialize_leb128_unsigned(val as u128);
-        let mut buf = Vec::with_capacity(6 + payload.len());
-        buf.push(complex::UINT);
+        out.push(complex::UINT);
         let checksum = crc32(&payload);
-        buf.extend(payload);
-        buf.extend_from_slice(&checksum.to_le_bytes());
-        buf.push(internal::EV);
-        buf
+        out.extend(payload);
+        out.extend_from_slice(&checksum.to_le_bytes());
+        out.push(internal::EV);
     } else {
         let val = n.into_isize().unwrap() as i64;
         let payload = serialize_leb128_signed_v3(val);
-        let mut buf = Vec::with_capacity(6 + payload.len());
-        buf.push(complex::SINT);
+        out.push(complex::SINT);
         let checksum = crc32(&payload);
-        buf.extend(payload);
-        buf.extend_from_slice(&checksum.to_le_bytes());
-        buf.push(internal::EV);
-        buf
+        out.extend(payload);
+        out.extend_from_slice(&checksum.to_le_bytes());
+        out.push(internal::EV);
     }
+    Ok(())
 }
