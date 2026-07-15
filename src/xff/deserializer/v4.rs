@@ -99,11 +99,11 @@ fn deserialize_v4_value(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
             }
 
             if marker == complex::ASCI {
-                let bytes: Vec<u8> = content[data_start..checksum_start]
-                    .iter()
-                    .map(|&b| b & 0x7F)
-                    .collect();
-                let s = String::from_utf8_lossy(&bytes).into_owned();
+                let raw_bytes = &content[data_start..checksum_start];
+                let mut s = String::with_capacity(raw_bytes.len());
+                for &b in raw_bytes {
+                    s.push((b & 0x7F) as char);
+                }
                 Ok(XffValue::Ascii(athena::XffString::from(s)))
             } else {
                 let s = std::str::from_utf8(&content[data_start..checksum_start])
