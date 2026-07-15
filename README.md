@@ -100,7 +100,7 @@ All nomos files follow the syntax defined [here](https://github.com/Xqhare/nomos
     - Arrays, Objects, OrderedObjects, Tables, Graphs, Metadata
     - Arbitrary data
 - Performant
-    - 100MB are read in approximately 200ms
+    - 100MB of complex nested data is deserialized in ~480ms (with raw binary blocks processed at over 2.0 GB/s)
     - Delta-encoded offset lists for parent types
 - Strong integrity and resilience
     - CRC-32 checksums and even-parity marker bytes (v3)
