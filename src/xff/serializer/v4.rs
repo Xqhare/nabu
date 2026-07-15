@@ -258,46 +258,34 @@ fn serialize_v4_text(s: &str, marker: u8, out: &mut Vec<u8>) -> Result<()> {
     Ok(())
 }
 
-fn serialize_v4_parent(marker: u8, elements: &[XffValue]) -> Result<Vec<u8>> {
-    let element_count_bytes = serialize_leb128_unsigned(elements.len() as u128);
-
-    let mut serialized_elements = Vec::with_capacity(elements.len());
+fn serialize_v4_parent(marker: u8, elements: &[XffValue], out: &mut Vec<u8>) -> Result<()> {
+    let mut children_buf = Vec::new();
     let mut deltas = Vec::with_capacity(elements.len());
     let mut prev_offset: u128 = 0;
-    let mut current_offset: u128 = 0;
-    let mut total_child_size = 0;
 
     for el in elements {
-        let ser = serialize_v4_value(el)?;
-        let delta = current_offset - prev_offset;
-        deltas.push(serialize_leb128_unsigned(delta));
-
-        prev_offset = current_offset;
-        current_offset += ser.len() as u128;
-        total_child_size += ser.len();
-        serialized_elements.push(ser);
+        let start_offset = children_buf.len() as u128;
+        serialize_v4_value(el, &mut children_buf)?;
+        let delta = start_offset - prev_offset;
+        deltas.push(delta);
+        prev_offset = start_offset;
     }
 
-    let mut index_data = Vec::with_capacity(element_count_bytes.len() + (deltas.len() * 2));
+    let element_count_bytes = serialize_leb128_unsigned(elements.len() as u128);
+    let mut index_data = Vec::with_capacity(element_count_bytes.len() + deltas.len() * 2);
     index_data.extend(element_count_bytes);
-    for delta_bytes in deltas {
-        index_data.extend(delta_bytes);
+    for delta in deltas {
+        index_data.extend(serialize_leb128_unsigned(delta));
     }
 
     let checksum = crc32(&index_data);
 
-    // Final buffer pre-allocation
-    let mut buf = Vec::with_capacity(1 + index_data.len() + 4 + total_child_size + 1);
-    buf.push(marker);
-    buf.extend(index_data);
-    buf.extend_from_slice(&checksum.to_le_bytes());
-
-    for ser in serialized_elements {
-        buf.extend(ser);
-    }
-
-    buf.push(internal::EV);
-    Ok(buf)
+    out.push(marker);
+    out.extend(index_data);
+    out.extend_from_slice(&checksum.to_le_bytes());
+    out.extend_from_slice(&children_buf);
+    out.push(internal::EV);
+    Ok(())
 }
 
 fn serialize_v4_table(t: &athena::Table) -> Result<Vec<u8>> {
