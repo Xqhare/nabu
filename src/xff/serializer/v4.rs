@@ -288,113 +288,92 @@ fn serialize_v4_parent(marker: u8, elements: &[XffValue], out: &mut Vec<u8>) -> 
     Ok(())
 }
 
-fn serialize_v4_table(t: &athena::Table) -> Result<Vec<u8>> {
+fn serialize_v4_table(t: &athena::Table, out: &mut Vec<u8>) -> Result<()> {
     let col_count = t.columns.len();
     let col_count_bytes = serialize_leb128_unsigned(col_count as u128);
 
-    let mut col_names_ser = Vec::with_capacity(col_count);
+    let mut col_names_ser = Vec::new();
     let mut col_deltas = Vec::with_capacity(col_count);
     let mut current_col_offset: u128 = 0;
     let mut prev_col_offset: u128 = 0;
-    let mut total_col_names_size = 0;
 
     for col in &t.columns {
-        let ser = serialize_v4_value(&XffValue::from(col.clone()))?;
+        let start = col_names_ser.len() as u128;
+        serialize_v4_value(&XffValue::from(col.clone()), &mut col_names_ser)?;
         let delta = current_col_offset - prev_col_offset;
-        col_deltas.push(serialize_leb128_unsigned(delta));
-
+        col_deltas.push(delta);
         prev_col_offset = current_col_offset;
-        current_col_offset += ser.len() as u128;
-        total_col_names_size += ser.len();
-        col_names_ser.push(ser);
+        current_col_offset += (col_names_ser.len() as u128) - start;
     }
 
     let mut col_index_data = Vec::with_capacity(col_count_bytes.len() + (col_deltas.len() * 2));
     col_index_data.extend(col_count_bytes);
     for delta in col_deltas {
-        col_index_data.extend(delta);
+        col_index_data.extend(serialize_leb128_unsigned(delta));
     }
     let col_checksum = crc32(&col_index_data);
 
-    // Row parsing
     let row_count = t.rows.len();
     let row_count_bytes = serialize_leb128_unsigned(row_count as u128);
-    let mut row_data_ser = Vec::with_capacity(row_count * col_count);
+    let mut row_data_ser = Vec::new();
     let mut row_deltas = Vec::with_capacity(row_count);
     let mut element_deltas = Vec::with_capacity(row_count * col_count);
     let mut current_row_offset: u128 = 0;
     let mut prev_row_offset: u128 = 0;
     let mut prev_element_offset: u128 = 0;
-    let mut total_row_data_size = 0;
 
     for row in &t.rows {
         let row_delta = current_row_offset - prev_row_offset;
-        row_deltas.push(serialize_leb128_unsigned(row_delta));
+        row_deltas.push(row_delta);
         prev_row_offset = current_row_offset;
 
         for cell in row {
-            let ser = serialize_v4_value(cell)?;
+            let start = row_data_ser.len() as u128;
+            serialize_v4_value(cell, &mut row_data_ser)?;
             let el_delta = current_row_offset - prev_element_offset;
-            element_deltas.push(serialize_leb128_unsigned(el_delta));
-
+            element_deltas.push(el_delta);
             prev_element_offset = current_row_offset;
-            current_row_offset += ser.len() as u128;
-            total_row_data_size += ser.len();
-            row_data_ser.push(ser);
+            current_row_offset += (row_data_ser.len() as u128) - start;
         }
     }
 
     let mut row_index_data = Vec::with_capacity(row_count_bytes.len() + (row_deltas.len() * 2));
     row_index_data.extend(row_count_bytes);
     for delta in row_deltas {
-        row_index_data.extend(delta);
+        row_index_data.extend(serialize_leb128_unsigned(delta));
     }
     let row_checksum = crc32(&row_index_data);
 
     let mut element_index_data = Vec::with_capacity(element_deltas.len() * 2);
     for delta in element_deltas {
-        element_index_data.extend(delta);
+        element_index_data.extend(serialize_leb128_unsigned(delta));
     }
     let element_checksum = crc32(&element_index_data);
 
-    // Final buffer pre-allocation
-    let total_size = 1
-        + (col_index_data.len() + 4 + total_col_names_size)
-        + (row_index_data.len() + 4)
-        + (element_index_data.len() + 4)
-        + total_row_data_size
-        + 1;
-
-    let mut buf = Vec::with_capacity(total_size);
-    buf.push(parent::TBL);
+    out.push(parent::TBL);
 
     // Column Index + Names
-    buf.extend(col_index_data);
-    buf.extend_from_slice(&col_checksum.to_le_bytes());
-    for ser in col_names_ser {
-        buf.extend(ser);
-    }
+    out.extend(col_index_data);
+    out.extend_from_slice(&col_checksum.to_le_bytes());
+    out.extend_from_slice(&col_names_ser);
 
     // Row Index
-    buf.extend(row_index_data);
-    buf.extend_from_slice(&row_checksum.to_le_bytes());
+    out.extend(row_index_data);
+    out.extend_from_slice(&row_checksum.to_le_bytes());
 
     // Element Index
-    buf.extend(element_index_data);
-    buf.extend_from_slice(&element_checksum.to_le_bytes());
+    out.extend(element_index_data);
+    out.extend_from_slice(&element_checksum.to_le_bytes());
 
     // Row Data
-    for ser in row_data_ser {
-        buf.extend(ser);
-    }
+    out.extend_from_slice(&row_data_ser);
 
-    buf.push(internal::EV);
-    Ok(buf)
+    out.push(internal::EV);
+    Ok(())
 }
 
-fn serialize_v4_graph(g: &athena::graph::Graph) -> Result<Vec<u8>> {
-    let mut buf = Vec::new();
-    buf.push(parent::GRPH);
+fn serialize_v4_graph(g: &athena::graph::Graph, out: &mut Vec<u8>) -> Result<()> {
+    out.push(parent::GRPH);
 
     // Nodes Block
     let mut nodes_ser = Vec::new();
@@ -407,39 +386,36 @@ fn serialize_v4_graph(g: &athena::graph::Graph) -> Result<Vec<u8>> {
 
     for &idx in &all_node_indices {
         let node = g.get_node(idx).unwrap();
-        let mut n_ser = Vec::new();
-        n_ser.extend(serialize_v4_value(&node.payload)?);
-        n_ser.extend(serialize_v4_value(&node.metadata)?);
-        n_ser.extend(serialize_v4_value(&XffValue::Array(Array::from(
+        let start = nodes_ser.len() as u128;
+        serialize_v4_value(&node.payload, &mut nodes_ser)?;
+        serialize_v4_value(&node.metadata, &mut nodes_ser)?;
+        serialize_v4_value(&XffValue::Array(Array::from(
             node.inbound_connections
                 .iter()
                 .map(|&i| XffValue::from(i as usize))
                 .collect::<Vec<_>>(),
-        )))?);
-        n_ser.extend(serialize_v4_value(&XffValue::Array(Array::from(
+        )), &mut nodes_ser)?;
+        serialize_v4_value(&XffValue::Array(Array::from(
             node.outbound_connections
                 .iter()
                 .map(|&i| XffValue::from(i as usize))
                 .collect::<Vec<_>>(),
-        )))?);
+        )), &mut nodes_ser)?;
 
         let delta = current_node_offset - prev_node_offset;
-        node_deltas.push(serialize_leb128_unsigned(delta));
+        node_deltas.push(delta);
         prev_node_offset = current_node_offset;
-        current_node_offset += n_ser.len() as u128;
-        nodes_ser.push(n_ser);
+        current_node_offset += (nodes_ser.len() as u128) - start;
     }
 
     let mut nodes_index = serialize_leb128_unsigned(node_count as u128);
     for d in node_deltas {
-        nodes_index.extend(d);
+        nodes_index.extend(serialize_leb128_unsigned(d));
     }
     let nodes_checksum = crc32(&nodes_index);
-    buf.extend(nodes_index);
-    buf.extend_from_slice(&nodes_checksum.to_le_bytes());
-    for n in nodes_ser {
-        buf.extend(n);
-    }
+    out.extend(nodes_index);
+    out.extend_from_slice(&nodes_checksum.to_le_bytes());
+    out.extend_from_slice(&nodes_ser);
 
     // Connections Block
     let mut conns_ser = Vec::new();
@@ -456,30 +432,28 @@ fn serialize_v4_graph(g: &athena::graph::Graph) -> Result<Vec<u8>> {
         c_payload.extend(serialize_leb128_unsigned(conn.to as u128));
         let c_checksum = crc32(&c_payload);
 
-        let mut c_ser = c_payload;
-        c_ser.extend_from_slice(&c_checksum.to_le_bytes());
-        c_ser.extend(serialize_v4_value(&conn.metadata)?);
+        let start = conns_ser.len() as u128;
+        conns_ser.extend(c_payload);
+        conns_ser.extend_from_slice(&c_checksum.to_le_bytes());
+        serialize_v4_value(&conn.metadata, &mut conns_ser)?;
 
         let delta = current_conn_offset - prev_conn_offset;
-        conn_deltas.push(serialize_leb128_unsigned(delta));
+        conn_deltas.push(delta);
         prev_conn_offset = current_conn_offset;
-        current_conn_offset += c_ser.len() as u128;
-        conns_ser.push(c_ser);
+        current_conn_offset += (conns_ser.len() as u128) - start;
     }
 
     let mut conns_index = serialize_leb128_unsigned(conn_count as u128);
     for d in conn_deltas {
-        conns_index.extend(d);
+        conns_index.extend(serialize_leb128_unsigned(d));
     }
     let conns_checksum = crc32(&conns_index);
-    buf.extend(conns_index);
-    buf.extend_from_slice(&conns_checksum.to_le_bytes());
-    for c in conns_ser {
-        buf.extend(c);
-    }
+    out.extend(conns_index);
+    out.extend_from_slice(&conns_checksum.to_le_bytes());
+    out.extend_from_slice(&conns_ser);
 
-    buf.push(internal::EV);
-    Ok(buf)
+    out.push(internal::EV);
+    Ok(())
 }
 
 fn serialize_v4_number(n: &athena::Number, out: &mut Vec<u8>) -> Result<()> {
