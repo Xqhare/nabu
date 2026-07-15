@@ -1,9 +1,9 @@
-- [ ] (3) Adress performance issues
+- [x] (3) Adress performance issues
     * Focus on latest version only. Slow serde of older versions is not an issue that needs fixing
     - [x] (1) Measure the performance of the code :: never done any real benchmarking at all; should be fun
         - [x] Serialisation
         - [x] Deserialisation
-    - [ ] Find performance killers
-    - [ ] Find performance bottlenecks
-    - [ ] Fix performance killers
-    - [ ] Fix performance bottlenecks
+    - [x] Find performance killers
+    - [x] Find performance bottlenecks
+    - [x] Fix performance killers
+    - [x] Fix performance bottlenecks
