@@ -7,8 +7,8 @@
     - [x] Find performance bottlenecks
     - [x] Fix performance killers
     - [x] Fix performance bottlenecks
+- [ ] (1) Update XFF v4 specification (`specifications/v4.md`) to explicitly document that Object `Element Count` is 2N (keys + values)
 - [ ] (2) Implement `get` and `get_from_buffer` for partial on-disk lookups
-    - [ ] Update XFF v4 specification (`specifications/v4.md`) to explicitly document that Object `Element Count` is 2N (keys + values)
     - [ ] Implement `XffPath` builder pattern (`.key()`, `.index()`, `.cell()`) in a new module
     - [ ] Implement core `get_from_reader<R: Read + Seek>` traversal engine
     - [ ] Add `get` and `get_from_buffer` to `src/serde.rs`
