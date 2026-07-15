@@ -73,6 +73,97 @@ where
     }
 }
 
+fn create_complex_mock() -> XffValue {
+    // 1. Level 4: Profile and Prefs
+    let mut preferences = Object::new();
+    preferences.insert("theme".to_string(), XffValue::from("dark"));
+    preferences.insert("notifications".to_string(), XffValue::from(true));
+    preferences.insert("retry_limit".to_string(), XffValue::from(5));
+
+    let login_history = XffValue::Array(Array::from(
+        (0..10).map(|i| XffValue::from(1721081700 + i * 3600)).collect::<Vec<_>>()
+    ));
+
+    // Large 1 KB string for bio
+    let large_bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(18); // ~1026 bytes
+    let mut profile = Object::new();
+    profile.insert("bio".to_string(), XffValue::from(large_bio));
+    profile.insert("preferences".to_string(), XffValue::Object(preferences));
+    profile.insert("login_history".to_string(), login_history);
+
+    // 2. Level 3: Users Array
+    let mut users_list = Vec::with_capacity(50);
+    for i in 0..50 {
+        let mut user = Object::new();
+        user.insert("id".to_string(), XffValue::Uuid(nabu::Uuid::new([i as u8; 16])));
+        user.insert("username".to_string(), XffValue::Ascii(athena::XffString::from(format!("user_{}", i))));
+        user.insert("permissions".to_string(), XffValue::Array(Array::from(vec![
+            XffValue::from("read"),
+            XffValue::from("write"),
+        ])));
+        user.insert("profile".to_string(), XffValue::Object(profile.clone()));
+        users_list.push(XffValue::Object(user));
+    }
+    let users_array = XffValue::Array(Array::from(users_list));
+
+    // 3. Level 2: Metrics Table
+    let columns = vec![
+        "metric_name".to_string(),
+        "value".to_string(),
+        "status".to_string(),
+    ];
+    let mut rows = Vec::with_capacity(10);
+    for i in 0..10 {
+        rows.push(vec![
+            XffValue::from(format!("metric_{}", i)),
+            XffValue::from(42.0 + (i as f64) * 1.5),
+            XffValue::from(i % 2 == 0),
+        ]);
+    }
+    let metrics_table = XffValue::Table(nabu::Table { columns, rows });
+
+    // 4. Level 2: Network Graph
+    let mut graph = Graph::new();
+    let nodes: Vec<_> = (0..5)
+        .map(|i| graph.add_node(XffValue::from(format!("server_node_{}", i)), XffValue::Null))
+        .collect();
+    for i in 0..5 {
+        let from = nodes[i];
+        let to = nodes[(i + 1) % 5];
+        let _ = graph.add_connection(from, to, XffValue::from(format!("link_{}_to_{}", i, (i + 1) % 5)));
+    }
+    let network_graph = XffValue::Graph(graph);
+
+    // 5. Level 2: Config Server details
+    let mut server = Object::new();
+    server.insert("host".to_string(), XffValue::from("127.0.0.1"));
+    server.insert("port".to_string(), XffValue::from(8080));
+    server.insert("timeout".to_string(), XffValue::from(30.5));
+
+    let mut config = Object::new();
+    config.insert("server".to_string(), XffValue::Object(server));
+    config.insert("users".to_string(), users_array);
+    config.insert("metrics".to_string(), metrics_table);
+    config.insert("network".to_string(), network_graph);
+
+    // 6. Level 1: Root Object
+    let mut metadata = Object::new();
+    metadata.insert("creator".to_string(), XffValue::from("bench_runner"));
+    metadata.insert("version".to_string(), XffValue::from("4.1.0"));
+
+    let mut system_status = Object::new();
+    system_status.insert("active".to_string(), XffValue::from(true));
+    system_status.insert("code".to_string(), XffValue::from(200));
+    system_status.insert("msg".to_string(), XffValue::from("healthy"));
+
+    let mut root = Object::new();
+    root.insert("metadata".to_string(), XffValue::Metadata(nabu::Metadata::from(metadata)));
+    root.insert("config".to_string(), XffValue::Object(config));
+    root.insert("system_status".to_string(), XffValue::Object(system_status));
+
+    XffValue::Object(root)
+}
+
 fn main() {
     println!(
         "\n{:<30} {:<8} {:<10} {:<15} {:<15} {:<15}",
