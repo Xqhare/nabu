@@ -463,11 +463,7 @@ fn deserialize_v4_parent_elements(content: &[u8], cursor: &mut usize) -> Result<
     *cursor += leb_len as usize;
 
     // Read and skip deltas
-    for _ in 0..element_count {
-        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
-        *cursor += leb_len as usize;
-    }
+    skip_leb128_values(content, cursor, element_count as usize)?;
 
     let index_end = *cursor;
     let checksum = read_u32_le(content, cursor)?;
@@ -500,11 +496,7 @@ fn deserialize_v4_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     let (col_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
         .map_err(|_| NabuError::InvalidXFFValueLength(col_index_start, 4))?;
     *cursor += leb_len as usize;
-    for _ in 0..col_count {
-        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
-        *cursor += leb_len as usize;
-    }
+    skip_leb128_values(content, cursor, col_count as usize)?;
     let col_index_end = *cursor;
     let col_checksum = read_u32_le(content, cursor)?;
     let col_actual_crc = crc32(&content[col_index_start..col_index_end]);
@@ -533,11 +525,7 @@ fn deserialize_v4_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     let (row_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
         .map_err(|_| NabuError::InvalidXFFValueLength(row_index_start, 4))?;
     *cursor += leb_len as usize;
-    for _ in 0..row_count {
-        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
-        *cursor += leb_len as usize;
-    }
+    skip_leb128_values(content, cursor, row_count as usize)?;
     let row_index_end = *cursor;
     let row_checksum = read_u32_le(content, cursor)?;
     let row_actual_crc = crc32(&content[row_index_start..row_index_end]);
@@ -551,11 +539,7 @@ fn deserialize_v4_table(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
 
     // 4. Element Index
     let element_index_start = *cursor;
-    for _ in 0..(row_count * col_count) {
-        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
-        *cursor += leb_len as usize;
-    }
+    skip_leb128_values(content, cursor, (row_count * col_count) as usize)?;
     let element_index_end = *cursor;
     let element_checksum = read_u32_le(content, cursor)?;
     let element_actual_crc = crc32(&content[element_index_start..element_index_end]);
@@ -602,11 +586,7 @@ fn deserialize_v4_graph(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     let (node_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
         .map_err(|_| NabuError::InvalidXFFValueLength(nodes_index_start, 4))?;
     *cursor += leb_len as usize;
-    for _ in 0..node_count {
-        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
-        *cursor += leb_len as usize;
-    }
+    skip_leb128_values(content, cursor, node_count as usize)?;
     let nodes_index_end = *cursor;
     let nodes_checksum = read_u32_le(content, cursor)?;
     let nodes_actual_crc = crc32(&content[nodes_index_start..nodes_index_end]);
@@ -635,11 +615,7 @@ fn deserialize_v4_graph(content: &[u8], cursor: &mut usize) -> Result<XffValue> 
     let (conn_count, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
         .map_err(|_| NabuError::InvalidXFFValueLength(conns_index_start, 4))?;
     *cursor += leb_len as usize;
-    for _ in 0..conn_count {
-        let (_, leb_len) = deserialize_leb128_unsigned(&content[*cursor..])
-            .map_err(|_| NabuError::InvalidXFFValueLength(*cursor, 4))?;
-        *cursor += leb_len as usize;
-    }
+    skip_leb128_values(content, cursor, conn_count as usize)?;
     let conns_index_end = *cursor;
     let conns_checksum = read_u32_le(content, cursor)?;
     let conns_actual_crc = crc32(&content[conns_index_start..conns_index_end]);
@@ -723,4 +699,23 @@ fn read_f64_le(content: &[u8], cursor: &mut usize) -> Result<f64> {
     let bytes = &content[*cursor..*cursor + 8];
     *cursor += 8;
     Ok(f64::from_le_bytes(bytes.try_into().unwrap()))
+}
+
+fn skip_leb128_values(content: &[u8], cursor: &mut usize, count: usize) -> Result<()> {
+    let mut scan = *cursor;
+    let len = content.len();
+    for _ in 0..count {
+        loop {
+            if scan >= len {
+                return Err(NabuError::InvalidXFFValueLength(*cursor, 4));
+            }
+            let byte = content[scan];
+            scan += 1;
+            if byte < 0x80 {
+                break;
+            }
+        }
+    }
+    *cursor = scan;
+    Ok(())
 }
