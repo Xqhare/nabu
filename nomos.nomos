@@ -1,16 +1,16 @@
 - [x] (3) Adress performance issues
     * Focus on latest version only. Slow serde of older versions is not an issue that needs fixing
-    - [x] (1) Measure the performance of the code :: never done any real benchmarking at all; should be fun
+    - [x] (1) Measure the performance of the code :: never done any real benchmarking at all; should be fun +data_collection
         - [x] Serialisation
         - [x] Deserialisation
     - [x] Find performance killers
     - [x] Find performance bottlenecks
     - [x] Fix performance killers
     - [x] Fix performance bottlenecks
-- [ ] (1) Update XFF v4 specification Object Element Count :: explicitly document that Object Element Count is 2N (keys + values) @specifications/v4.md
+- [ ] (1) Update XFF v4 specification Object Element Count :: explicitly document that Object Element Count is 2N (keys + values) @specifications/v4.md +documentation +specification
 - [ ] (2) Implement partial on-disk lookups
-    - [ ] Implement XffPath builder pattern :: (`.key()`, `.index()`, `.cell()`) @new_module
-    - [ ] Implement core traversal engine :: get_from_reader<R: Read + Seek>
-    - [ ] Add get and get_from_buffer :: @src/serde.rs
-    - [ ] Re-export lookup API :: get, get_from_buffer, and XffPath @src/lib.rs
-    - [ ] Write integration tests :: @tests/
+    - [ ] Implement XffPath builder pattern :: (`.key()`, `.index()`, `.cell()`) @new_module +feature
+    - [ ] Implement core traversal engine :: get_from_reader<R: Read + Seek> +feature
+    - [ ] Add get and get_from_buffer :: @src/serde.rs +feature
+    - [ ] Re-export lookup API :: get, get_from_buffer, and XffPath @src/lib.rs +feature
+    - [ ] Write integration tests :: @tests/ +test
