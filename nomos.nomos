@@ -8,6 +8,7 @@
     - [x] Fix performance killers
     - [x] Fix performance bottlenecks
 - [ ] (1) Update XFF v4 specification Object Element Count :: explicitly document that Object Element Count is 2N (keys + values) @specifications/v4.md +documentation +specification
+- [ ] (1) Update HpFloat creation :: Added `from_scale_and_value` to aequa::HpFloat; should make the code a lot simpler +feature
 - [ ] (2) Implement partial on-disk lookups
     - [ ] Implement XffPath builder pattern :: (`.key()`, `.index()`, `.cell()`) @new_module +feature
     - [ ] Implement core traversal engine :: get_from_reader<R: Read + Seek> +feature
